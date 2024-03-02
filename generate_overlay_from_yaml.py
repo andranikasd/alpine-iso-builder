@@ -1,7 +1,7 @@
 import yaml
 import sys
 
-def main(config_path):
+def main(config_path, output_script_path):
     try:
         with open(config_path, 'r') as stream:
             config = yaml.safe_load(stream)
@@ -11,7 +11,7 @@ def main(config_path):
 
     additional_apks = config.get('additional_apks', [])
     
-    # Prepare the content for the overlay script without using backslashes in f-strings
+    # Prepare the content for the overlay script
     overlay_script_content = """#!/bin/sh
 tmp=$(mktemp -d)
 mkdir -p "$tmp"/etc/apk
@@ -28,11 +28,12 @@ tar -czf "$1" -C "$tmp" .
 rm -rf "$tmp"
 """
 
-    # Output the script content to a file or stdout
-    print(overlay_script_content)
+    # Write the script content to a file
+    with open(output_script_path, 'w') as script_file:
+        script_file.write(overlay_script_content)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python generate_overlay_from_yaml.py image-settings.yaml", file=sys.stderr)
+    if len(sys.argv) < 3:
+        print("Usage: python generate_overlay_from_yaml.py image-settings.yaml output_script.sh", file=sys.stderr)
         sys.exit(1)
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])

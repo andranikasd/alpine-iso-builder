@@ -2,46 +2,47 @@
 FROM alpine:3.19.1
 
 # Install necessary packages
-RUN apk update &&     \
+RUN apk update && \
     apk add --update --no-cache \
-    alpine-sdk git        \
-    alpine-conf        \
-    syslinux           \
-    xorriso            \
-    squashfs-tools     \
-    grub grub-efi doas \
-    mtools dosfstools  \
-    python3 py3-pip
+    alpine-sdk git \
+    alpine-conf \
+    syslinux \
+    xorriso \
+    squashfs-tools \
+    grub grub-efi \
+    doas \
+    mtools \
+    dosfstools \
+    python3 \
+    py3-pip \
+    abuild \
+    apk-tools \
+    busybox \
+    fakeroot \
+    syslinux \
+    xorriso
 
-# Making Python availabe
-
-# Configure doas for non-interactive use by the build user
-RUN echo "permit nopass build as root" > /etc/doas.conf
-
+# Making Python available
 COPY requirements.txt /tmp/
-RUN pip install cython PyYAML --break-system-packages 
-# RUN pip install -r /tmp/requirements.txt --break-system-packages
+RUN pip install --no-cache-dir --break-system-packages cython PyYAML
+# Alternatively, if you have additional requirements: RUN pip install -r /tmp/requirements.txt --no-cache-dir
 
-# Add your build user and add to the abuild group
-RUN adduser --disabled-password --gecos "" build && \
-    addgroup build abuild && \
-    echo "permit :abuild" > /etc/doas.d/doas.conf && \
-    echo "permit persist :abuild" >> /etc/doas.d/doas.conf
-
-COPY --chown=build:build aports /home/build/aports
+# Configure doas for non-interactive use
+RUN echo "permit nopass as root" > /etc/doas.conf
 
 # Copy the ISO and mkimg creation scripts into the container
-COPY generate_overlay_from_yaml.py /home/build/generate_overlay_from_yaml.py
-COPY parse-config.py /home/build/
-COPY create-custom-iso.sh /home/build/
-COPY create-mkimg-profile.sh /home/build/
-RUN chmod +x /home/build/create-custom-iso.sh /home/build/create-mkimg-profile.sh && \
-    chown build:build /home/build/create-custom-iso.sh /home/build/create-mkimg-profile.sh
-RUN chmod +x /home/build/*.sh /home/build/*.py
+COPY aports /aports
+COPY generate_overlay_from_yaml.py /generate_overlay_from_yaml.py
+COPY parse-config.py /parse-config.py
+COPY create-custom-iso.sh /create-custom-iso.sh
+COPY create-mkimg-profile.sh /create-mkimg-profile.sh
+COPY logger.sh /logger.sh
 
-# Switch to the build user for subsequent commands
-USER build
-WORKDIR /home/build
+# Ensure scripts are executable
+RUN chmod +x /*.sh /*.py
+
+# Set the working directory
+WORKDIR /
 
 # The entrypoint is the script to create the ISO
-ENTRYPOINT ["/bin/sh", "/home/build/create-custom-iso.sh"]
+ENTRYPOINT ["/bin/sh", "/create-custom-iso.sh"]

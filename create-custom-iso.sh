@@ -1,41 +1,66 @@
 #!/bin/sh
 
-# Exit on errors
+# Source the logger script
+. /logger.sh
+
+# Function to handle errors
+error_handler() {
+    ERROR_MSG="$?"
+    log_error "An error occurred with profile: $PROFILE_NAME. Error code: $ERROR_MSG"
+    exit 1
+}
+
+# Trap any error with error_handler
+trap 'error_handler' ERR
+
+# Set script to exit on errors
 set -e
 
 # Parse the configuration file and set environment variables
-eval "$(python parse-config.py /home/build/image-settings.yaml)"
+CONFIG_OUTPUT=$(python parse-config.py /image-settings.yaml 2>&1)
+if [ $? -ne 0 ]; then
+    log_error "$CONFIG_OUTPUT"
+    exit 1
+else
+    eval "$CONFIG_OUTPUT"
+fi
 
 # Ensure PROFILE_NAME is valid and set
 PROFILE_NAME=${PROFILE_NAME:-custom}
-echo "$PROFILE_NAME"
-abuild-keygen -a -n
-# Clone the aports repository if necessary
+log_info "Profile name set to ${PROFILE_NAME}"
+ABUILD_KEYGEN_OUTPUT=$(abuild-keygen -a -n 2>&1)
+log_info "$ABUILD_KEYGEN_OUTPUT"
 
 # Generate the overlay file from the YAML configuration
-python /home/build/generate_overlay_from_yaml.py /home/build/image-settings.yaml > /home/build/aports/scripts/genapkovl-mkimgoverlay.sh
-chmod +x /home/build/aports/scripts/genapkovl-mkimgoverlay.sh
+python /generate_overlay_from_yaml.py /image-settings.yaml /aports/scripts/genapkovl-mkimgoverlay.sh >/dev/null 2>&1
+chmod +x /aports/scripts/genapkovl-mkimgoverlay.sh
+log_info "Overlay file generated and permissions set."
 
 # Call the script to create the mkimg.$PROFILE_NAME.sh script
-./create-mkimg-profile.sh "$PROFILE_NAME" "$ADDITIONAL_APKS"
+CREATE_PROFILE_SCRIPT_OUTPUT=$(./create-mkimg-profile.sh "$PROFILE_NAME" "$ADDITIONAL_APKS" 2>&1)
+log_info "$CREATE_PROFILE_SCRIPT_OUTPUT"
 
 # Prepare temporary directory
-mkdir -pv ~/tmp
-export TMPDIR=~/tmp
+mkdir -pv /tmp >/dev/null 2>&1
 
-echo "Attempting to source mkimg.$PROFILE_NAME.sh manually..."
-source /home/build/aports/scripts/mkimg.$PROFILE_NAME.sh
+log_info "Attempting to source mkimg.$PROFILE_NAME.sh manually..."
+source /aports/scripts/mkimg.$PROFILE_NAME.sh 
 
-echo "Running mkimage.sh with profile $PROFILE_NAME..."
+log_info "Running mkimage.sh with profile $PROFILE_NAME..."
 
-export PACKAGER_PRIVKEY="/home/build/.abuild/*.rsa"
+export PACKAGER_PRIVKEY="/.abuild/*.rsa"
 
 # Create ISO
-mkdir -p ~/iso
-sh /home/build/aports/scripts/mkimage.sh --tag edge \
-    --outdir ~/iso \
+MKIMAGE_OUTPUT=$(sh /aports/scripts/mkimage.sh --tag edge \
+    --outdir /iso \
     --arch "$ARCH" \
     --repository https://dl-cdn.alpinelinux.org/alpine/edge/main \
-    --profile "$PROFILE_NAME"
+    --profile "$PROFILE_NAME" 2>&1)
+if [ $? -ne 0 ]; then
+    log_error "$MKIMAGE_OUTPUT"
+    exit 1
+else
+    log_info "$MKIMAGE_OUTPUT"
+fi
 
-echo "ISO creation complete."
+log_info "ISO creation complete."

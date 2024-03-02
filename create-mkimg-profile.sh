@@ -1,15 +1,18 @@
 #!/bin/sh
 
+# Source the logger script
+. /logger.sh
+
 # Specify the directory where the mkimage profile script will be created
-APORTS_SCRIPTS_DIR="/home/build/aports/scripts"
-echo $PROFILE_NAME
+APORTS_SCRIPTS_DIR="/aports/scripts"
+
 # Ensure the directory exists
-mkdir -p "$APORTS_SCRIPTS_DIR"
+mkdir -p "$APORTS_SCRIPTS_DIR" >/dev/null 2>&1
 
 # Create the mkimage profile script based on the configuration
-cat << EOF > "$APORTS_SCRIPTS_DIR/mkimg.$PROFILE_NAME.sh"
+PROFILE_SCRIPT_CONTENT=$(cat << EOF
 profile_$PROFILE_NAME() {
-    "$PROFILE_TYPE"
+    profile_standard
     title="$DESC"
     arch="$ARCH"
     kernel_flavors="$KERNEL_FLAVORS"
@@ -23,9 +26,8 @@ profile_$PROFILE_NAME() {
     done
 }
 EOF
+)
 
-cat "$APORTS_SCRIPTS_DIR/mkimg.$PROFILE_NAME.sh"
-
-# Make the profile script executable
+echo "$PROFILE_SCRIPT_CONTENT" > "$APORTS_SCRIPTS_DIR/mkimg.$PROFILE_NAME.sh"
 chmod +x "$APORTS_SCRIPTS_DIR/mkimg.$PROFILE_NAME.sh"
-echo "Profile script created successfully for profile: $PROFILE_NAME"
+log_info "Profile script created successfully for profile: $PROFILE_NAME"

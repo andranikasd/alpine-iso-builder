@@ -1,0 +1,41 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=apk-polkit-rs
+pkgver=2.1.1
+_gitlabsha=d52c3da65fe202a9e97c3d228af952c6
+pkgrel=0
+pkgdesc="apk-polkit-rs exposes a DBus API for APK, the Alpine Package Keeper"
+url="https://gitlab.alpinelinux.org/Cogitri/apk-polkit-rs"
+arch="x86_64 armv7 armhf aarch64 x86 ppc64le riscv64"
+license="GPL-3.0-or-later"
+depends="polkit alpine-appstream-downloader"
+makedepends="meson cargo polkit-dev glib-dev clang-dev apk-tools-dev"
+checkdepends="appstream bash dbus py3-dbusmock"
+subpackages="$pkgname-dev $pkgname-dbg $pkgname-lang $pkgname-openrc"
+install="$pkgname.post-install $pkgname.post-upgrade"
+source="https://gitlab.alpinelinux.org/Cogitri/apk-polkit-rs/uploads/$_gitlabsha/apk-polkit-rs-$pkgver.tar.xz"
+
+prepare() {
+	default_prepare
+
+	sed '/CBUILD/d' -i meson.build
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	dbus-run-session -- \
+		meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+3fee5a23041708eb6008fb0cf6cba387fe32fb57a1fe1f4becb9ad2f234f4c461dad422d968503062244b3382056337d79218c99fdb30ce065d9ae9b300ec4a6  apk-polkit-rs-2.1.1.tar.xz
+"

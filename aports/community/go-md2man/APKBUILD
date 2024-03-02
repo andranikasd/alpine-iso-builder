@@ -1,0 +1,38 @@
+# Contributor: Jake Buchholz Göktürk <tomalok@gmail.com>
+# Maintainer: Jake Buchholz Göktürk <tomalok@gmail.com>
+pkgname=go-md2man
+pkgver=2.0.3
+pkgrel=0
+pkgdesc="Utility to convert markdown to man pages"
+options="net"
+url="https://github.com/cpuguy83/go-md2man"
+arch="all"
+license="MIT"
+makedepends="go"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/cpuguy83/go-md2man/archive/v$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+export GOFLAGS="$GOFLAGS -modcacherw"
+
+build() {
+	go build
+
+	./go-md2man -in go-md2man.1.md -out go-md2man.1
+}
+
+check() {
+	grep -q "User Manual" go-md2man.1
+}
+
+package() {
+	install -Dsm755 go-md2man "$pkgdir"/usr/bin/go-md2man
+	install -Dm644 go-md2man.1 "$pkgdir"/usr/share/man/man1/go-md2man.1
+}
+
+sha512sums="
+237e8039beea11b4efb7d0c75fb5826c17dea50057b0149b9533e72e2a5198811f9a3a5b264ea3788922d2f03b07cb57914448b2d4325d54d0f946fb42c42f40  go-md2man-2.0.3.tar.gz
+"

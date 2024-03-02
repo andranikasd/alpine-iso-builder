@@ -1,0 +1,33 @@
+# Maintainer: Hugo Osvaldo Barrera <hugo@whynothugo.nl>
+pkgname=darkman
+pkgver=1.5.4
+pkgrel=7
+pkgdesc="Daemon for dark-mode and light-mode transitions on Unix-like desktop"
+url="https://darkman.whynothugo.nl/"
+arch="all"
+license="ISC"
+makedepends="go scdoc"
+subpackages="
+	$pkgname-doc
+	"
+source="https://gitlab.com/WhyNotHugo/darkman/-/archive/v$pkgver/darkman-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+# tarballs lack git version metadata required for buildling
+export VERSION="$pkgver"
+
+build() {
+	make build
+}
+
+package() {
+	make DESTDIR="$pkgdir/" PREFIX=/usr/ install
+}
+
+sha512sums="
+1d4bbbbafa56d282f78d344f61e36c12a56caa2f7445ac4e107decf97c0840e4ce3bab1db95a39aa752a3770c3613069e47fc13b8d925db589b608d9a0fdabbb  darkman-v1.5.4.tar.gz
+"

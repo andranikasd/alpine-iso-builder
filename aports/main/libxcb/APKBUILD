@@ -1,0 +1,37 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libxcb
+pkgver=1.16
+pkgrel=0
+pkgdesc="X11 client-side library"
+url="https://xcb.freedesktop.org"
+arch="all"
+license="MIT"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+depends_dev="libxau-dev xcb-proto"
+checkdepends="check-dev"
+options="!check" # upstream requires an old check version (0.9.4)
+makedepends="$depends_dev libxdmcp-dev libxslt python3"
+source="https://xorg.freedesktop.org/archive/individual/lib/libxcb-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--enable-xkb \
+		--enable-xinput \
+		--disable-xprint
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+check() {
+	make check
+}
+
+sha512sums="
+002fbc126c6f09eb7db5e4197cd0572d495f64b6de714a76d9a024fe3e13122c1cfc7c55207c0dee76cc63fcccf87b37db513223eadaf760af2bd2a926443bf8  libxcb-1.16.tar.xz
+"

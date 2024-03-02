@@ -1,0 +1,56 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kalzium
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://edu.kde.org/kalzium/"
+pkgdesc="Periodic Table of Elements"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	eigen-dev
+	extra-cmake-modules
+	karchive5-dev
+	kconfig5-dev
+	kcoreaddons5-dev
+	kdoctools5-dev
+	khtml-dev
+	ki18n5-dev
+	knewstuff5-dev
+	kparts5-dev
+	kplotting5-dev
+	kunitconversion5-dev
+	kwidgetsaddons5-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	samurai
+	solid5-dev
+	"
+_repo_url="https://invent.kde.org/education/kalzium.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kalzium-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang $pkgname-dev"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+102f16f035dba09eddcd10f8454d8aa32f850611b1ab4638417b3da7b1f7eed46e87b10282b44d519d5667a5d7ea03e1da8a1b99ec57fe8a93f370b0c00b05f7  kalzium-23.08.5.tar.xz
+"

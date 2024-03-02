@@ -1,0 +1,35 @@
+# Contributor: rubicon <rubicon@mailo.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=lfe
+pkgver=2.1.4
+pkgrel=0
+pkgdesc="Lisp Flavoured Erlang"
+url="https://lfe.io/"
+arch="all"
+license="Apache-2.0"
+depends="erlang"
+makedepends="erlang-dev"
+subpackages="$pkgname-doc"
+source="https://github.com/lfe/lfe/archive/$pkgver/lfe-$pkgver.tar.gz"
+
+build() {
+	make compile
+}
+
+check() {
+	./bin/lfe -e '(help)'
+}
+
+package() {
+	make PREFIX="$pkgdir/usr" install
+
+	install -Dvm644 doc/*.txt \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+
+	cd "$pkgdir"/usr/bin
+	ln -svf ../lib/lfe/bin/* .
+}
+
+sha512sums="
+3a161b506d0caaa201e3039cfb13bc0b6e401b95e3b5217f1a0e89dec0a7b12be46456f64bcd0442aa116d9a277ae685a7c5a706adcf1f66696a802f4eebc9cd  lfe-2.1.4.tar.gz
+"

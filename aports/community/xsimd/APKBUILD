@@ -1,0 +1,44 @@
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=xsimd
+pkgver=12.1.1
+pkgrel=0
+pkgdesc="C++ wrappers for SIMD intrinsics and parallelized, optimized mathematical functions (SSE, AVX, NEON, AVX512)"
+url="https://github.com/xtensor-stack/xsimd"
+# only supports simd on these
+arch="aarch64 x86 x86_64"
+license="BSD-3-Clause"
+makedepends="cmake gtest-dev linux-headers samurai"
+checkdepends="doctest-dev"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/xtensor-stack/xsimd/archive/refs/tags/$pkgver.tar.gz
+	failed-tests.patch
+	"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DBUILD_TESTS="$(want_check && echo ON || echo OFF)" \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+8e45a8e9b28358d5f20f713ea19a8c366edc62790c27984149f283dfe808d78a549c8ec465e8b3677d7e30b2cb80093908de364bbb9dc80683f5fdfb843131e1  xsimd-12.1.1.tar.gz
+b7cbd3ccf71c73e8cc670a76daf864803ec1080ca0312e876d20e8219fcc535807bdd5def6f4dca3a1cad7977fa16781d8ea55f87a87983298b71eebe4c5d754  failed-tests.patch
+"

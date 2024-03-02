@@ -1,0 +1,126 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <ablocorrea@hotmail.com>
+pkgname=gnome-shell
+pkgver=45.4
+pkgrel=0
+pkgdesc="GNOME shell"
+url="https://gitlab.gnome.org/GNOME/gnome-shell"
+# gjs -> mozjs
+arch="all !armhf !s390x"
+license="GPL-2.0-or-later"
+depends="
+	accountsservice
+	adwaita-icon-theme
+	caribou
+	desktop-file-utils
+	elogind
+	font-adobe-source-code-pro
+	font-cantarell
+	gnome-bluetooth
+	gnome-control-center
+	gnome-shell-schemas
+	gsettings-desktop-schemas
+	gst-plugin-pipewire
+	gst-plugins-good
+	gstreamer
+	ibus
+	librsvg
+	networkmanager-common
+	tecla
+	unzip
+	upower
+	"
+makedepends="
+	asciidoc
+	elogind-dev
+	evolution-data-server-dev evolution-dev
+	gcr4-dev
+	gjs-dev>=1.78.0
+	gnome-autoar-dev
+	gnome-bluetooth-dev
+	gnome-control-center-dev
+	gnome-desktop-dev>=44.0
+	gobject-introspection-dev
+	gstreamer-dev
+	ibus-dev
+	libcanberra-dev
+	libnma-dev
+	libxml2-dev
+	libxml2-utils
+	meson
+	mutter-dev>=45.0
+	networkmanager-dev
+	pipewire-dev
+	polkit-dev
+	pulseaudio-dev
+	py3-setuptools
+	python3
+	sassc
+	startup-notification-dev
+	tecla-dev
+	"
+checkdepends="
+	mesa-dri-gallium
+	xvfb-run
+	"
+	# gdm is also needed but introduces circular dep
+subpackages="
+	$pkgname-dbg
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-schemas::noarch
+	gnome-extensions-app:extensions_app:noarch
+	"
+source="https://download.gnome.org/sources/gnome-shell/${pkgver%.*}/gnome-shell-$pkgver.tar.xz
+	disable-telepathy-integration.patch
+	gsh.patch
+	"
+options="!check" # Tests have circular dependency 'gnome-shell <-> gdm'
+
+# secfixes:
+#   0:
+#     - CVE-2019-3820
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dsystemd=false \
+		-Dtests=false \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+extensions_app() {
+	pkgdesc="Manage GNOME Shell extensions"
+	depends="gnome-shell libadwaita"
+	replaces="gnome-shell"
+
+	amove usr/bin/gnome-extensions-app
+	amove usr/share/applications/org.gnome.Extensions.desktop
+	amove usr/share/gnome-shell/org.gnome.Extensions
+	amove usr/share/gnome-shell/org.gnome.Extensions.data.gresource
+	amove usr/share/gnome-shell/org.gnome.Extensions.src.gresource
+}
+
+schemas() {
+	pkgdesc="GNOME Shell gsetting schemas"
+	depends=""
+	replaces="gnome-shell"
+
+	amove usr/share/glib-2.0/schemas
+	amove usr/share/gnome-control-center/keybindings
+}
+
+sha512sums="
+127031302c4f606353292ab2ca2ab7b4c1000eba11bccd30cefb6a0c4a316aac1203d021d713716ad6036e4519700001d564545978f83b1e24668b166dcd66ba  gnome-shell-45.4.tar.xz
+2ca70115fab957fdf276b7f0772786e1afd56b0b22bcfd92f5b5f1d29676dc97c19cfb079434d0dbf7b459f1d133dbd8d1faa0d88f7b94846040a23856f951f8  disable-telepathy-integration.patch
+ae4ac679bacd35948b44068e5a70407f473bd96986ee126abb1bdf066db5cbc2087a3ffae0b390286689cacbe8325870fd43663ba39f4f7543216e02bf083934  gsh.patch
+"

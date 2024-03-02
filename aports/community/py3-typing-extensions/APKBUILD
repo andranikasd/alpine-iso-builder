@@ -1,0 +1,33 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=py3-typing-extensions
+pkgver=4.9.0
+pkgrel=1
+pkgdesc="Backported and Experimental Type Hints for Python 3.5+"
+url="https://github.com/python/typing_extensions"
+arch="noarch"
+license="Python-2.0"
+makedepends="py3-gpep517 py3-flit-core"
+checkdepends="python3-tests"
+subpackages="$pkgname-pyc"
+source="https://github.com/python/typing_extensions/archive/$pkgver/typing_extensions-$pkgver.tar.gz"
+builddir="$srcdir/typing_extensions-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 src/test_typing_extensions.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/typing_extensions-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+e7e8d21e549194a8e660b004d8026ff39db047ed330220f8a47b1df6f53ec7a172d4c5ffcf605f332ef150bc7333ad6ae86b08019195d3bd22a44d67f51feb80  typing_extensions-4.9.0.tar.gz
+"

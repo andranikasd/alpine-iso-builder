@@ -1,0 +1,51 @@
+# Contributor: Chloe Kudryavtsev <code@toast.bunkerlabs.net>
+# Contributor: Hoang Nguyen <folliekazetani@protonmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=minio-client
+pkgver=0.20240224.013320
+# 0.20230323.200304 -> 2023-03-23T20-03-04Z
+_pkgver="${pkgver:2:4}-${pkgver:6:2}-${pkgver:8:2}T${pkgver:11:2}-${pkgver:13:2}-${pkgver:15:2}Z"
+pkgrel=0
+pkgdesc="The MinIO Client"
+url="https://min.io/"
+arch="all"
+license="AGPL-3.0-or-later"
+makedepends="go"
+source="https://github.com/minio/mc/archive/RELEASE.$_pkgver/minio-client-$pkgver.tar.gz"
+builddir="$srcdir/mc-RELEASE.$_pkgver"
+
+# secfixes:
+#   0.20230111.031416-r0:
+#     - CVE-2022-41717
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	local prefix='github.com/minio/mc/cmd'
+	local date=${_pkgver%%T*}
+	local time=${_pkgver#*T}
+
+	go build -tags kqueue -o bin/mcli -ldflags "
+		-X $prefix.Version=${date}T${time//-/:}
+		-X $prefix.CopyrightYear=${date%%-*}
+		-X $prefix.ReleaseTag=RELEASE.$_pkgver
+		-X $prefix.CommitID=0000000000000000000000000000000000000000
+		-X $prefix.ShortCommitID=000000000000
+		"
+}
+
+check() {
+	# mc/cmd is disabled, seems to be outdated and fails on all my systems
+	# shellcheck disable=2046
+	go test -tags kqueue $(go list ./... | grep -v cmd)
+}
+
+package() {
+	install -Dm755 bin/mcli -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+19084d268b282acc11e4661f4ba1a47c42b51648086d6752f2ab3c854d7b357aef1cfe9f21de59f78ebb7c6af32d6268e06abc84d6e191569ed21bf21c1bb4cc  minio-client-0.20240224.013320.tar.gz
+"

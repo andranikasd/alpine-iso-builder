@@ -1,0 +1,46 @@
+# Contributor: Sascha Paunovic <azarus@posteo.net>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=spectrwm
+pkgver=3.5.1
+pkgrel=0
+_gittag="SPECTRWM_${pkgver//./_}"
+pkgdesc="Dynamic, configurable tiling window manager for X11"
+url="https://github.com/conformal/spectrwm"
+arch="all"
+license="ISC"
+depends="
+	dmenu-virtual
+	font-terminus
+	"
+makedepends="
+	bsd-compat-headers
+	freetype-dev
+	libxcursor-dev
+	libxft-dev
+	libxrandr-dev
+	libxt-dev
+	xcb-util-keysyms-dev
+	xcb-util-wm-dev
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-doc"
+source="https://github.com/conformal/spectrwm/archive/$_gittag/spectrwm-$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$_gittag"
+
+build() {
+	make -C linux PREFIX=/usr
+}
+
+package() {
+	make -C linux PREFIX=/usr SYSCONFDIR=/etc DESTDIR="$pkgdir" install
+
+	install -Dm644 spectrwm_*.conf -t "$pkgdir"/etc/spectrwm/
+
+	# make default config work
+	install -Dm755 baraction.sh screenshot.sh \
+		-t "$pkgdir"/usr/share/spectrwm/
+}
+
+sha512sums="
+9a5b9bee6debd395b6b5f706d12dbb80a848e4f5f02405a54cf9a47b2bcceb407bf14fce64a9cc4ff9205ed7e688adeefb0280289b73a0cf9927b44cfaec02fa  spectrwm-3.5.1.tar.gz
+"

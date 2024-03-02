@@ -1,0 +1,31 @@
+# Maintainer: Oliver Smith <ollieparanoid@postmarketos.org>
+# Contributor: Johannes Marbach <n0-0ne+gitlab@mailbox.org>
+pkgname=py3-mygpoclient
+pkgver=1.9
+pkgrel=2
+pkgdesc="Python Client Library for gpodder.net"
+url="https://github.com/gpodder/mygpoclient"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="python3"
+makedepends="py3-setuptools"
+checkdepends="py3-nose py3-pytest py3-pytest-cov py3-minimock"
+subpackages="$pkgname-doc $pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/gpodder/mygpoclient/archive/$pkgver.tar.gz"
+builddir="$srcdir/mygpoclient-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	make test
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+57502295725d3a1351e877998442141dd596927215d3746786c12db061ebe3bdf8282e8b2d554997515a558f608c0815e4caad311ad3f1ea9f5b62321e8d6635  py3-mygpoclient-1.9.tar.gz
+"

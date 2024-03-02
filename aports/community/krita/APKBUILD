@@ -1,0 +1,104 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=krita
+pkgver=5.1.5
+pkgrel=11
+# armhf blocked by build failures
+# s390x: nobody is using an art tool there
+arch="all !s390x !armhf"
+url="https://krita.org/"
+pkgdesc="Free digital painting application. Digital Painting, Creative Freedom!"
+license="GPL-2.0-or-later"
+depends="qt5-qtbase-sqlite"
+makedepends="
+	boost-dev
+	eigen-dev
+	exiv2-dev
+	extra-cmake-modules
+	fftw-dev
+	giflib-dev
+	gsl-dev
+	karchive5-dev
+	kcompletion5-dev
+	kconfig5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kguiaddons5-dev
+	ki18n5-dev
+	kitemmodels5-dev
+	kitemviews5-dev
+	krita-kseexpr-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	lcms2-dev
+	libheif-dev
+	libjpeg-turbo-dev
+	libjxl-dev
+	libmypaint-dev
+	libraw-dev
+	libxi-dev
+	opencolorio-dev
+	openexr-dev
+	poppler-qt5-dev
+	py3-qt5
+	py3-sip
+	python3-dev
+	qt5-qtbase-dev
+	qt5-qtmultimedia-dev
+	qt5-qtsvg-dev
+	qt5-qttools-dev
+	quazip-dev
+	samurai
+	tiff-dev
+	xcb-util-dev
+	zlib-dev
+	"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/krita/$pkgver/krita-$pkgver.tar.xz
+	$pkgname-tiff-heap-crash.patch::https://invent.kde.org/graphics/krita/-/commit/bbee5eff34e7a17c4a1c7b59abe4823ccff7f58c.diff
+	exiv2-0.28.patch
+	32.patch
+	10-jxl.patch
+	"
+subpackages="$pkgname-dev $pkgname-lang $pkgname-python"
+options="!check" # Breaks compilation on Musl https://bugs.kde.org/show_bug.cgi?id=412058
+
+build() {
+	GIT_DIR=. cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_KRITA_QT_DESIGNER_PLUGINS=ON \
+		-DBUILD_TESTING=OFF \
+		-DENABLE_UPDATERS=OFF \
+		-DKRITA_ENABLE_PCH=OFF
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+python() {
+	pkgdesc="$pkgdesc (python plugin)"
+	depends="python3 py3-qt5"
+
+	amove \
+		usr/share/krita/pykrita \
+		usr/lib/kritaplugins/kritapykrita.so \
+		usr/lib/krita-python-libs \
+		usr/bin/kritarunner
+}
+
+sha512sums="
+b745eb9f51bb08df0948d6b97b85aee6a74b496df3e8423fb9107d79551daadb21960b4bb5c438348f662c67d0ec5b2fa6da18cfa5feb418659881cddd24d8f1  krita-5.1.5.tar.xz
+642aaa3192114d39add74955da7747ca77d543858382dc0824c0be73696c0b7736dbadd0ca9ca8ef321a712df57b1ee39999c4ae741cb6459b43312e7cb146bb  krita-tiff-heap-crash.patch
+a145d9402e372f8453509eb711546418bf5578713d8bb8a42bb24497441781b4fbdc661511f72041d006687c42b465066ce072e303b6aed053aead2020ef106e  exiv2-0.28.patch
+c14bf4876e1bc0e757ed5c9231b1875c26d495462ce74b34e7dee958bc482b86754c1636b9b2cdf31fcc81484ade08988b8c8c4aa9ef83af66a5a03a4c237e44  32.patch
+59be9a7f6f8424c27fad0cdb437effbb2ffd4b031e7e9006e63c9622652978bc042b110263060c97793543a39e068bb7246e9acfac90089e1928934e9a412f63  10-jxl.patch
+"

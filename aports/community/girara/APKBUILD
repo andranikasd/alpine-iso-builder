@@ -1,0 +1,47 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Andrew Hills <ahills@ednos.net>
+# Contributor: Jean-Louis Fuchs <jean-louis.fuchs@adfinis-sygroup.ch>
+# Maintainer: Jean-Louis Fuchs <jean-louis.fuchs@adfinis-sygroup.ch>
+pkgname=girara
+pkgver=0.4.2
+pkgrel=0
+pkgdesc="girara - gtk user interface that focuses on simplicity and minimalism"
+url="https://git.pwmt.org/pwmt/girara"
+arch="all"
+license="Zlib"
+makedepends="
+	check-dev
+	doxygen
+	gtk+3.0-dev
+	json-c-dev
+	libnotify-dev
+	meson
+	ncurses
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-doc $pkgname-dev $pkgname-lang"
+source="https://git.pwmt.org/pwmt/girara/-/archive/$pkgver/girara-$pkgver.tar.gz"
+
+build() {
+	abuild-meson . build
+	meson compile -C build
+}
+
+check() {
+	xvfb-run -a meson test --no-rebuild --print-errorlogs -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+doc() {
+	pkgdesc="girara - gtk user interface that focuses on simplicity and minimalism (documentation)"
+	local _docdir="$subpkgdir"/usr/share/doc/$pkgname/
+	mkdir -p "$_docdir"
+	cp -r "$builddir"/build/doc/html/* "$_docdir"
+}
+
+sha512sums="
+02dfe097aec9dd6c3ebbcbc0e4ca1ddcc6aeb3085a411b9cb1db81d441d85a7eadec7c07773b7d7a63da2e30a8bca45bd8417e7e5cb5efe7bde39059e53b5e34  girara-0.4.2.tar.gz
+"

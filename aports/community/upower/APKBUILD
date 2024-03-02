@@ -1,0 +1,54 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=upower
+pkgver=1.90.2
+pkgrel=0
+pkgdesc="Power Management Services"
+url="https://upower.freedesktop.org"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	docbook-xsl
+	eudev-dev
+	glib-dev
+	gobject-introspection-dev
+	gtk-doc
+	libgudev-dev
+	libxslt
+	meson
+	"
+checkdepends="
+	dbus
+	py3-dbus
+	py3-dbusmock
+	py3-gobject3
+	py3-packaging
+	umockdev-dev
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://gitlab.freedesktop.org/upower/upower/-/archive/v$pkgver/upower-v$pkgver.tar.bz2
+	reduce-gudev.patch
+	"
+builddir="$srcdir/$pkgname-v$pkgver"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dudevhwdbdir=/lib/udev/hwdb.d/ \
+		-Dudevrulesdir=/lib/udev/rules.d \
+		-Dsystemdsystemunitdir=no \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test -t 5 --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+9cdaea76d604e79bb385c2d7d8df26ab74d8fbbd5ddd271d7dc3323ae4f98ce9504ce807638e008869fdec0e1fcaf8d4be53e486714913616b8df73d8e4ac396  upower-v1.90.2.tar.bz2
+cc638c154f7f3c5dd626dfd8f8c3578b4ba5f57b2cb3be58f2c4690a93c7b5bbdde2b92bccdcf6ad980c326e3822bb6c8541e3ab34e1e4d2d8ac889ec79ea0c1  reduce-gudev.patch
+"

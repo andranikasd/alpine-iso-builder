@@ -1,0 +1,33 @@
+# Contributor: Alan Lacerda <alacerda@alpinelinux.org>
+# Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
+pkgname=mate-user-guide
+pkgver=1.26.1
+pkgrel=0
+pkgdesc="Documents targeted for end-users of MATE"
+url="https://github.com/mate-desktop/mate-user-guide"
+arch="noarch"
+license="GFDL-1.1"
+makedepends="itstool libxml2-utils intltool gettext-dev"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/mate-user-guide-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--sysconfdir=/etc \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+e4ddd9417e79503801dae298fdee978037710a4f8d5de82b501dd80ecc51a54e44271e95892ce3e3086ec333e999dd566a1ad4e3b39e0c32d76a3bae7e7a90fe  mate-user-guide-1.26.1.tar.xz
+"

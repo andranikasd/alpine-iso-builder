@@ -1,0 +1,34 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-python-ipware
+_pyname="python-ipware"
+pkgver=2.0.2
+pkgrel=0
+arch="noarch"
+pkgdesc="A python package for server applications to retrieve client's IP address"
+url="https://pypi.python.org/project/python-ipware"
+license="MIT"
+makedepends="
+	py3-setuptools
+	py3-gpep517
+	py3-wheel
+	"
+options="!check" # No testsuite
+source="$pkgname-$pkgver.tar.gz::https://pypi.io/packages/source/p/python-ipware/python-ipware-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+subpackages="$pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+590945c385fe05a3d430e529efe47859c23e42a956430ac5c74fd4acd3e041ef66a1eabcef195f1089c82e3ab10792078aa582887b1d4146834559dba0313913  py3-python-ipware-2.0.2.tar.gz
+"

@@ -1,0 +1,41 @@
+# Contributor: Alex Yam <alex@alexyam.com>
+# Maintainer: Alex Yam <alex@alexyam.com>
+pkgname=xcb-imdkit
+pkgver=1.0.6
+pkgrel=0
+pkgdesc="X input method support for XCB"
+url="https://github.com/fcitx/xcb-imdkit"
+arch="all"
+license="LGPL-2.1-only"
+makedepends="
+	cmake
+	extra-cmake-modules
+	samurai
+	uthash-dev
+	xcb-util-keysyms-dev
+	"
+subpackages="$pkgname-dev"
+source="https://github.com/fcitx/xcb-imdkit/archive/$pkgver/xcb-imdkit-$pkgver.tar.gz"
+
+build() {
+	CFLAGS="$CFLAGS -flto=auto" \
+	cmake -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DUSE_SYSTEM_UTHASH=ON
+	cmake --build build
+}
+
+check() {
+	cd build/test
+	ctest -VV
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+sha512sums="
+e503e04f852194f11c80cf6a289832a26be519c3f2546b447955d8eef70062343efe0b65d85684a76a32c2166e129a7ff1e8015e1b08c3b5f540bc0ec38a1a2b  xcb-imdkit-1.0.6.tar.gz
+"

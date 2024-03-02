@@ -1,0 +1,57 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=libktorrent
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/applications/internet/org.kde.ktorrent"
+pkgdesc="A powerful BitTorrent client for KDE"
+license="GPL-2.0-or-later"
+depends_dev="
+	boost-dev
+	gmp-dev
+	karchive5-dev
+	kcrash5-dev
+	ki18n5-dev
+	kio5-dev
+	qca-dev
+	qt5-qtbase-dev
+	solid5-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	graphviz
+	samurai
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/network/libktorrent.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/libktorrent-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	cd build
+	# utppolltest requires network access
+	# superseedtest is broken
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "(utppoll|superseed)test"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+c38f944167436a7190e46093cbc928d3db375f7414fa5acdf5b3fd9e77007435259740027941daed422c784d691532f3c9a6c824ce9ac23c091edbedc563aa11  libktorrent-23.08.5.tar.xz
+"

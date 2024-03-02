@@ -1,0 +1,57 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=konqueror
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="KDE File Manager & Web Browser"
+# armhf blocked by extra-cmake-modules
+# s390x, ppc64le and riscv64 blocked by qt5-qtwebengine
+arch="all !armhf !s390x !ppc64le !riscv64"
+url="https://konqueror.org/"
+license="GPL-2.0-or-later AND GFDL-1.2-only AND LicenseRef-KDE-Accepted-LGPL"
+makedepends="
+	extra-cmake-modules
+	kactivities5-dev
+	karchive5-dev
+	kcmutils5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kdelibs4support-dev
+	kdesu5-dev
+	kdoctools5-dev
+	kiconthemes5-dev
+	kinit5-dev
+	kparts5-dev
+	kwindowsystem5-dev
+	qt5-qtbase-dev
+	qt5-qtwebengine-dev
+	samurai
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/network/konqueror.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/konqueror-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+options="!check" # Requires OpenGL and running D-Bus server
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	xvfb-run ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+8f0ebd03b24de9723800edd9a9c6dd6de5fe272e7a0702c1e07de4aa24fdbd7dae47de8afec07fced9c1d4fcd52a66fa0bad674f68a94499c7cc4bbb79e422ee  konqueror-23.08.5.tar.xz
+"

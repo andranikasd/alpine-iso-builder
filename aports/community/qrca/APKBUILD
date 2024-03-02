@@ -1,0 +1,57 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=qrca
+pkgver=0_git20230209
+pkgrel=1
+_commit=907dd4bde9a33c85d969ba0c9f4ec0145c39d3a1
+pkgdesc="QR-Code scanner for Plasma Mobile"
+# armhf blocked by qt5-qtdeclarative
+# ppc64le, s390x and riscv64 blocked by qt5-qtwebengine -> purpose
+arch="all !armhf !ppc64le !s390x !riscv64"
+url="https://invent.kde.org/utilities/qrca"
+license="GPL-3.0-or-later"
+depends="
+	kirigami2
+	purpose5
+	"
+makedepends="
+	extra-cmake-modules
+	kcontacts5-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	kirigami2-dev
+	prison5-dev
+	purpose5-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtmultimedia-dev
+	qt5-qtquickcontrols2-dev
+	qt5-qtsvg-dev
+	samurai
+	zxing-cpp-dev
+	"
+checkdepends="appstream"
+subpackages="$pkgname-lang"
+source="https://invent.kde.org/utilities/qrca/-/archive/$_commit/qrca-$_commit.tar.gz"
+builddir="$srcdir/$pkgname-$_commit"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+55045ad35e14d757c451ef04b653382778327ef28f273fe4f79cc119a9932e49360820f9a05c70aac14e40e686da3908702900e43de9ca08e412c4beb99e003d  qrca-907dd4bde9a33c85d969ba0c9f4ec0145c39d3a1.tar.gz
+"

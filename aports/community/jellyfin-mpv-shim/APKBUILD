@@ -1,0 +1,34 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=jellyfin-mpv-shim
+pkgver=2.6.0
+pkgrel=1
+pkgdesc="MPV Cast Client for Jellyfin "
+url="https://github.com/jellyfin/jellyfin-mpv-shim"
+arch="noarch"
+license="MIT"
+depends="
+	mpv
+	py3-jellyfin-apiclient-python
+	py3-mpv
+	py3-python-mpv-jsonipc
+	py3-requests
+	python3
+	python3-tkinter
+	"
+makedepends="py3-setuptools"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/j/jellyfin-mpv-shim/jellyfin-mpv-shim-$pkgver.tar.gz"
+options="!check" # No tests
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+b0697245e12d7aede73301f245bee7062c49dfdb4ef50b0896463635751da2b390f56671ff557f587acc1eb6e86e7486a22084af4f8ac43b31f28559fb35e3e6  jellyfin-mpv-shim-2.6.0.tar.gz
+"

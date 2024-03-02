@@ -1,0 +1,57 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kpmcore
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/applications/system/org.kde.partitionmanager"
+pkgdesc="Library for managing partitions"
+license="GPL-3.0-or-later"
+depends="
+	device-mapper-udev
+	lsblk
+	sfdisk
+	smartmontools
+	"
+makedepends="
+	extra-cmake-modules
+	kauth5-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	kwidgetsaddons5-dev
+	qca-dev
+	qt5-qtbase-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/system/kpmcore.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kpmcore-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+options="!check" # Requires running dbus server
+
+# secfixes:
+#   4.2.0-r0:
+#     - CVE-2020-27187
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+30ddbe62412df5645e034b745159b7c8db7801340225653d05856032083181d482379415a56d4e6f703c4f6c4a1a79c252a3b549beba227ab70dfc673cc59acd  kpmcore-23.08.5.tar.xz
+"

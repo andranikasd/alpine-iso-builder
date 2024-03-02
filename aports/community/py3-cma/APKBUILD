@@ -1,0 +1,38 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-cma
+_pkgorig=cma
+pkgver=3.3.0
+pkgrel=2
+pkgdesc="Python implementation of CMA-ES"
+url="https://github.com/CMA-ES/pycma"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	python3
+	py3-matplotlib
+	py3-numpy
+	"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/c/cma/cma-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	PYTHONPATH=build/lib python3 -c "import cma"
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+508a12aa93546ac174b6cd693ce3c1098f408a429dbbb4ede9b79f31a67099cecd9853f56edfea5a18a21d63274359332f168825385664660fecf1cdfa3a9d8a  py3-cma-3.3.0.tar.gz
+"

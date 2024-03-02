@@ -1,0 +1,47 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=sysprof
+pkgver=3.48.0
+pkgrel=1
+pkgdesc="System-wide profiler for Linux"
+url="http://www.sysprof.com/"
+arch="all"
+license="GPL-2.0-or-later"
+depends_dev="$pkgname=$pkgver-r$pkgrel" # sysprof's lib setup is a bit weird...
+makedepends="
+	desktop-file-utils
+	elogind-dev
+	glib-dev
+	gtk4.0-dev
+	itstool
+	json-glib-dev
+	libadwaita-dev
+	libunwind-dev
+	meson
+	polkit-dev
+	"
+#options="!check" # test-model-filter fails
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://download.gnome.org/sources/sysprof/${pkgver%.*}/sysprof-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dgtk=true \
+		-Dsystemdunitdir=systemd \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+	rm -rf "$pkgdir"/usr/systemd
+}
+
+sha512sums="
+100b79fabee005b5445dab3ad78d43facf375a488aa6513e987deecd6a3036cc43bfd78db106a4b8a15b4280dcd975872784c839f560779183adb5a339b0648c  sysprof-3.48.0.tar.xz
+"

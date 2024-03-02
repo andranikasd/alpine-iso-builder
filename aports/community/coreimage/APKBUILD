@@ -1,0 +1,30 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=coreimage
+pkgver=4.4.0
+pkgrel=1
+pkgdesc="An image viewer from C-Suite"
+arch="all"
+url="https://gitlab.com/cubocore"
+license="GPL-3.0-or-later"
+depends="qt5-qtsvg"
+makedepends="qt5-qtbase-dev libcprime-dev cmake ninja"
+source="$pkgname-$pkgver.tar.gz::https://gitlab.com/cubocore/coreimage/-/archive/v$pkgver/coreimage-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+build() {
+	cmake ../$pkgname-v$pkgver \
+		-GNinja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	ninja
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja install
+}
+
+sha512sums="
+ef008f41e5348ab7e95180c7f4a275f2748160c36e31b1783f53b4548503f0fb4081a2331f10b084264d4495139a684fc08379bb8bbe1430d329b23c839b6dd5  coreimage-4.4.0.tar.gz
+"

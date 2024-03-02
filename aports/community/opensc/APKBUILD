@@ -1,0 +1,98 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Timo Teräs <timo.teras@iki.fi>
+pkgname=opensc
+_realname=OpenSC
+pkgver=0.24.0
+pkgrel=1
+pkgdesc="Open source smart card tools and middleware"
+url="https://github.com/OpenSC/OpenSC"
+arch="all"
+license="LGPL-2.1-or-later"
+depends="pcsc-lite"
+depends_dev="zlib-dev pcsc-lite-dev openssl-dev>3 readline-dev"
+makedepends="$depends_dev automake autoconf m4 gettext libtool"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-bash-completion:bashcomp:noarch"
+source="$_realname-$pkgver.tar.gz::https://github.com/OpenSC/OpenSC/archive/$pkgver.tar.gz
+	"
+
+builddir="$srcdir/$_realname-$pkgver"
+
+# secfixes:
+#   0.24.0-r0:
+#     - CVE-2023-40660
+#     - CVE-2023-40661
+#     - CVE-2023-4535
+#   0.21.0-r0:
+#     - CVE-2020-26570
+#     - CVE-2020-26571
+#     - CVE-2020-26572
+#   0.20.0-r0:
+#     - CVE-2019-6502
+#     - CVE-2019-15945
+#     - CVE-2019-15946
+#     - CVE-2019-19479
+#     - CVE-2019-19480
+#     - CVE-2019-19481
+#   0.19.0-r0:
+#     - CVE-2018-16391
+#     - CVE-2018-16392
+#     - CVE-2018-16393
+#     - CVE-2018-16418
+#     - CVE-2018-16419
+#     - CVE-2018-16420
+#     - CVE-2018-16421
+#     - CVE-2018-16422
+#     - CVE-2018-16423
+#     - CVE-2018-16424
+#     - CVE-2018-16425
+#     - CVE-2018-16426
+#     - CVE-2018-16427
+
+prepare() {
+	default_prepare
+	./bootstrap
+}
+
+build() {
+	CFLAGS="$CFLAGS -Wno-error" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--enable-zlib \
+		--enable-readline \
+		--enable-openssl \
+		--enable-pcsc \
+		--enable-sm \
+		--enable-piv-sm
+	make
+	make -C src/tools pkcs11-register.desktop
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -D -m644 etc/opensc.conf \
+		"$pkgdir/etc/opensc.conf"
+
+	mkdir -p "$pkgdir"/usr/share/bash-completion
+	mv "$pkgdir"/etc/bash_completion.d "$pkgdir"/usr/share/bash-completion/completions
+
+	install -Dm644 src/tools/pkcs11-register.desktop \
+		-t "$pkgdir"/etc/xdg/autostart/
+}
+
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	amove usr/share/bash-completion/completions
+}
+
+sha512sums="
+acc47117216df5d4ed1296673082e61ee91c08ca2fd3e718858f77ad0fca77ba7cebcf4ab1c7c26f9a8c80b48df567112a1cc5c4cd4b655f10c60db508e08a8f  OpenSC-0.24.0.tar.gz
+"

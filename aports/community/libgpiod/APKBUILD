@@ -1,0 +1,47 @@
+# Contributor: vinymeuh <vinymeuh@gmail.com>
+# Maintainer: Luca Weiss <luca@z3ntu.xyz>
+pkgname=libgpiod
+pkgver=1.6.4
+pkgrel=1
+pkgdesc="C library and tools for interacting with the linux GPIO character device"
+url="https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/"
+arch="all"
+license="LGPL-2.1-or-later"
+options="!check" # no test suite
+makedepends="autoconf automake libtool linux-headers autoconf-archive python3-dev doxygen help2man"
+subpackages="$pkgname-dev $pkgname-doc py3-$pkgname:_py3"
+source="https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/snapshot/libgpiod-$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	autoreconf -vfi
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-tools=yes \
+		--disable-static \
+		--enable-bindings-python
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+_py3() {
+	pkgdesc="Python bindings for libgpiod"
+	depends="python3"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/python* "$subpkgdir"/usr/lib/
+}
+
+sha512sums="
+22e3a6f6a721b2c8cf8852fcb79ad36e2002ea164b8158c1f69fb6a178746b89aacd66266c172a1397c7f6f052d4aee639e9bdf5e88b005dc8d3dcb444cbe66b  libgpiod-1.6.4.tar.gz
+"

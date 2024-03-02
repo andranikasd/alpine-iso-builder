@@ -1,0 +1,31 @@
+# Contributor: Alex Denes <caskd@redxen.eu>
+# Maintainer: Alex Denes <caskd@redxen.eu>
+_pkgname=geographiclib
+pkgname="py3-$_pkgname"
+pkgver=2.0
+pkgrel=2
+pkgdesc="Geodesic routines from GeographicLib"
+url="https://geographiclib.sourceforge.io/"
+arch="noarch"
+license="MIT"
+depends="python3"
+makedepends="py3-setuptools_scm"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py test
+}
+
+package() {
+	python3 setup.py install --root "$pkgdir"
+}
+
+sha512sums="
+08e67317b83ed96dc45b013bfc0eac771f015250da07b1574252f566f48ce944ad0a5a0623b1bfc96c14e65658f2f39a069af5ceb6ffe153677cc2a023eeef91  geographiclib-2.0.tar.gz
+"

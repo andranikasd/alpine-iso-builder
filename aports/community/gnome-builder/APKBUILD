@@ -1,0 +1,78 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: jane400 <alpine@j4ne.de>
+pkgname=gnome-builder
+pkgver=45.0
+pkgrel=2
+pkgdesc="Develop software for GNOME"
+url="https://wiki.gnome.org/Apps/Builder"
+# limited by polkit -> flatpak
+# armhf: libpeas2
+# ppc64le: libdex
+arch="all !armhf !ppc64le !s390x !riscv64"
+license="GPL-3.0-or-later"
+depends="flatpak-builder py3-lxml py3-gobject3"
+makedepends="
+	clang-dev
+	cmark-dev
+	ctags
+	desktop-file-utils
+	devhelp-dev
+	d-spy-dev
+	editorconfig-dev
+	enchant2-dev
+	flatpak-dev
+	glib-dev
+	gobject-introspection-dev
+	gspell-dev
+	gtk4.0-dev
+	gtkmm3-dev
+	gtksourceview5-dev
+	json-glib-dev
+	jsonrpc-glib-dev
+	libadwaita-dev
+	libdazzle-dev
+	libdex-dev
+	libgit2-glib-dev
+	libpanel-dev
+	libpeas2-dev
+	libportal-dev
+	libxml2-dev
+	llvm-dev
+	meson
+	pango-dev
+	pcre2-dev
+	template-glib-dev
+	vala
+	vte3-dev
+	webkit2gtk-6.0-dev
+	"
+checkdepends="appstream-glib xvfb-run"
+subpackages="$pkgname-pyc $pkgname-dev $pkgname-lang"
+source="
+	https://download.gnome.org/sources/gnome-builder/${pkgver%.*}/gnome-builder-$pkgver.tar.xz
+	remove-unnecessary-cleanup.patch
+	"
+options="!check" # re-enable once gnome.gitlab is back
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dplugin_sysprof=false \
+		-Dtracing=false \
+		. output
+	meson compile -C output
+}
+
+check() {
+	# Increase the timeout, this can take pretty long, especially on armhf
+	xvfb-run -a meson test --print-errorlogs -C output -t 10
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+2cb3583d609687baed342471818e4206e53d86e66412d68425c1900aa6661f424c8926814d1426420a807112eb06c56a9b5298876e7f4643f1f4eb08c7e34bc1  gnome-builder-45.0.tar.xz
+562574bfedfb8e3a6fb687d7269106be4568e176687a5c03b6bf9f892ee9796632dcd4ccaf1aec413916412eb5cb5da9930464ad085aa1e3333428e6900be0b6  remove-unnecessary-cleanup.patch
+"

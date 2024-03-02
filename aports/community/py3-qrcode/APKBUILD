@@ -1,0 +1,39 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-qrcode
+_pkgname=qrcode
+pkgver=7.4.2
+pkgrel=1
+pkgdesc="QR code image generator"
+url="https://github.com/lincolnloop/python-qrcode"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3 py3-pillow py3-setuptools py3-pypng"
+checkdepends="py3-pytest"
+subpackages="$pkgname-doc $pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/q/qrcode/qrcode-$pkgver.tar.gz
+	no-typing-extensions.patch
+	"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-qrcode" # Backwards compatibility
+provides="py-qrcode=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+
+	install -D -m644 "$builddir"/doc/qr.1 "$pkgdir"/usr/share/man/man1/qr.1
+}
+
+sha512sums="
+a8642845990341034e39c43ef674f5b4ce8d3175a44d6062f711af2c24ffd45bda5f3ecf8a7825b7ebafe734b6396d52a37bb59177c544f921e43eaa9f1f5405  qrcode-7.4.2.tar.gz
+69b2f48990b50408505ef273244aa0ee070411870d8f930170639c9371f0b595faefddb563c6a367b595d3070b2f2353758d74df82310a0ad72e8c5222957c76  no-typing-extensions.patch
+"

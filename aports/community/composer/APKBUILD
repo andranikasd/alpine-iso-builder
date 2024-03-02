@@ -1,0 +1,48 @@
+# Contributor: Nathan Johnson <nathan@nathanjohnson.info>
+# Maintainer: Dave Hall <skwashd@gmail.com>
+pkgname=composer
+pkgver=2.7.1
+pkgrel=0
+pkgdesc="Dependency manager for PHP"
+url="https://getcomposer.org/"
+arch="noarch"
+license="MIT"
+_php=php82
+depends="$_php $_php-phar $_php-curl $_php-iconv $_php-mbstring $_php-openssl $_php-zip"
+checkdepends="git"
+options="net"
+source="$pkgname-$pkgver.phar::https://getcomposer.org/download/$pkgver/composer.phar"
+subpackages="$pkgname-bash-completion"
+
+# secfixes:
+#   2.6.4-r0:
+#     - CVE-2023-43655
+#   2.3.5-r0:
+#     - CVE-2022-24828
+#   2.1.9-r0:
+#     - CVE-2021-41116
+#   2.0.13-r0:
+#     - CVE-2021-29472
+
+build() {
+	$_php "$srcdir"/$pkgname-$pkgver.phar completion bash > "$srcdir"/$pkgname.bash
+}
+
+check() {
+	cd "$srcdir"
+	$_php $pkgname-$pkgver.phar -Vn
+	$_php $pkgname-$pkgver.phar -n diagnose || true # fails as pub-keys are missing
+}
+
+package() {
+	install -m 0755 -D "$srcdir"/$pkgname-$pkgver.phar "$pkgdir"/usr/bin/$pkgname.phar
+	printf "#!/bin/sh\n\n/usr/bin/%s /usr/bin/composer.phar \"\$@\"\n" "$_php" \
+		> "$pkgdir"/usr/bin/$pkgname
+	chmod +x "$pkgdir"/usr/bin/$pkgname
+	install -Dm644 "$srcdir"/$pkgname.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/$pkgname
+}
+
+sha512sums="
+034a0e99a388b4ca3200ab20b0f06612639f375b2300d9723eca96e7522233c7001ec066e638e120c1969bbaa02b686f53a0e2253c36a4e627a8e6d3c319798b  composer-2.7.1.phar
+"

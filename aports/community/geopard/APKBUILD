@@ -1,0 +1,44 @@
+# Contributor: knuxify <knuxify@gmail.com>
+# Maintainer: knuxify <knuxify@gmail.com>
+pkgname=geopard
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="Colorful, adaptive gemini browser"
+url="https://ranfdev.com/projects/geopard/"
+arch="all !s390x" # blueprint-compiler
+license="GPL-3.0-or-later"
+makedepends="
+	blueprint-compiler
+	cargo
+	desktop-file-utils
+	glib-dev
+	gtk4.0-dev
+	libadwaita-dev
+	meson
+	openssl-dev>3
+	"
+source="$pkgname-$pkgver.tar.xz::https://github.com/ranfdev/Geopard/releases/download/v$pkgver/com.ranfdev.Geopard.tar.xz"
+options="!check" # no test suite
+
+
+prepare() {
+	default_prepare
+	rm -rf "$builddir"/subprojects/blueprint-compiler
+}
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+7b08d4e1551b2fb4642388ab2aeb157fce551a75357ed626798eb640b3560221d9b215b026aa70384eff9eb109d717deb3406a307c044facd838a4a160e415bc  geopard-1.4.0.tar.xz
+"

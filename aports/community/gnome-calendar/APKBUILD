@@ -1,0 +1,40 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <ablocorrea@hotmail.com>
+pkgname=gnome-calendar
+pkgver=45.1
+pkgrel=0
+pkgdesc="Calendar application for GNOME"
+url="https://gitlab.gnome.org/GNOME/gnome-calendar"
+arch="all"
+license="GPL-3.0-or-later"
+depends="gsettings-desktop-schemas"
+makedepends="
+	evolution-data-server-dev
+	geoclue-dev
+	geocode-glib-dev>=3.26.4-r1
+	glib-dev
+	gsettings-desktop-schemas-dev
+	gtk4.0-dev
+	libadwaita-dev
+	libical-dev
+	libgweather4-dev
+	meson
+	"
+options="!check" # Can't be run on release builds and we don't want debug asserts
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/gnome-calendar/${pkgver%.*}/gnome-calendar-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+372abcf94c7b49980c9d1a5f7ee6cea1e34760337f2ab8886fdb3207fd3d87f4c45feecfa9156f6f8596f395af8d02469c2db53acf6b718735db94221af8c623  gnome-calendar-45.1.tar.xz
+"

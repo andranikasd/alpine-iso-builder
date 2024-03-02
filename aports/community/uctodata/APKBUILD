@@ -1,0 +1,27 @@
+# Contributor: Maarten van Gompel <proycon@anaproy.nl>
+# Maintainer: Maarten van Gompel <proycon@anaproy.nl>
+pkgname=uctodata
+pkgver=0.9.1
+pkgrel=0
+pkgdesc="Data for the tokeniser ucto"
+options="!check"
+arch="noarch"
+url="https://github.com/LanguageMachines/uctodata"
+license="GPL-3.0-only"
+source="$pkgname-$pkgver.tar.gz::https://github.com/LanguageMachines/uctodata/releases/download/v$pkgver/uctodata-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var
+	make
+}
+
+package() {
+	make DESTDIR=$pkgdir install
+}
+
+sha512sums="ffa56a017e47b4c85d04caa007f8cd6d653c5c5d412d507ce92d8946b6408671a200b8c9772224c2a308b210014ec7ea5d0db1e291772023e39c82b363a8c802  uctodata-0.9.1.tar.gz"

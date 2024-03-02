@@ -1,0 +1,68 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=pacman
+pkgver=6.0.2
+pkgrel=1
+pkgdesc="A simple library-based package manager"
+options="!check" # Depends on not packaged fakechroot
+url="https://www.archlinux.org/pacman/"
+arch="all"
+license="GPL-2.0-or-later"
+depends="bash libarchive-tools"
+depends_dev="gettext-dev"
+makedepends="
+	$depends_dev
+	asciidoc
+	curl-dev
+	gpgme-dev
+	libarchive-dev
+	meson
+	openssl-dev>3
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-bash-completion
+	$pkgname-zsh-completion
+	"
+source="https://sources.archlinux.org/other/pacman/pacman-$pkgver.tar.xz
+	use-gettext-libintl.patch
+	"
+
+provides="$pkgname-makepkg=$pkgver-r$pkgrel"
+replaces="$pkgname-makepkg"
+
+# secfixes:
+#   5.2.0-r0:
+#     - CVE-2019-18183
+#     - CVE-2019-18182
+#   5.1.3-r0:
+#     - CVE-2019-9686
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dscriptlet-shell=/usr/bin/bash \
+		-Di18n=true \
+		-Ddoc=enabled \
+		build
+	meson compile -C build
+}
+
+check() {
+	meson test -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install -C build
+
+	mkdir -p "$pkgdir"/usr/lib/pkgconfig
+	mv "$pkgdir"/usr/share/pkgconfig/* "$pkgdir"/usr/lib/pkgconfig
+	rmdir -p "$pkgdir"/usr/share/pkgconfig || true
+}
+
+sha512sums="
+9d76fb58c3a50e89a4b92b1f9e3bfdecca3f69e05022ea88fbd34f9df540c4fc688ad4f8b27e77eedb791aa682c27037abe65c789c6d9ee393bae5b620c3df13  pacman-6.0.2.tar.xz
+f8cd24b003b9e0c21736fac49df549129d303f424039acc20c5c6d986027488480b68029e756329fa6b3f0a4351efe38f669a7ca268f478af9d35fbc8388abdd  use-gettext-libintl.patch
+"

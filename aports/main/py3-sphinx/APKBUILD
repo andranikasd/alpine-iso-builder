@@ -1,0 +1,57 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-sphinx
+pkgver=6.2.1
+pkgrel=4
+pkgdesc="Python Documentation Generator"
+# checkdepends require 'imagemagick' and 'py3-html5lib' which
+# are in community/, 'imagemagick' itself also needs 'librsvg'
+# and 'libheif', which bring in 'rust', 'x265' and others, this
+# is too much of a burden to put on main/
+options="!check"
+url="https://www.sphinx-doc.org/"
+arch="noarch"
+license="BSD-2-Clause"
+depends="
+	py3-babel
+	py3-docutils
+	py3-imagesize
+	py3-jinja2
+	py3-packaging
+	py3-pygments
+	py3-requests
+	py3-snowballstemmer
+	py3-alabaster
+	py3-sphinxcontrib-applehelp
+	py3-sphinxcontrib-devhelp
+	py3-sphinxcontrib-htmlhelp
+	py3-sphinxcontrib-jsmath
+	py3-sphinxcontrib-serializinghtml
+	py3-sphinxcontrib-qthelp
+	"
+makedepends="py3-gpep517 py3-flit-core py3-installer"
+# imagemagick is for tests/test_ext_imgconverter.py::test_ext_imgconverter
+# which calls the 'convert' binary
+checkdepends="py3-pytest py3-funcsigs py3-pluggy imagemagick py3-html5lib"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/sphinx-doc/sphinx/archive/v$pkgver.tar.gz"
+builddir="$srcdir/sphinx-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	make PYTHON=python3 test
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/sphinx-*.whl
+}
+
+sha512sums="
+ba56fb9672dc2e156b6cfd0fc2252a989d44b199946a371ec5f1cda5840836b3a58e267ac0973f522479b472dbb07c6c2d7ae6b0c63c9adfbe82d36bd59a9465  py3-sphinx-6.2.1.tar.gz
+"

@@ -1,0 +1,23 @@
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=s6-man-pages
+pkgver=2.12.0.3.1
+pkgrel=0
+pkgdesc="Unofficial mdoc versions of the s6 documentation"
+url="https://git.sr.ht/~flexibeast/s6-man-pages"
+arch="noarch"
+license="ISC"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~flexibeast/s6-man-pages/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check" # no tests
+install_if="${pkgname%-*-*}>=${pkgver%.*} docs"
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	find "$pkgdir" -type f ! -name "*.gz" \
+		-exec gzip -9 {} \;
+}
+
+sha512sums="
+424edbd55e56ac2f4c9146c542c989c9a5e542fdfff9b2f026c620949a3a07a3f767123672f45744efaa28da0012472f97b0aeb09f2fe4dbe5567a6f66946d9d  s6-man-pages-2.12.0.3.1.tar.gz
+"

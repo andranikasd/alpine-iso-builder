@@ -1,0 +1,35 @@
+# Contributor:
+# Maintainer: Alexander Sack <asac@pantacor.com>
+pkgname=tpm2-tss-engine
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="tpm2tss engine for openssl"
+url="https://github.com/tpm2-software/tpm2-tss-engine/"
+arch="all"
+license="BSD-2-Clause"
+makedepends="tpm2-tss-dev openssl-dev>3 doxygen linux-headers"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-bash-completion
+	"
+source="https://github.com/tpm2-software/tpm2-tss-engine/releases/download/$pkgver/tpm2-tss-engine-$pkgver.tar.gz"
+options="!check" # no tests
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--disable-static \
+		--enable-tctienvvar
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+cd0f1c3b5251ab2f21159099cdb9c0b1cc68d7ad334d4c5245bba9c07274ecea7c86a531afc9ce6250635a9d0929a5147f461cc3760b15cd6ad099342af87ad0  tpm2-tss-engine-1.2.0.tar.gz
+"

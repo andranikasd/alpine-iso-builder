@@ -1,0 +1,31 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=pg-gvm
+pkgver=22.6.4
+#PostgreSQL version
+_pgver=16
+pkgrel=0
+pkgdesc="Greenbone Library for helper functions in PostgreSQL"
+url="https://github.com/greenbone/pg-gvm"
+arch="all"
+license="GPL-3.0"
+options="!check" # no check available
+makedepends="cmake glib libical-dev gvm-libs-dev postgresql$_pgver-dev ninja"
+source="$pkgname-$pkgver.tar.gz::https://github.com/greenbone/pg-gvm/archive/refs/tags/v$pkgver.tar.gz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/$_pgver/ \
+		-DPostgreSQL_TYPE_INCLUDE_DIR=/usr/include/postgresql/$_pgver/
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+62ea4e982f6939f4eef0543209120fc7b1e0134630669c500289c9e68247b56dd861d802f93524a8eb4ad4c0585d38d11b8d3715cc2afc6e63cea5b6accd4bb6  pg-gvm-22.6.4.tar.gz
+"

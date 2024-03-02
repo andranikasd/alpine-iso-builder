@@ -1,0 +1,49 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kdebugsettings
+pkgver=23.08.5
+pkgrel=0
+arch="all !armhf"
+url="https://kde.org/applications/utilities/"
+pkgdesc="An application to enable/disable qCDebug"
+license="GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kcompletion5-dev
+	kconfig5-dev
+	kcoreaddons5-dev
+	kdbusaddons5-dev
+	ki18n5-dev
+	kitemviews5-dev
+	kwidgetsaddons5-dev
+	kxmlgui5-dev
+	qt5-qtbase-dev
+	samurai
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/utilities/kdebugsettings.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kdebugsettings-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	xvfb-run ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+6087f3e66e8d931d7dc5777b544372f38066beb9d1f4b5b78031d930b8cdcf0b95c29cd9b5f45d249edeca35ecf01424ebb18481267c3d1d7ccf0c2b9e2d349e  kdebugsettings-23.08.5.tar.xz
+"

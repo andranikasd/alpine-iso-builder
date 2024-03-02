@@ -1,0 +1,48 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=polari
+pkgver=45.0
+pkgrel=1
+pkgdesc="Polari is a simple IRC Client that is designed to integrate seamlessly with GNOME 3"
+url="https://wiki.gnome.org/Apps/Polari"
+arch="all !armhf !s390x" # limited by gjs
+license="GPL-2.0-or-later"
+depends="
+	telepathy-logger
+	telepathy-idle
+	telepathy-mission-control
+	libadwaita
+	libsecret
+	libsoup3
+	"
+makedepends="
+	desktop-file-utils
+	gjs-dev
+	gobject-introspection-dev
+	gtk+3.0-dev
+	itstool
+	meson
+	telepathy-glib-dev
+	"
+checkdepends="appstream-glib"
+subpackages="$pkgname-lang $pkgname-doc"
+source="https://download.gnome.org/sources/polari/${pkgver%.*}/polari-$pkgver.tar.xz"
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+	LD_LIBRARY_PATH="$PWD/output/src" \
+		meson devenv -C output polari --version # check for runtime dependencies
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+33a3a0ef6960d2ac11fc312efc859a5ea75198c4ae8e74ff0885f9d0aa04f4e59d84be1495db3f498486b595aac66a91ec63d121a92557d9386dfbaed60bb409  polari-45.0.tar.xz
+"

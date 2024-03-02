@@ -1,0 +1,60 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=lua-penlight
+_rockname=penlight
+pkgver=1.13.1
+pkgrel=0
+pkgdesc="Lua libraries for extended operations on tables, lists and strings"
+options="!check" # Requires lua-coveralls
+url="https://lunarmodules.github.io/Penlight/"
+arch="noarch"
+license="MIT"
+depends="lua lua-filesystem"
+checkdepends="luajit"
+subpackages="$pkgname-doc"
+source="https://github.com/lunarmodules/Penlight/archive/$pkgver/lua-penlight-$pkgver.tar.gz"
+builddir="$srcdir/Penlight-$pkgver"
+
+provides="$pkgname-shared=$pkgver-r$pkgrel"  # for backward compatibility
+replaces="$pkgname-shared"  # for backward compatibility
+
+_luaversions="5.1 5.2 5.3 5.4"
+for _v in $_luaversions; do
+	checkdepends="$checkdepends lua$_v"
+	subpackages="$subpackages lua$_v-penlight:_split"
+done
+
+check() {
+	local lver; for lver in $_luaversions jit; do
+		msg "Testing on Lua $lver"
+		lua$lver run.lua tests
+	done
+}
+
+package() {
+	local lmod_dir="$pkgdir/usr/share/lua/common"
+	local rockdir="$pkgdir/usr/lib/luarocks/rocks-common/$_rockname/$pkgver-1"
+	local docdir="$pkgdir/usr/share/doc/$pkgname"
+
+	mkdir -p "$lmod_dir" "$docdir"
+	cp -r lua/pl "$lmod_dir"/
+	cp -r examples "$docdir"/
+
+	mkdir -p "$rockdir"
+	echo 'rock_manifest = {}' > "$rockdir"/rock_manifest
+}
+
+_split() {
+	local _lua=${subpkgname%%-*}
+	local _ver=${_lua#lua}
+	pkgdesc="Lua $—ver libraries for extended operations on tables, lists and strings"
+	depends="$_lua-filesystem"
+	mkdir -p "$subpkgdir"/usr/share/lua/$_ver
+
+	# keep this so abuild pulls in the right dependency with the common
+	# files
+	ln -s ../common/pl "$subpkgdir"/usr/share/lua/$_ver/pl
+}
+
+sha512sums="
+de0a6a2f585f32bed234ef084d8fca9cee645eed3459aa3c39b885b46a05ae752b5c7ac3bb1957fef9519df2a11e250fc87d6d4d62ee6155be2742ad43a079fe  lua-penlight-1.13.1.tar.gz
+"

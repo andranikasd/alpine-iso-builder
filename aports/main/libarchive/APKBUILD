@@ -1,0 +1,63 @@
+# Contributor: Sergei Lukin <sergej.lukin@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libarchive
+pkgver=3.7.2
+pkgrel=0
+pkgdesc="library that can create and read several streaming archive formats"
+url="https://libarchive.org/"
+arch="all"
+license="BSD-2-Clause AND BSD-3-Clause AND Public-Domain"
+makedepends="
+	acl-dev
+	attr-dev
+	bsd-compat-headers
+	bzip2-dev
+	expat-dev
+	lz4-dev
+	openssl-dev
+	xz-dev
+	zlib-dev
+	zstd-dev
+	"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-tools"
+source="https://libarchive.org/downloads/libarchive-$pkgver.tar.xz"
+options="!check"
+
+# secfixes:
+#   3.6.1-r2:
+#     - CVE-2022-36227
+#   3.6.1-r0:
+#     - CVE-2022-26280
+#   3.6.0-r0:
+#     - CVE-2021-36976
+#   3.4.2-r0:
+#     - CVE-2020-19221
+#     - CVE-2020-9308
+#   3.4.0-r0:
+#     - CVE-2019-18408
+#   3.3.2-r1:
+#     - CVE-2017-14166
+
+build() {
+	CFLAGS="$CFLAGS -ffat-lto-objects -flto=auto" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--without-xml2
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+tools() {
+	pkgdesc="libarchive tools bsdtar and bsdcpio"
+
+	amove usr/bin
+}
+
+sha512sums="
+a21bebb27b808cb7d2ed13a70739904a1b7b55661d8dea83c9897a0129cf71e20c962f13666c571782ff0f4f753ca885619c2097d9e7691c2dee4e6e4b9a2971  libarchive-3.7.2.tar.xz
+"

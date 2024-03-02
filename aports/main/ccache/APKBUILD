@@ -1,0 +1,55 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=ccache
+pkgver=4.9.1
+pkgrel=0
+pkgdesc="fast C/C++ compiler cache"
+url="https://ccache.dev/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	asciidoctor
+	cmake
+	hiredis-dev
+	linux-headers
+	perl
+	samurai
+	xxhash-dev
+	zstd-dev
+	"
+checkdepends="bash util-linux-misc python3 redis"
+subpackages="$pkgname-doc"
+source="https://github.com/ccache/ccache/releases/download/v$pkgver/ccache-$pkgver.tar.xz
+	ioctl.patch
+	system-xxhash.patch
+	"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCCACHE_DEV_MODE=OFF \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+check() {
+	ctest --output-on-failure --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	local link=
+	mkdir -p "$pkgdir"/usr/lib/ccache/bin
+
+	for link in cc gcc g++ cpp c++ $CHOST-cc $CHOST-gcc \
+		$CHOST-g++ $CHOST-c++ c89 c99; do
+		ln -sf ../../../bin/ccache "$pkgdir"/usr/lib/ccache/bin/$link
+	done
+}
+
+sha512sums="
+5ae4537a7e546b779c80f5adadce1349a84da3a47b255bda06cb2678ee5403307f013c08c8541a21f6f1fb36a0b64bdbcf785fbd2fcfe3009150117250e75b0b  ccache-4.9.1.tar.xz
+231b016e9f80442d679a5d5b58deae94c633882be6a8e87f70b33f436762bc5cbb370888763a003032115960aa987011fbfda5deb089d946cfd1878872ad3be3  ioctl.patch
+4c117b78ed95c7e3b573e31ca11aa3b82a9007b49170bab563b96bab3f1342ee0d33cb31def0bd5ca9fdd00737cdef53f4e9e41613ea1b48e26ae0106fd3540e  system-xxhash.patch
+"

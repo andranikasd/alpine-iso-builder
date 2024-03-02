@@ -1,0 +1,38 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=ginkgo
+pkgver=2.15.0
+pkgrel=0
+pkgdesc="Modern Testing Framework for Go"
+url="https://onsi.github.io/ginkgo/"
+license="MIT"
+arch="all"
+makedepends="go"
+source="https://github.com/onsi/ginkgo/archive/v$pkgver/ginkgo-$pkgver.tar.gz
+	tests.patch
+	"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -v -o bin/ginkgo ./ginkgo
+}
+
+check() {
+	# integration tests are slow
+	# CodeLocation tests access local files inside project root, so they don't work with -trimpath
+	GOFLAGS="${GOFLAGS/-trimpath/}" \
+		./bin/ginkgo -r --randomize-all --randomize-suites \
+		--skip-package ./integration
+}
+
+package() {
+	install -Dm755 bin/ginkgo -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+0c6c3e09ce913ab4426112b6ddb2ebfa536ea3abefec324fc199e2e0748b9513b2a01fc248ea5494d339538152367513cb907acf54ef8856187aaecb6269a5c6  ginkgo-2.15.0.tar.gz
+2fe515438583a51dbd92912a761063882788b3d001d37073986d81b9d4076e0381ee1981623cbf603fb70b59efb60bf941d577ecb8d5af97027d1877c7e164cc  tests.patch
+"

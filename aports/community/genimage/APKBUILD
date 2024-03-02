@@ -1,0 +1,62 @@
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=genimage
+pkgver=17
+pkgrel=0
+pkgdesc="tool to generate multiple filesystem and flash images from a tree"
+url="https://github.com/pengutronix/genimage"
+arch="all"
+license="GPL-2.0-only"
+makedepends="autoconf automake confuse-dev linux-headers"
+checkdepends="
+	bash
+	cdrkit
+	coreutils
+	cramfs
+	dosfstools
+	dtc
+	findutils
+	genext2fs
+	mtd-utils-ubi
+	mtools
+	qemu-img
+	squashfs-tools
+	util-linux-misc
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pengutronix/genimage/archive/refs/tags/v$pkgver.tar.gz"
+
+# s390x fails one test, not sure why
+case "$CARCH" in
+	ppc64le) checkdepends="$checkdepends mtd-utils-jffs sfdisk" ;;
+	s390x) options="!check" ;;
+	*) checkdepends="$checkdepends android-tools mtd-utils-jffs sfdisk u-boot-tools" ;;
+esac
+
+prepare() {
+	default_prepare
+	autoreconf -vif
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc
+	make
+}
+
+check() {
+	# ext2/3/4 tests fail with incorrect output
+	# android-tools and u-boot-tools missing on ppc64le and s390x
+	# first hdimage test and jfs test fails on s390x
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+b02415e030e2ef9ace40b965935e2634c208db4f4d401e1a824aa6dcf06c9656ba060d66e4a3a4306216ec74ce2ddcea4647bb68eb61a3bf4e9aadb1ff0d73ef  genimage-17.tar.gz
+"

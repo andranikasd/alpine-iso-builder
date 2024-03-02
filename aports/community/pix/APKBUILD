@@ -1,0 +1,67 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=maui
+pkgname=pix
+pkgver=3.0.2
+pkgrel=0
+_geonames_pkgver=2020.06.25
+pkgdesc="Image gallery manager built with MauiKit"
+# armhf blocked by qt5-qtdeclarative
+# s390x, armhf, x86, ppc64le, riscv64 blocked by mauikit-imagetools
+arch="all !armhf !s390x !x86 !ppc64le !riscv64"
+url="https://invent.kde.org/maui/pix"
+license="GPL-3.0-or-later"
+depends="
+	kquickimageeditor
+	qt5-qtbase-sqlite
+	qt5-qtlocation
+	"
+makedepends="
+	attica5-dev
+	exiv2-dev
+	extra-cmake-modules
+	kconfig5-dev
+	ki18n5-dev
+	kio5-dev
+	knotifications5-dev
+	mauikit-dev
+	mauikit-filebrowsing-dev
+	mauikit-imagetools-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtlocation-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/maui/pix.git"
+source="https://download.kde.org/stable/maui/pix/$pkgver/pix-$pkgver.tar.xz
+	https://github.com/pmsourcedump/geonames/archive/$_geonames_pkgver/geonames-$_geonames_pkgver.tar.gz
+	"
+options="!check" # No tests available
+
+prepare() {
+	default_prepare
+
+	unzip "$srcdir/geonames-$_geonames_pkgver"/cities1000.zip
+}
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	mv "$builddir"/cities1000.txt build/src/
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+b16dd854b9b7b4c1224e7d7297858ad9f227a2b6ffb5d65d8bea8f55b0831377881496ed700655c813eefe4ffa0bd2cb5ea4c0014e301ccbd939137188ec8aa5  pix-3.0.2.tar.xz
+07485983a5ce0f03f1e12e64c280abe01e81beaa22b2dd43bc1b0e7632298acbfb83f09ef8c01a0915481c8e918a430b97d68f1ed5d43f76506798245345bc14  geonames-2020.06.25.tar.gz
+"

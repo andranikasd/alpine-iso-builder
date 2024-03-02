@@ -1,0 +1,35 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <ablocorrea@hotmail.com>
+pkgname=gnome-font-viewer
+pkgver=45.0
+pkgrel=0
+pkgdesc="View fonts on your system"
+url="https://gitlab.gnome.org/GNOME/gnome-font-viewer"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="
+	fontconfig-dev
+	freetype-dev
+	glib-dev
+	gnome-desktop-dev
+	gtk4.0-dev
+	harfbuzz-dev
+	libadwaita-dev
+	meson
+	"
+options="!check" # no tests
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/gnome-font-viewer/${pkgver%.*}/gnome-font-viewer-$pkgver.tar.xz"
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+94289be78831dbc9be8d73348fd423379ebe691b08cf2547acd2648e0e7b1dafcd6c63ffa2c9ec033786b7b65912187c782bb279cc0fb6227d6ee74c1541701e  gnome-font-viewer-45.0.tar.xz
+"

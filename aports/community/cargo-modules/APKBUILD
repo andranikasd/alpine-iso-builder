@@ -1,0 +1,40 @@
+# Contributor: Orhun Parmaksız <orhunparmaksiz@gmail.com>
+# Maintainer: Orhun Parmaksız <orhunparmaksiz@gmail.com>
+pkgname=cargo-modules
+pkgver=0.13.3
+pkgrel=0
+pkgdesc="A cargo plugin for showing an overview of a crate's modules"
+url="https://github.com/regexident/cargo-modules"
+# s390x: FTBFS
+arch="all !s390x"
+license="MPL-2.0"
+makedepends="
+	cargo
+	cargo-auditable
+	"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/regexident/cargo-modules/archive/$pkgver.tar.gz"
+options="net" # needed to fetch crates
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cargo test --frozen --lib
+}
+
+package() {
+	install -Dm 755 target/release/cargo-modules -t "$pkgdir"/usr/bin
+	install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+}
+
+sha512sums="
+898e804329a5c65450f0694325e739119832e09f546dbefd00879dea4162966b5f2cf2621dd9097f18ab5f2f0f7140748d1702e110b4593d0d963e0db985c8d8  cargo-modules-0.13.3.tar.gz
+"

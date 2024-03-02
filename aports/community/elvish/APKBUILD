@@ -1,0 +1,35 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Contributor: Daniel Isaksen <d@duniel.no>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=elvish
+pkgver=0.20.1
+pkgrel=2
+pkgdesc="Friendly and expressive Unix shell"
+url="https://elv.sh/"
+arch="all"
+license="BSD-2-Clause"
+makedepends="go"
+source="https://github.com/elves/elvish/archive/v$pkgver/elvish-$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+export GOFLAGS="$GOFLAGS -mod=readonly"
+
+build() {
+	go build -ldflags="
+		-X src.elv.sh/pkg/buildinfo.Variant=alpine$pkgrel
+	" ./cmd/elvish
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 elvish -t "$pkgdir"/usr/bin
+}
+
+sha512sums="
+d6fd7ab0d494de7d70f7f34117c5e5dc5eb92a076e9782f11b543009872f0a1193d47814d8b67a8fcf3da14fd17a510de1f0ebb8c27f13388a8ca68a94836a61  elvish-0.20.1.tar.gz
+"

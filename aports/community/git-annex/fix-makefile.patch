@@ -1,0 +1,24 @@
+diff --git a/Makefile b/Makefile
+index 5688430..54fe3c8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -87,16 +87,16 @@ install-docs: docs install-mans
+ 		rsync -a --delete html/ $(DESTDIR)$(PREFIX)/$(SHAREDIR)/doc/git-annex/html/; \
+ 	fi
+ 
+-install-bins: build
++install-bins:
+ 	install -d $(DESTDIR)$(PREFIX)/bin
+ 	install git-annex $(DESTDIR)$(PREFIX)/bin
+ 	ln -sf git-annex $(DESTDIR)$(PREFIX)/bin/git-annex-shell
+ 	ln -sf git-annex $(DESTDIR)$(PREFIX)/bin/git-remote-tor-annex
+ 
+-install-desktop: build Build/InstallDesktopFile
++install-desktop: Build/InstallDesktopFile
+ 	./Build/InstallDesktopFile $(PREFIX)/bin/git-annex || true
+ 
+-install-completions: build
++install-completions:
+ 	install -d $(DESTDIR)$(PREFIX)/$(SHAREDIR)/bash-completion/completions
+ 	install -m 0644 bash-completion.bash $(DESTDIR)$(PREFIX)/$(SHAREDIR)/bash-completion/completions/git-annex
+ 	install -d $(DESTDIR)$(ZSH_COMPLETIONS_PATH)

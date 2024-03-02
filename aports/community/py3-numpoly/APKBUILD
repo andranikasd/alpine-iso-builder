@@ -1,0 +1,36 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-numpoly
+_pkgorig=numpoly
+pkgver=1.2.11
+pkgrel=1
+pkgdesc="Numpy compatible polynomial representation"
+url="https://github.com/jonathf/numpoly"
+arch="noarch !armhf !armv7 !x86 !ppc64le" # failed tests on 32 bit
+license="BSD-2-Clause"
+depends="python3 py3-numpy"
+checkdepends="py3-pytest py3-sympy"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+subpackages="$pkgname-pyc"
+source="https://github.com/jonathf/numpoly/archive/v$pkgver/$_pkgorig-$pkgver.tar.gz"
+builddir="$srcdir/numpoly-$pkgver"
+options="!check" # temporary fix - numpy deprecations
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+63359e18368d2476cbe4ed991db4925e6c45704bb4cd61211118f45cd6dc6f87dcb3f5332abb658f4653f034fd0210a83eaf55a1fbe57f9fda5e6508af4428b4  numpoly-1.2.11.tar.gz
+"

@@ -1,0 +1,40 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=dust
+pkgver=0.9.0
+pkgrel=0
+pkgdesc="A more intuitive version of du in Rust"
+url="https://github.com/bootandy/dust"
+# riscv64: rust broken
+arch="all !riscv64"
+license="Apache-2.0"
+makedepends="cargo cargo-auditable"
+options="net"
+source="https://github.com/bootandy/dust/archive/v$pkgver/dust-$pkgver.tar.gz"
+
+export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+	# this test runs dust and expects the output to match 100%,
+	# which fails a lot of the time on various systems as you can't guarantee that
+	rm tests/test_exact_output.rs
+}
+
+build() {
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -D -m755 target/release/$pkgname -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+de41c92b564bce0d8594221d244445dbacfee313a3b6afb969db229d0eafbf599cd1d1ea7a43f497a7bead69e00b53c5e7b09c4e0bc0fdcf8636bff8906cf7de  dust-0.9.0.tar.gz
+"

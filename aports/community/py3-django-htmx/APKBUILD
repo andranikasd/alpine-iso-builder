@@ -1,0 +1,43 @@
+# Contributor: Celeste <cielesti@protonmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=py3-django-htmx
+pkgver=1.17.2
+pkgrel=0
+pkgdesc="Extensions for using Django with htmx"
+url="https://django-htmx.readthedocs.io/"
+arch="noarch"
+license="MIT"
+depends="
+	py3-asgiref
+	py3-django
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-pytest-django"
+subpackages="$pkgname-pyc"
+source="https://github.com/adamchainz/django-htmx/archive/$pkgver/py3-django-htmx-$pkgver.tar.gz"
+builddir="$srcdir/django-htmx-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+6fab59b5722c3a7322c79c958edcffd08589db1f0aa733d3f6b2a0a9b65789b63c63d144bf821ce22511787dea34210c97e822118ff4a15f2e172c8e7d0df2e6  py3-django-htmx-1.17.2.tar.gz
+"

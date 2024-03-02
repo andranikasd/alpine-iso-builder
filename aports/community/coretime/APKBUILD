@@ -1,0 +1,31 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=coretime
+pkgver=4.4.0
+pkgrel=1
+pkgdesc="Time related task manager from C-Suite"
+arch="all !armhf"
+url="https://gitlab.com/cubocore"
+license="GPL-3.0-or-later"
+depends="qt5-qtsvg"
+makedepends="qt5-qtbase-dev libcprime-dev qt5-qtmultimedia-dev cmake ninja"
+source="$pkgname-$pkgver.tar.gz::https://gitlab.com/cubocore/coretime/-/archive/v$pkgver/coretime-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+build() {
+	cmake -B build \
+		-GNinja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+49180e4cc3bfaee6dfc1f89aa9650eb65aa400b7aa2175bca007fa4b715e9331404b7bba8819dda7787b203907d16c4e3d6ab64c9ca6771a2b6fbd1828d79a42  coretime-4.4.0.tar.gz
+"

@@ -1,0 +1,50 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=liblxqt
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="Common base library for LXQt components"
+url="https://github.com/lxqt/liblxqt"
+# armhf blocked by extra-cmake-modules -> kwindowsystem
+arch="all !armhf"
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake
+	samurai
+	lxqt-build-tools
+	qt5-qttools-dev
+	libqtxdg-dev
+	kwindowsystem5-dev
+	qt5-qtx11extras-dev
+	libxscrnsaver-dev
+	polkit-qt-dev
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://github.com/lxqt/liblxqt/releases/download/$pkgver/liblxqt-$pkgver.tar.xz"
+options="!check" # No testsuite
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DBUILD_BACKLIGHT_LINUX_BACKEND=True \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname
+}
+
+sha512sums="
+2012bedab77fba7979d456c9e223e6a0a2f86c272d59eb66d3dbb4b028348972789249fa4a3889d419004210b7c5fcd1e989c196bb338ec8caa31bb0eca1d703  liblxqt-1.4.0.tar.xz
+"

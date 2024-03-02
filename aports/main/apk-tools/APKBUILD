@@ -1,0 +1,100 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=apk-tools
+pkgver=2.14.0
+pkgrel=5
+pkgdesc="Alpine Package Keeper - package manager for alpine"
+arch="all"
+url="https://gitlab.alpinelinux.org/alpine/apk-tools"
+license="GPL-2.0-only"
+subpackages="$pkgname-dbg $pkgname-dev $pkgname-static $pkgname-doc $pkgname-zsh-completion"
+# Musl 1.2 introduced new ABI for time64 => upgrading apk-tools
+# while staying on musl <1.2 causes missing symbols
+# starting with musl 1.2.3_git (pre 1.2.3), we added DT_RELR
+# it is possible for old systems to upgrade, and apk-tools would upgrade first,
+# which would upgrade to a binary that cannot run until musl is upgraded.
+# forcing this constraint makes apk upgrade musl as part of the 'critical' transaction,
+# and update musl first.
+depends="musl>=1.2.3_git20230424"
+makedepends_build="openssl>3 lua5.3 lua5.3-lzlib scdoc"
+makedepends_host="zlib-dev openssl-dev zlib-static openssl-libs-static linux-headers"
+makedepends="$makedepends_build $makedepends_host"
+_lua="no"
+if [ "$CBUILD" = "$CHOST" ]; then
+	_lua="lua5.3"
+	subpackages="$subpackages $_lua-apk:luaapk"
+	makedepends="$makedepends $_lua-dev"
+
+	# ca-certificates-bundle needed for https certificate validation
+	depends="$depends ca-certificates-bundle"
+fi
+source="https://gitlab.alpinelinux.org/alpine/apk-tools/-/archive/v$pkgver/apk-tools-v$pkgver.tar.gz
+	fix-recursive-solve-1.patch
+	fix-recursive-solve-2.patch
+	_apk
+	"
+builddir="$srcdir/$pkgname-v$pkgver"
+
+# secfixes:
+#   2.12.6-r0:
+#     - CVE-2021-36159
+#   2.12.5-r0:
+#     - CVE-2021-30139
+
+prepare() {
+	default_prepare
+	sed -i -e 's:-Werror::' Make.rules
+	echo "FULL_VERSION=$pkgver-r$pkgrel" > config.mk
+}
+
+build() {
+	make LUA="$_lua"
+	make static LUA="$_lua"
+}
+
+check() {
+	make check LUA="$_lua"
+}
+
+package() {
+	make DESTDIR="$pkgdir" LUA="$_lua" install
+	install -d "$pkgdir"/var/lib/apk \
+		"$pkgdir"/lib/apk/exec \
+		"$pkgdir"/etc/apk/keys \
+		"$pkgdir"/etc/apk/protected_paths.d
+
+	install -Dm644 "$srcdir"/_apk "$pkgdir"/usr/share/zsh/site-functions/_apk
+	rm -r "$pkgdir"/usr/share/doc
+}
+
+static() {
+	pkgdesc="Alpine Package Keeper - static binary"
+	install -Dm755 "$builddir"/src/apk.static \
+		"$subpkgdir"/sbin/apk.static
+
+	# lets sign the static binary so it can be vefified from distros
+	# that does not have apk-tools
+	local abuild_conf=${ABUILD_CONF:-"/etc/abuild.conf"}
+	local abuild_home=${ABUILD_USERDIR:-"$HOME/.abuild"}
+	local abuild_userconf=${ABUILD_USERCONF:-"$abuild_home/abuild.conf"}
+	[ -f "$abuild_userconf" ] && . "$abuild_userconf"
+	local privkey="$PACKAGER_PRIVKEY"
+	local pubkey=${PACKAGER_PUBKEY:-"$privkey.pub"}
+	local keyname=${pubkey##*/}
+	${CROSS_COMPILE}strip "$subpkgdir"/sbin/apk.static
+	openssl dgst -sha1 -sign "$privkey" \
+		-out "$subpkgdir"/sbin/apk.static.SIGN.RSA.$keyname \
+		"$subpkgdir"/sbin/apk.static
+}
+
+luaapk() {
+	pkgdesc="Lua module for apk-tools"
+	mkdir -p "$subpkgdir"/usr/
+	mv "$pkgdir"/usr/lib "$subpkgdir"/usr/lib/
+}
+
+sha512sums="
+95bfc6d4210c3fb0cd0226b01a67610d719bdf88574c4159b15594c379fa63a7aea88dbeba435af6920e68e65547c9472f987c53589d5f5cc3e1e1280ee8c227  apk-tools-v2.14.0.tar.gz
+c38a75ee0b4d61f5af99e5ce8b6cfe6561d32d44aea866ed08dda77dbf20231d1c7e93042ae95ca0a8dc4fcc4193834942cd1030d0b5ccca8070c198efaf0568  fix-recursive-solve-1.patch
+5f2c3c7248f200679250b763716c52ab6140db13b44cf6524bfa10c2ac101ec913d84d212b499c2fcf6630a571dbc6c5d5e15ab51760754d3253bf021053d5cc  fix-recursive-solve-2.patch
+7870676720f5007eee9482786e02246f8e3474afb90e76c9c83aebe914747a8e007b5d2eed6441933f4922024b3f0664db270f21981ad6c2db877a110b0cd79e  _apk
+"

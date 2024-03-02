@@ -1,0 +1,43 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xf86-video-savage
+pkgver=2.4.0
+pkgrel=2
+pkgdesc="S3 Savage video driver"
+url="https://xorg.freedesktop.org"
+arch="all"
+license="MIT"
+subpackages="$pkgname-doc"
+makedepends="
+	libdrm-dev
+	libxi-dev
+	libxrandr-dev
+	mesa-dev
+	util-macros
+	xorg-server-dev
+	xorgproto
+	"
+source="https://www.x.org/releases/individual/driver/$pkgname-$pkgver.tar.xz"
+
+build() {
+	export CFLAGS="${CFLAGS/-fno-plt}"
+	export CXXFLAGS="${CXXFLAGS/-fno-plt}"
+	export LDFLAGS="$LDFLAGS -Wl,-z,lazy"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+}
+
+sha512sums="
+a4db097c200f1430887e4c52bbe14aeaaa2c73dfc392beeed104c682114bd067f89b69994d649829cdc5d188cdbe7a41b22c82b0b49e3a02cdf366013ebbc161  xf86-video-savage-2.4.0.tar.xz
+"

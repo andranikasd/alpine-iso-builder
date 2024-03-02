@@ -1,0 +1,47 @@
+# Contributor: Mark Pashmfouroush <mark@markpash.me>
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
+pkgname=corerad
+pkgver=1.2.2
+pkgrel=4
+pkgdesc="Extensible and observable IPv6 Neighbor Discovery Protocol router advertisement daemon"
+url="https://corerad.net/"
+license="Apache-2.0"
+arch="all"
+options="net" # Requires net for getting go module dependencies
+makedepends="go"
+install="$pkgname.pre-install"
+subpackages="$pkgname-openrc"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/mdlayher/corerad/archive/v$pkgver.tar.gz
+	corerad.initd
+	"
+
+# access denied for ipv6 autoconfiguration
+[ "$CARCH" = "s390x" ] && options="$options !check"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	make VERSION="$pkgver"
+
+	# create a minimal configuration file
+	./cmd/corerad/corerad -init
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 cmd/corerad/corerad "$pkgdir"/usr/sbin/corerad
+
+	install -Dm755 "$srcdir"/corerad.initd "$pkgdir"/etc/init.d/corerad
+	install -Dm644 corerad.toml "$pkgdir"/etc/corerad/config.toml
+}
+
+sha512sums="
+47f60e9b1f537dc280e3248e28b802a2ffd3ff4f78440965082e3c5ef5c3e69359009164ee83c5292ccdc50236019784a6869d4488752084c8989268318add2f  corerad-1.2.2.tar.gz
+f0e6249e2430a6b1d3d826fd5dd4e9df936af4d21ad9d42c6655b28c92847a2ae41874c313bc054fa3067915d7af02769794f3fb4d2ce70b47c029793da7dd76  corerad.initd
+"

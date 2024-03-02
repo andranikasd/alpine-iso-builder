@@ -1,0 +1,55 @@
+# Contributor: Alan Lacerda <alacerda@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=mate-applets
+pkgver=1.26.1
+pkgrel=3
+pkgdesc="Applets for use with the MATE panel"
+url="https://github.com/mate-desktop/mate-applets"
+arch="all"
+license="GPL-2.0-or-later"
+depends="mate-icon-theme"
+makedepends="
+	dconf-dev
+	gtk+3.0-dev
+	gucharmap-dev
+	intltool
+	itstool
+	libgtop-dev
+	libmateweather-dev
+	libnl3-dev
+	libnotify-dev
+	libwnck3-dev
+	libxml2-dev
+	libxml2-utils
+	linux-headers
+	mate-desktop-dev
+	mate-panel-dev
+	polkit-dev
+	upower-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/mate-applets-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--sysconfdir=/etc \
+		--prefix=/usr \
+		--enable-static=no \
+		--enable-polkit \
+		--disable-stickynotes
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+7243825098f9101542b9eead2f60ac7f12e044ceb685da92a29fe72b2dc1271e1fa34dbc4c47148e2331a2af79d69f787dc8856c7112b75ef0a3dea97e4ab8fd  mate-applets-1.26.1.tar.xz
+"

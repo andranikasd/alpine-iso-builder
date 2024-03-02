@@ -1,0 +1,40 @@
+# Contributor: Krassy Boykinov <kboykinov@teamcentrixx.com>
+# Maintainer: Krassy Boykinov <kboykinov@teamcentrixx.com>
+pkgname=livi
+pkgver=0.0.6
+pkgrel=0
+pkgdesc="A small video player targeting mobile devices"
+url="https://gitlab.gnome.org/guidog/livi"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	desktop-file-utils
+	gst-plugins-bad-dev
+	gstreamer-dev
+	gtk4.0-dev
+	libadwaita-dev
+	meson
+	"
+checkdepends="appstream-glib"
+source="https://gitlab.gnome.org/guidog/livi/-/archive/v$pkgver/livi-v$pkgver.tar.gz
+	fix-validate-appstream-test.patch
+	"
+builddir="$srcdir/$pkgname-v$pkgver"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+60b2e42602bd58b64e1be25e62b1a9d50b1863b5eeec15dd44905120a864fe1b45f516ff04c52bc08ef1c57a9cf29aa56a1b57cf75e6021a959519262e3b67f6  livi-v0.0.6.tar.gz
+4f953b0a6c7ffdec6691fb9ebbf1ce68a6d8d6989298b8352716a7fbf7fe5700f9efed2b0eb44bc3d7b61f186af24bf203a23da100699d603e1445ffea3a3328  fix-validate-appstream-test.patch
+"

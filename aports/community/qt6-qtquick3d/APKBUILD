@@ -1,0 +1,50 @@
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+pkgname=qt6-qtquick3d
+pkgver=6.6.2
+pkgrel=0
+pkgdesc="Qt module and API for defining 3D content in Qt Quick"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends_dev="
+	qt6-qtdeclarative-dev
+	qt6-qtquicktimeline-dev
+	qt6-qtshadertools-dev
+	vulkan-headers
+	"
+makedepends="$depends_dev
+	assimp-dev
+	cmake
+	perl
+	samurai
+	"
+subpackages="$pkgname-dev"
+options="!check" # No tests
+builddir="$srcdir/qtquick3d-everywhere-src-${pkgver/_/-}"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtquick3d-everywhere-src-${pkgver/_/-}.tar.xz"
+
+build() {
+	export CFLAGS="$CFLAGS -g1 -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -g1 -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+d8b32ec1a5f9233e79612b5d9b56890c04a921edcc6369f4a047f8e58af92f5e6dc936fdde707df4afca81da53f9fb8959f03b00af24077c3dc723f3445e8123  qtquick3d-everywhere-src-6.6.2.tar.xz
+"

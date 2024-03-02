@@ -1,0 +1,35 @@
+# Contributor: Leon Marz <main@lmarz.org>
+# Maintainer: Leon Marz <main@lmarz.org>
+pkgname=openxr
+pkgver=1.0.34
+pkgrel=0
+pkgdesc="OpenXR loader library"
+url="https://khronos.org/openxr"
+arch="all"
+license="Apache-2.0"
+makedepends="cmake mesa-dev vulkan-loader-dev jsoncpp-dev samurai wayland-dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/KhronosGroup/OpenXR-SDK/archive/release-$pkgver.tar.gz"
+builddir="$srcdir/OpenXR-SDK-release-$pkgver"
+options="!check" # no check available
+
+build() {
+	case "$CARCH" in
+		armhf)
+			export CXXFLAGS="$CXXFLAGS -D_M_ARM" ;;
+	esac
+
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=Release
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+cfcabbd130f89d1d46899f3a9a34e9b5d9b21903b6d0fc48c62e233401cf200107a9fa8da926fc0036937a9ed647a2376bee58db925654c41acc7580f8f3a053  openxr-1.0.34.tar.gz
+"

@@ -1,0 +1,25 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=tree-sitter-scala
+pkgver=0.20.2
+pkgrel=1
+pkgdesc="Scala grammar for tree-sitter"
+url="https://github.com/tree-sitter/tree-sitter-scala"
+arch="all"
+license="MIT"
+makedepends="tree-sitter-dev"
+install_if="tree-sitter-grammars"
+source="https://github.com/tree-sitter/tree-sitter-scala/archive/v$pkgver/tree-sitter-scala-$pkgver.tar.gz"
+options="!check"  # no tests for shared lib
+
+build() {
+	abuild-tree-sitter build
+}
+
+package() {
+	DESTDIR="$pkgdir" abuild-tree-sitter install -q queries/scala
+}
+
+sha512sums="
+7dba7733c126877c26a4da82420cd6fe8bb933d7694dfbc7a64a9195b33014ab6fd74de6a659ed79eb48dd46767874611713dbad8cea1e7b2fc13a124e7e4e38  tree-sitter-scala-0.20.2.tar.gz
+"

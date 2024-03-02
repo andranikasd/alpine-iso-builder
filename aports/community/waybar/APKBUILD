@@ -1,0 +1,68 @@
+# Contributor: Luca Weiss <luca@z3ntu.xyz>
+# Maintainer: Luca Weiss <luca@z3ntu.xyz>
+pkgname=waybar
+pkgver=0.9.24
+pkgrel=1
+pkgdesc="Highly customizable Wayland bar for Sway and Wlroots based compositors"
+url="https://github.com/Alexays/Waybar/"
+# s390x: no wireplumber (but who uses it there anyway)
+arch="all !s390x"
+license="MIT"
+depends="tzdata"
+makedepends="
+	date-dev
+	eudev-dev
+	fmt-dev
+	gtk-layer-shell-dev
+	gtkmm3-dev
+	jsoncpp-dev
+	libdbusmenu-gtk3-dev
+	libinput-dev
+	libmpdclient-dev
+	libnl3-dev
+	meson
+	playerctl-dev
+	pulseaudio-dev
+	scdoc
+	spdlog-dev
+	sndio-dev
+	upower-dev
+	wireplumber-dev
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/Alexays/Waybar/archive/$pkgver/Waybar-$pkgver.tar.gz
+	config-fix-clock.patch
+	"
+options="!check" # No test suite
+builddir="$srcdir/Waybar-$pkgver"
+
+build() {
+	# -Ddefault_library=shared - to override the project defaults.
+	abuild-meson \
+		-Ddefault_library=shared \
+		-Ddbusmenu-gtk=enabled \
+		-Dgtk-layer-shell=enabled \
+		-Dlibevdev=disabled \
+		-Dlibnl=enabled \
+		-Dlibudev=enabled \
+		-Dman-pages=enabled \
+		-Dmpd=enabled \
+		-Dmpris=enabled \
+		-Dpulseaudio=enabled \
+		-Drfkill=enabled \
+		-Dsndio=enabled \
+		-Dsystemd=disabled \
+		-Dwireplumber=enabled \
+		-Dupower_glib=enabled \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+13177fbc2c537cd903294ab708ae46307a785c524cbdbca06abe869af1f7ccc866ce38b6fbc2b3769cd95f458c46296b4c88ee927cabe890692e78b999143f0e  Waybar-0.9.24.tar.gz
+173857d836630925658af5d1c1aa3630fe91d08a8bad09a63d724fd6dc622fc063a9bc936008dfe776573a263f1a90ad9d9f3e11eba6930448dc0a132e106af2  config-fix-clock.patch
+"

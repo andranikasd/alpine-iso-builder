@@ -1,0 +1,23 @@
+# Contributor: Minecrell <minecrell@minecrell.net>
+# Maintainer: Minecrell <minecrell@minecrell.net>
+pkgname=alsa-ucm-conf
+pkgver=1.2.11
+pkgrel=0
+pkgdesc="ALSA Use Case Manager configuration"
+url="https://alsa-project.org"
+arch="noarch"
+license="BSD-3-Clause"
+source="https://alsa-project.org/files/pub/lib/alsa-ucm-conf-$pkgver.tar.bz2"
+options="!check" # no tests
+provider_priority=10
+# replaced files from downstream pmos
+replaces="device-purism-librem5"
+
+package() {
+	mkdir -p "$pkgdir"/usr/share/alsa
+	cp -r ucm2 "$pkgdir"/usr/share/alsa
+}
+
+sha512sums="
+b202e7410a579789be0005564b4868f70bca0fd8664c02add95fc9ff90ab64faebda978fbd3e83a3274c37242dccf8efbebd03f529e35ca3033daf55f425cb8d  alsa-ucm-conf-1.2.11.tar.bz2
+"

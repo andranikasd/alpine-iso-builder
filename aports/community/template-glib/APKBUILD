@@ -1,0 +1,38 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=template-glib
+pkgver=3.36.1
+pkgrel=1
+pkgdesc="library for template expansion which supports calling into GObject Introspection from templates"
+url="https://gitlab.gnome.org/GNOME/template-glib"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	bison
+	flex
+	glib-dev
+	gobject-introspection-dev
+	meson
+	vala
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://download.gnome.org/sources/template-glib/${pkgver%.*}/template-glib-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+7c00d750f7d58e98f2d6c9baa6fa84efde1cce2eaacfb334ef0ee19d0583373d303d67d43cc290cd1a41239f2ee804077e104bb4799b70cfd6760ac3fb04178e  template-glib-3.36.1.tar.xz
+"

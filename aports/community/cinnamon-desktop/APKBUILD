@@ -1,0 +1,35 @@
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Maintainer:
+pkgname=cinnamon-desktop
+pkgver=5.8.0
+pkgrel=0
+pkgdesc="Library providing shared API for Cinnamon applications"
+arch="all"
+url="https://github.com/linuxmint/cinnamon-desktop"
+license="GPL-2.0-only"
+makedepends="
+	accountsservice-dev
+	dconf-dev
+	gobject-introspection-dev
+	gtk+3.0-dev
+	libxkbfile-dev
+	meson
+	pulseaudio-dev
+	xkeyboard-config-dev
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://github.com/linuxmint/cinnamon-desktop/archive/$pkgver/cinnamon-desktop-$pkgver.tar.gz"
+options="!check"  # no tests
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+93c86d8269c39b84463ca102581e45d9b29a55c402bb040198972614fda2d81e075ec96cbaa859cef15dc3439b31329722f45ed637026b6d6a43d71ac6afb246  cinnamon-desktop-5.8.0.tar.gz
+"

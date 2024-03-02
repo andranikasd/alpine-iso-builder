@@ -1,0 +1,50 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=lxqt-session
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="The LXQt session manager"
+url="https://github.com/lxqt/lxqt-session"
+arch="all !armhf" # liblxqt-dev
+license="LGPL-2.0-or-later"
+depends="xdg-user-dirs"
+makedepends="
+	cmake
+	eudev-dev
+	kwindowsystem5-dev
+	liblxqt-dev
+	lxqt-build-tools
+	procps-ng-dev
+	qt5-qttools-dev
+	qtxdg-tools-dev
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No testsuite
+source="https://github.com/lxqt/lxqt-session/releases/download/$pkgver/lxqt-session-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	CXXFLAGS="$CXXFLAGS -DNDEBUG -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname
+}
+
+sha512sums="
+4f5731969582222eef9d0d2f2b37c4a160c3c6469f3a16cb4b1804ba76a9320d36b0ed91cada6ee905339ed8cfbd443851804086d978424c4d79045cc90e1629  lxqt-session-1.4.0.tar.xz
+"

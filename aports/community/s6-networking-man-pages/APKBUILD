@@ -1,0 +1,23 @@
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=s6-networking-man-pages
+pkgver=2.7.0.1.1
+pkgrel=0
+pkgdesc="Unofficial mdoc versions of the s6-networking documentation"
+url="https://github.com/flexibeast/s6-networking-man-pages"
+arch="noarch"
+license="ISC"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~flexibeast/s6-networking-man-pages/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check" # no tests
+install_if="${pkgname%-*-*}>=${pkgver%.*} docs"
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	find "$pkgdir" -type f ! -name "*.gz" \
+		-exec gzip -9 {} \;
+}
+
+sha512sums="
+c106fd1586f26e2a37a8252b554b78b413fbb19ffeb3874e27f8ee24ca246bb27bf2d9b4ebf05bec68a12c4524203f064fa9e504053044aa46c1a03313311f35  s6-networking-man-pages-2.7.0.1.1.tar.gz
+"

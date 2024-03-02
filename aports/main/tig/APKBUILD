@@ -1,0 +1,39 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=tig
+pkgver=2.5.8
+pkgrel=3
+pkgdesc="Text-mode interface for the git revision control system"
+url="https://jonas.github.io/tig/"
+arch="all"
+license="GPL-2.0-or-later"
+depends="git"
+makedepends="ncurses-dev pcre2-dev"
+checkdepends="util-linux-misc"
+subpackages="$pkgname-doc"
+source="https://github.com/jonas/tig/releases/download/tig-$pkgver/tig-$pkgver.tar.gz"
+
+build() {
+	CFLAGS="$CFLAGS -O2 -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -O2 -flto=auto" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make all
+}
+
+check() {
+	SHELL=/bin/sh script --return --quiet -c "make -j1 test" /dev/null
+}
+
+package() {
+	make DESTDIR="$pkgdir" install install-doc-man
+}
+
+sha512sums="
+f4e7648ae7c58e936251f69071a092617368a04eabb4ae6726b2de1dbd305c559b7235f7aa70868f4ada02611196593a6e1c241062f57cd05a9c98685385053e  tig-2.5.8.tar.gz
+"

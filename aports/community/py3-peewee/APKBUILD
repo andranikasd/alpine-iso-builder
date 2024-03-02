@@ -1,0 +1,52 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Contributor: Antoine Fontaine <antoine.fontaine@epfl.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-peewee
+pkgver=3.17.0
+pkgrel=0
+pkgdesc="Small, expressive ORM"
+url="https://github.com/coleifer/peewee"
+arch="all"
+license="MIT"
+depends="python3"
+makedepends="
+	cython
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	sqlite-dev
+	"
+checkdepends="py3-psycopg2 py3-pytest-xdist"
+subpackages="$pkgname-pyc"
+source="py3-peewee-$pkgver.tar.gz::https://github.com/coleifer/peewee/archive/$pkgver.tar.gz"
+builddir="$srcdir"/peewee-$pkgver
+options="!check" # requires a bunch of setup
+
+prepare() {
+	default_prepare
+
+	# recythonize
+	find . -name "*.c" -delete
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+978a911aa0236246abcc3cc2ef54d418dc8f94bf78ce6eeeeaf43352d92ccb4238c66972b78a904d3ceed47736a2c509fbdde837e7660290faf220e5744b1cfa  py3-peewee-3.17.0.tar.gz
+"

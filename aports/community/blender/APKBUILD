@@ -1,0 +1,155 @@
+# Contributor: Mark Riedesel <mark@klowner.com>
+# Contributor: Leon Marz <main@lmarz.org>
+# Maintainer: Leon Marz <main@lmarz.org>
+pkgname=blender
+pkgver=4.0.2
+_pkgver=${pkgver%.[0-9]}
+pkgrel=2
+_llvmver=17
+pkgdesc="3D Creation/Animation/Publishing System"
+url="https://www.blender.org/"
+arch="x86_64 aarch64" # limited by openvdb
+license="GPL-2.0-or-later"
+depends="blender-shared=$pkgver-r$pkgrel"
+makedepends="
+	alembic-dev
+	blosc-dev
+	boost-dev
+	clang-dev
+	cmake
+	eigen-dev
+	embree-dev
+	embree-static
+	ffmpeg-dev
+	fftw-dev
+	freetype-dev
+	glog-dev
+	gmp-dev
+	jack-dev
+	jemalloc-dev
+	libdecor-dev
+	libepoxy-dev
+	libharu-dev
+	libjpeg-turbo-dev
+	libpng-dev
+	libsndfile-dev
+	libx11-dev
+	libxi-dev
+	libxkbcommon-dev
+	libxrender-dev
+	llvm$_llvmver-dev
+	lzo-dev
+	onetbb-dev
+	openal-soft-dev
+	opencolorio-dev
+	openexr-dev
+	openimagedenoise-dev
+	openimageio-dev
+	openjpeg-dev
+	openpgl-dev
+	opensubdiv-dev
+	openvdb-dev
+	openvdb-nanovdb
+	openxr-dev
+	osl
+	osl-dev
+	potrace-dev
+	pugixml-dev
+	pulseaudio-dev
+	py3-numpy-dev
+	py3-zstandard
+	python3-dev
+	samurai
+	sdl2-dev
+	tiff-dev
+	wayland-dev
+	wayland-protocols
+	"
+subpackages="$pkgname-doc $pkgname-shared::noarch $pkgname-headless py3-$pkgname:python"
+source="https://download.blender.org/source/blender-$pkgver.tar.xz
+	0001-musl-fixes.patch
+	"
+
+# secfixes:
+#   3.3.0-r0:
+#     - CVE-2022-2831
+#     - CVE-2022-2832
+#     - CVE-2022-2833
+
+build() {
+	# Headless
+	_build build-headless -C build_files/cmake/config/blender_headless.cmake
+
+	# Full
+	_build build-full -C build_files/cmake/config/blender_full.cmake
+
+	# Python module
+	_build build-py -C build_files/cmake/config/bpy_module.cmake
+}
+
+_build() {
+	local py_version=$(python3 -c 'import sys; print("%i.%i" % (sys.version_info.major, sys.version_info.minor))')
+	local outdir="$1"
+	shift
+
+	cmake -B "$outdir" -G Ninja -Wno-dev \
+		"$@" \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DWITH_PYTHON_INSTALL=OFF \
+		-DWITH_INSTALL_PORTABLE=OFF \
+		-DWITH_LIBS_PRECOMPILED=OFF \
+		-DWITH_SYSTEM_EIGEN3=ON \
+		-DWITH_SYSTEM_GLOG=ON \
+		-DWITH_SYSTEM_LZO=ON \
+		-DWITH_CYCLES_OSL=OFF \
+		-DLLVM_VERSION=$_llvmver \
+		-DPYTHON_VERSION=$py_version
+
+	cmake --build "$outdir"
+}
+
+package() {
+	# Install and rename the headless blender to blender-headless
+	install -Dm755 build-headless/bin/blender "$pkgdir"/usr/bin/blender-headless
+
+	# Install python module
+	DESTDIR="$pkgdir" cmake --install build-py
+
+	# Install the full package
+	DESTDIR="$pkgdir" cmake --install build-full
+}
+
+shared() {
+	pkgdesc="Blender shared runtime data and add-on scripts"
+	depends=""
+	amove usr/share/blender
+}
+
+headless() {
+	pkgdesc="$pkgdesc (headless build)"
+	depends="blender-shared=$pkgver-r$pkgrel"
+
+	amove usr/bin/blender-headless
+}
+
+python() {
+	pkgdesc="Blender modules for Python 3"
+	depends="py3-numpy py3-zstandard"
+	local py_version=$(python3 -c 'import sys; print("%i.%i" % (sys.version_info.major, sys.version_info.minor))')
+
+	mkdir -p "$subpkgdir"/usr/lib/python"$py_version"/site-packages
+
+	# temporary fix, while the build script has a bug
+	mv "$pkgdir"/usr/lib/python"$py_version"/site-packages/bpy/__init__.so "$subpkgdir"/usr/lib/python"$py_version"/site-packages/bpy.so
+
+	rm -rf "$pkgdir"/usr/lib
+
+	# Symlink to the blender-shared files
+	ln -s ../../../share/blender/"$_pkgver" "$subpkgdir"/usr/lib/python"$py_version"/site-packages/"$_pkgver"
+}
+
+sha512sums="
+c37b85d06f5cf8b48cb8c657a9fb6b0ab1325271706fa34039f2993420f7606cd1e2c052173cdea94e9bec2924e7aa4df373e3a0fc1f9c4be336e62211b6bc4b  blender-4.0.2.tar.xz
+0d77a835e123b6e96119b2de5f3abf2471412efccc79773fc35cc3c9fa21ea8a0241eb9f3107b50591c599f1e8dbd9d6ff81714d35781e4979c81870b4679400  0001-musl-fixes.patch
+"

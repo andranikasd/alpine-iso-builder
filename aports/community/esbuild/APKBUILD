@@ -1,0 +1,53 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=esbuild
+pkgver=0.19.8
+pkgrel=0
+pkgdesc="Extremely fast JavaScript bundler and minifier"
+url="https://esbuild.github.io/"
+license="MIT"
+arch="all"
+makedepends="go nodejs"
+source="https://github.com/evanw/esbuild/archive/v$pkgver/esbuild-$pkgver.tar.gz"
+options="net" # fetch dependencies
+
+export GOPATH="$srcdir"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build \
+		-ldflags="-X main.version=$pkgver" \
+		-v ./cmd/esbuild
+
+	node scripts/esbuild.js npm/esbuild/package.json --version
+	node scripts/esbuild.js ./esbuild --neutral
+
+	# binary path override
+	sed -i '1s#^#var ESBUILD_BINARY_PATH = "/usr/bin/esbuild";\n#' \
+		npm/esbuild/lib/main.js
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 esbuild "$pkgdir"/usr/bin/esbuild
+
+	local destdir=/usr/lib/node_modules/esbuild
+
+	install -d \
+		"$pkgdir"/$destdir/bin \
+		"$pkgdir"/$destdir/lib
+
+	install -Dm644 -t "$pkgdir"/$destdir npm/esbuild/package.json
+	install -Dm644 -t "$pkgdir"/$destdir/lib npm/esbuild/lib/*
+	ln -s /usr/bin/esbuild "$pkgdir"/$destdir/bin/esbuild
+}
+
+sha512sums="
+3462475f8705f1390c8d018206201bb6e06c12a069dcb2a15cf83ba8efeb3da4f2882af110faed1465abe2e54a8392d166a8cd771e15a120b7de55bf1a9039ee  esbuild-0.19.8.tar.gz
+"

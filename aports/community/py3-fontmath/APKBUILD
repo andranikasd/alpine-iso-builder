@@ -1,0 +1,41 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=py3-fontmath
+pkgver=0.9.3
+pkgrel=2
+pkgdesc="set of objects for performing math operations on font data"
+url="https://github.com/robotools/fontMath"
+arch="noarch"
+license="MIT"
+depends="py3-fonttools python3"
+makedepends="
+	py3-gpep517
+	py3-installer
+	py3-setuptools
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/robotools/fontMath/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/fontMath-$pkgver"
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/fontMath-*.whl
+}
+
+sha512sums="
+12e9f032ccff4cd696c21bf5af80ea89591efb4e0a66f9e6d6d09be6794043f54b41643aa792f1800db0f4a62599b02643bdafc8de612a3d8a1aa66a5e9508a1  py3-fontmath-0.9.3.tar.gz
+"

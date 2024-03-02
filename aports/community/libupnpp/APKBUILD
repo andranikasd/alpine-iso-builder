@@ -1,0 +1,29 @@
+# Contributor: Marvin Preuss <marvin@xsteadfastx.org>
+# Maintainer: Marvin Preuss <marvin@xsteadfastx.org>
+pkgname=libupnpp
+pkgver=0.26.2
+pkgrel=0
+pkgdesc="C++ wrapper for libupnp"
+url="https://framagit.org/medoc92/libupnpp"
+arch="all"
+license="LGPL-2.0-or-later"
+options="!check"
+makedepends="curl-dev expat-dev libnpupnp-dev"
+subpackages="$pkgname-dev"
+source="libupnpp-$pkgver.tar.gz::https://www.lesbonscomptes.com/upmpdcli/downloads/libupnpp-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--build=$CBUILD \
+		--host=$CHOST
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+320f20e3dc0062cfc4d2852561d655ab6e1ca5d6390dfc204867afb097c684fae653cb24c1bda874f8916b6bb55cfedb881236da69c56677a287751fec08981a  libupnpp-0.26.2.tar.gz
+"

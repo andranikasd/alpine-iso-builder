@@ -1,0 +1,39 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gnote
+pkgver=44.1
+pkgrel=1
+pkgdesc="Gnote is a port of Tomboy to C++"
+url="https://wiki.gnome.org/Apps/Gnote"
+arch="all !s390x" # error: 'convert_return_gchar_ptr_to_stdstring' is not a member of 'Glib'
+license="GPL-3.0-or-later"
+depends="dbus:org.freedesktop.Secrets"
+makedepends="
+	appstream-glib
+	desktop-file-utils
+	glibmm-dev
+	gspell-dev
+	gtk+3.0-dev
+	gtkmm3-dev
+	itstool
+	libsecret-dev
+	libxslt-dev
+	meson
+	util-linux-dev
+	"
+options="!check" # missing dep: unittestcpp
+subpackages="$pkgname-dbg $pkgname-lang $pkgname-doc"
+source="https://download.gnome.org/sources/gnote/${pkgver%.*}/gnote-$pkgver.tar.xz"
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+89364d161d6ecc11822b89dec0353d0e20bc08d883573f324e4980ff2420361ddeb326213eb668fba4ce8de7d5d9668a1a058666ad2b81658ef94f8a65b87363  gnote-44.1.tar.xz
+"

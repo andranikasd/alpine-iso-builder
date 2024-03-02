@@ -1,0 +1,36 @@
+# Contributor: Alan Lacerda <alacerda@alpinelinux.org>
+# Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
+pkgname=mate-session-manager
+pkgver=1.26.1
+pkgrel=0
+pkgdesc="The MATE session manager"
+url="https://github.com/mate-desktop/mate-session-manager"
+arch="all"
+license="GPL-2.0-or-later"
+depends="mate-common mate-desktop"
+makedepends="intltool libtool dconf-dev dbus-glib-dev gtk+3.0-dev
+	libsm-dev mate-desktop-dev elogind-dev"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/mate-session-manager-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--sysconfdir=/etc \
+		--prefix=/usr \
+		--with-elogind
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+cc3ce559693b3b182e73fb9303e784c63918fabe5fee14f1f254357dc0897c3d325f15fbe363b9bb401218b2ad1864848749f536e9d69d100227b444e174a832  mate-session-manager-1.26.1.tar.xz
+"

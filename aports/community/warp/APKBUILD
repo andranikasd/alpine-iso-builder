@@ -1,0 +1,43 @@
+# Contributor: knuxify <knuxify@gmail.com>
+# Maintainer: knuxify <knuxify@gmail.com>
+pkgname=warp
+pkgver=0.6.2
+pkgrel=0
+pkgdesc="Fast and secure file transfer"
+url="https://apps.gnome.org/en/app/app.drey.Warp/"
+# rust-ring
+arch="all !ppc64le !s390x !riscv64"
+license="GPL-3.0-or-later"
+depends_doc="yelp"
+makedepends="cargo
+	desktop-file-utils
+	gtk4.0-dev
+	itstool
+	libadwaita-dev
+	meson
+	rust
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://gitlab.gnome.org/World/warp/-/archive/v$pkgver/warp-v$pkgver.tar.gz"
+builddir="$srcdir/warp-v$pkgver"
+options="!check" # no tests
+
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild -v -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+f181e0f2d612f28ce81f2784179b69531d86c3c846b4c16278603e3167f62d8182fd7e11524686f8f2de84ab0ac604a8e3cb0455ed5d88685d2850b772754db2  warp-v0.6.2.tar.gz
+"

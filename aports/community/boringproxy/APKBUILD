@@ -1,0 +1,31 @@
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=boringproxy
+pkgver=0.10.0
+pkgrel=10
+pkgdesc="Simple tunneling reverse proxy with a fast web UI and auto HTTPS"
+url="https://github.com/boringproxy/boringproxy"
+options="!check" # no tests
+arch="all"
+license="MIT"
+makedepends="go inkscape"
+source="$pkgname-$pkgver.tar.gz::https://github.com/boringproxy/boringproxy/archive/refs/tags/v$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	# from ./scripts/generate_logo.sh
+	inkscape -w 192 -h 192 logo.svg -o logo.png
+
+	go build -ldflags "-X main.Version=$pkgver" \
+		-o boringproxy ./cmd/boringproxy
+}
+
+package() {
+	install -Dm0755 boringproxy -t "$pkgdir"/usr/bin
+}
+
+sha512sums="
+c4ce808309edde3f89463b383e0b4657083e42a6d2c09b15e5f442cd296b070bbb6f78bcc4f9b2e7513b56802149f1d0a61ead8967353016432b52f77737bc96  boringproxy-0.10.0.tar.gz
+"

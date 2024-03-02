@@ -1,0 +1,38 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Contributor: Nathan Angelacos <nangel@alpinelinux.org>
+# Maintainer: Nathan Angelacos <nangel@alpinelinux.org>
+pkgname=xorgxrdp
+pkgver=0.9.19
+pkgrel=0
+pkgdesc="Xorg drivers for xrdp"
+options="!check" # Testsuite is non-functional
+url="https://github.com/neutrinolabs/xorgxrdp"
+arch="all"
+license="X11"
+makedepends="xorg-server-dev xrdp-dev nasm"
+checkdepends="coreutils xdpyinfo"
+subpackages="$pkgname-dev"
+source="https://github.com/neutrinolabs/xorgxrdp/releases/download/v$pkgver/xorgxrdp-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+ddde47133df70dc401bc6ce29c2d2562dec47e8c81cdd3415a185396f2db75d663586b426aa36b27f696ed9e046cbb4a4c05553b64688a36ec0bd6966c527667  xorgxrdp-0.9.19.tar.gz
+"

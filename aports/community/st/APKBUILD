@@ -1,0 +1,45 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=st
+pkgver=0.9
+pkgrel=1
+pkgdesc="Simple terminal emulator for X"
+url="https://st.suckless.org"
+arch="all"
+license="MIT"
+depends="ncurses-terminfo-base font-liberation"
+makedepends="fontconfig-dev freetype-dev libx11-dev libxext-dev libxft-dev"
+subpackages="$pkgname-doc $pkgname-dbg"
+source="https://dl.suckless.org/st/st-$pkgver.tar.gz"
+
+provides="st-virtual"
+provider_priority=100
+
+prepare() {
+	default_prepare
+	sed -i '/tic/d' Makefile
+}
+
+build() {
+	make
+}
+
+package() {
+	make install PREFIX=/usr DESTDIR="$pkgdir"
+	mkdir -p "$pkgdir"/usr/share/applications
+
+	cat > "$pkgdir"/usr/share/applications/st.desktop <<-EOF
+		[Desktop Entry]
+		Name=st
+		Comment=st is a simple virtual terminal emulator for X which sucks less
+		Exec=st
+		Terminal=false
+		Type=Application
+		Icon=gnome-xterm
+		Categories=System;TerminalEmulator;
+	EOF
+}
+
+sha512sums="
+8d996a68d55c63d84da9962911b076ef437842e8cd83d74672d95531dfbaea91e049430886459a99e859ec760bb3754e94bbe1f646410998725e5a8997fb70ea  st-0.9.tar.gz
+"

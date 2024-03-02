@@ -1,0 +1,41 @@
+# Contributor: Michael Mason <ms13sp@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=freetds
+pkgver=1.4.10
+pkgrel=0
+pkgdesc="Tabular Datastream Library"
+url="https://www.freetds.org/"
+arch="all"
+license="GPL-2.0-or-later OR LGPL-2.0-or-later"
+makedepends="openssl-dev>3 linux-headers readline-dev unixodbc-dev"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+source="https://www.freetds.org/files/stable/freetds-$pkgver.tar.bz2"
+options="!check"  # tests require running SQL server http://www.freetds.org/userguide/confirminstall.htm#TESTS
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--enable-msdblib \
+		--with-openssl=/usr \
+		--enable-odbc \
+		--with-unixodbc=/usr
+	make
+}
+
+check() {
+	cd "$builddir"/src/replacements
+	make check
+}
+
+package() {
+	make -j1 DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+b4b1f97cd795d9e68c64805f5b79c6bfe54c1171ceeca864edd616334c8be59e4c2cb7d297b5665f1550b021984dd63457af60eb700bf341f706314d3de1dd07  freetds-1.4.10.tar.bz2
+"

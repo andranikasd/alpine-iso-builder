@@ -1,0 +1,112 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=git-annex
+pkgver=10.20240227
+pkgrel=0
+pkgdesc="Manage files with git, without checking their contents into git"
+url="http://git-annex.branchable.com"
+arch="x86_64 aarch64" # limited by ghc
+license="AGPL-3.0-or-later"
+options="net"
+depends="
+	curl
+	git
+	rsync
+	"
+makedepends="
+	alex
+	cabal
+	dbus-dev
+	file-dev
+	ghc
+	gmp-dev
+	gnutls-dev
+	happy
+	libffi-dev
+	libgsasl-dev
+	libxml2-dev
+	ncurses-dev
+	zlib-dev
+	"
+source="
+	https://git.joeyh.name/index.cgi/git-annex.git/snapshot/git-annex-$pkgver.tar.gz
+	https://lab.ilot.io/mirrors/git-annex/-/releases/$pkgver/downloads/config/git-annex-$pkgver-edge.config
+	fix-makefile.patch
+	"
+subpackages="$pkgname-doc $pkgname-bash-completion $pkgname-fish-completion $pkgname-zsh-completion"
+
+# Add / remove '-' between "-f" and "FeatureName" to adjust feature build
+_feature_flags="
+	-fAssistant \
+	-fWebApp \
+	-fPairing \
+	-fProduction \
+	-fTorrentParser \
+	-fMagicMime \
+	-fBenchmark \
+	-f-DebugLocks \
+	-fDbus \
+	-fNetworkBSD \
+	-fGitLfs \
+	-fHttpClientRestricted \
+	"
+_cabal_home="$srcdir/dist"
+
+cabal_update() {
+	default_prepare
+	msg "Freezing $pkgname dependencies"
+
+	# Resolve deps and generate fresh cabal.config with version constraints.
+	HOME="$_cabal_home" cabal update
+	cd "$srcdir/git-annex"*
+	HOME="$_cabal_home" cabal v1-freeze --shadow-installed-packages
+
+	mv "cabal.config" "$startdir/git-annex-$pkgver.config"
+	cd "$startdir"
+
+	if ! abuild checksum; then
+		die "Failed to update checksum, run 'abuild checksum' manually"
+	fi
+}
+
+prepare() {
+	default_prepare
+
+	ln -sf "$srcdir"/git-annex-*.config cabal.config
+
+	# ghc version path
+	export PATH="$PATH:/usr/lib/llvm14/bin"
+
+	# problematic depend install
+	HOME="$_cabal_home" cabal update
+}
+
+build() {
+	# ghc version path
+	export PATH="$PATH:/usr/lib/llvm14/bin"
+
+	msg "Building git-annex-$pkgver"
+	HOME="$_cabal_home" cabal update
+	HOME="$_cabal_home" cabal v1-install \
+		--only-dependencies \
+		--allow-newer=feed:base-compat \
+		$_feature_flags
+	HOME="$_cabal_home" cabal v1-configure $_feature_flags
+	HOME="$_cabal_home" cabal v1-build -j
+	mv dist/build/git-annex/git-annex .
+	ln -s git-annex git-annex-shell
+}
+
+check() {
+	"$builddir"/git-annex test
+}
+
+package() {
+	HOME="$_cabal_home" make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+3889c6fc8a99026c36a4e639524f9a717b6094d4703605e31e918347adc09f61b372e6db89b011f741731bc2367115ba28d65f82ef203e4e3a2049ba0e20cee5  git-annex-10.20240227.tar.gz
+9454be16f0b0436b082e4fa2648c905cb5fe950fc64bff0c173f5df001469a0266696e091cfb24ded603524193b79af9a538dbbc1fb8b7813716cd3434bfcaa7  git-annex-10.20240227-edge.config
+9300f883746d8726f47be6d194b5ac9550e2894669097f3202eca944221665bd3087a81b3f97b21f013eccaa6b5b1fb050e253ac18999c136db20056fadf2ed8  fix-makefile.patch
+"

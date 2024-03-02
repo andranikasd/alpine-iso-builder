@@ -1,0 +1,33 @@
+# Maintainer: Jeff Bilyk <jbilyk@gmail.com>
+pkgname=perl-crypt-des
+_pkgreal=Crypt-DES
+pkgver=2.07
+pkgrel=14
+pkgdesc="Perl DES encryption module"
+url="https://metacpan.org/release/Crypt-DES/"
+arch="all"
+license="Artistic-1.0-Perl OR GPL-1.0-or-later"
+makedepends="perl-dev"
+subpackages="$pkgname-doc"
+source="https://cpan.metacpan.org/authors/id/D/DP/DPARIS/$_pkgreal-$pkgver.tar.gz
+	"
+
+builddir="$srcdir/$_pkgreal-$pkgver"
+
+build() {
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
+}
+
+sha512sums="
+95d40280850290fb2f9b2f26be2f47f2241e0aeeb842bd02c56d667062d65b3b65b9a87c045cbee50604f95f8a0d0b033c92334520de19022decaf77f77c7678  Crypt-DES-2.07.tar.gz
+"

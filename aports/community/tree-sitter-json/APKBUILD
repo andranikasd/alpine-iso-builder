@@ -1,0 +1,25 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=tree-sitter-json
+pkgver=0.20.2
+pkgrel=0
+pkgdesc="JSON grammar for tree-sitter"
+url="https://github.com/tree-sitter/tree-sitter-json"
+arch="all"
+license="MIT"
+makedepends="tree-sitter-dev"
+install_if="tree-sitter-grammars"
+source="https://github.com/tree-sitter/tree-sitter-json/archive/v$pkgver/tree-sitter-json-$pkgver.tar.gz"
+options="!check"  # no tests for shared lib
+
+build() {
+	abuild-tree-sitter build
+}
+
+package() {
+	DESTDIR="$pkgdir" abuild-tree-sitter install
+}
+
+sha512sums="
+511376b7be02c624bc48b0a46dd937f1a5d6def3d2a15a7b61cf71b846ecf98ef8af93f05f861152270ea0dcacc18940f8c25bfbad69e9d5c520485d25dab7f5  tree-sitter-json-0.20.2.tar.gz
+"

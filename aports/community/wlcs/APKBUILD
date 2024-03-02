@@ -1,0 +1,37 @@
+# Contributor: Luca Weiss <luca@z3ntu.xyz>
+# Maintainer: Luca Weiss <luca@z3ntu.xyz>
+pkgname=wlcs
+pkgver=1.7.0
+pkgrel=0
+pkgdesc="Wayland Conformance Test Suite"
+url="https://github.com/MirServer/wlcs"
+arch="all"
+license="GPL-3.0-only"
+makedepends="cmake gtest-dev wayland-dev boost-dev samurai"
+subpackages="$pkgname-dev"
+source="https://github.com/MirServer/wlcs/releases/download/v$pkgver/wlcs-$pkgver.tar.xz"
+options="!check" # No test suite
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DWLCS_BUILD_ASAN=False \
+		-DWLCS_BUILD_TSAN=False \
+		-DWLCS_BUILD_UBSAN=False \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+ac8d33eef2ba7ebaaff46967e23f353c7eb41035568f3c703a05fe8f291602487b4b5a7e71ff72d00c41eaa8283a8fc4e5d3533385a449794986f667ae292240  wlcs-1.7.0.tar.xz
+"

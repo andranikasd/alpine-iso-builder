@@ -1,0 +1,43 @@
+# Contributor: Kevin Daudt <kdaudt@alpinelinux.org>
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
+pkgname=ruby-erubi
+pkgver=1.12.0
+pkgrel=2
+pkgdesc="small ERB implementation"
+url="https://github.com/jeremyevans/erubi"
+arch="noarch"
+license="MIT"
+depends="ruby"
+checkdepends="ruby-minitest ruby-rake"
+options="!check" # requires coveralls
+source="$pkgname-$pkgver.tar.gz::https://github.com/jeremyevans/erubi/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/erubi-$pkgver"
+
+build() {
+	gem build erubi.gemspec
+}
+
+check() {
+	rake spec
+}
+
+package() {
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
+
+	gem install \
+		--local \
+		--install-dir "$gemdir" \
+		--bindir "$pkgdir/usr/bin" \
+		--ignore-dependencies \
+		--no-document \
+		--verbose \
+		erubi
+
+	rm -r "$gemdir"/cache \
+		"$gemdir"/extensions \
+		"$gemdir"/doc
+}
+
+sha512sums="
+6243b6e1c4360ceb1eb4bc3ce4492cebcf071e526be43f7393a789e4b0eaf43b6ed770b5baec7cbab4b6a563d4dc821e56a8e4222ad7a13a852d74dcb7c5552a  ruby-erubi-1.12.0.tar.gz
+"

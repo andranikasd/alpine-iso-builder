@@ -1,0 +1,90 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kdepim-addons
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+# ppc64le, s390x and riscv64 blocked by qt5-qtwebengine
+arch="all !armhf !ppc64le !s390x !riscv64"
+url="https://kontact.kde.org/"
+pkgdesc="Addons for KDE PIM applications"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later"
+makedepends="
+	akonadi-calendar-dev
+	akonadi-contacts-dev
+	akonadi-dev
+	akonadi-import-wizard-dev
+	akonadi-notes-dev
+	discount-dev
+	extra-cmake-modules
+	gpgme-dev
+	grantlee-dev
+	grantleetheme-dev
+	incidenceeditor-dev
+	kaddressbook-dev
+	kcalendarcore5-dev
+	kcalutils-dev
+	kconfig5-dev
+	kcontacts5-dev
+	kdbusaddons5-dev
+	kdeclarative5-dev
+	kholidays5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kidentitymanagement-dev
+	kimap-dev
+	kio5-dev
+	kitinerary-dev
+	kmailtransport-dev
+	kontactinterface-dev
+	kparts5-dev
+	kpimtextedit-dev
+	kpkpass-dev
+	ktnef-dev
+	kxmlgui5-dev
+	libgravatar-dev
+	libkdepim-dev
+	libkleo-dev
+	libksieve-dev
+	mailcommon-dev
+	mailimporter-dev
+	messagelib-dev
+	pimcommon-dev
+	prison5-dev
+	qt5-qtbase-dev
+	qt5-qtwebengine-dev
+	samurai
+	syntax-highlighting5-dev
+	"
+checkdepends="
+	drkonqi
+	xvfb-run
+	"
+_repo_url="https://invent.kde.org/pim/kdepim-addons.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kdepim-addons-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+options="!check" # Require OpenGL and running dbus
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DKDEPIMADDONS_BUILD_EXAMPLES=OFF
+	cmake --build build
+}
+
+check() {
+	xvfb-run ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+ee9990b4ad3c838c70199b515361eff2b2d756c9c9be5c9a74f65bc1bf3177e77a59f0054968be672284cd65ecb0c6d1bcc4787c998e9e0fbc3820605285eb4a  kdepim-addons-23.08.5.tar.xz
+"

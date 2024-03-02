@@ -1,0 +1,42 @@
+# Contributor: Newbyte <newbyte@postmarketos.org>
+# Maintainer: team/gnome <newbyte@postmarketos.org>
+pkgname=loupe
+pkgver=45.3
+pkgrel=0
+pkgdesc="Image viewer application written with GTK 4 and Rust"
+url="https://gitlab.gnome.org/GNOME/loupe"
+# s390x: Multple definitions in Cargo dependency Nix 0.26.2
+arch="all !s390x"
+license="GPL-3.0-or-later"
+depends="glycin"
+makedepends="
+	cargo
+	desktop-file-utils
+	glib-dev
+	gtk4.0-dev
+	itstool
+	lcms2-dev
+	libadwaita-dev
+	libgweather4-dev
+	meson
+	"
+checkdepends="appstream-glib desktop-file-utils"
+subpackages="$pkgname-lang"
+source="https://gitlab.gnome.org/GNOME/loupe/-/archive/$pkgver/loupe-$pkgver.tar.gz"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+2b1ed4335f26f4cbae8ff6e5531d736417bc693c4f19d49067f9c7ef0ef1ace5efabb7dd389eb2cbebabb8c7d40cb05630a88aa74b1d223146107a0fef27d204  loupe-45.3.tar.gz
+"

@@ -1,0 +1,35 @@
+# Contributor: Jiri Kastner <cz172638@gmail.com>
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=py3-jaraco.collections
+pkgver=5.0.0
+pkgrel=0
+pkgdesc="jaraco - Module for text manipulation"
+url="https://github.com/jaraco/jaraco.collections"
+arch="noarch"
+license="MIT"
+depends="py3-jaraco.classes py3-jaraco.text"
+# py3-setuptools_scm is needed to set python module version
+makedepends="py3-gpep517 py3-setuptools py3-setuptools_scm py3-wheel"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/j/jaraco.collections/jaraco.collections-$pkgver.tar.gz"
+builddir="$srcdir/jaraco.collections-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/jaraco.collections-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+bc4bf9159c3f2878fb3ed57e311c894986fa106af96423a612f25dbefb51f8dfc77fa1468612a224fbe26c64270745ff1c1db7d05d7c3f5d51040a8773298a73  jaraco.collections-5.0.0.tar.gz
+"

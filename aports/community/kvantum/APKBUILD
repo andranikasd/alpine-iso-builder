@@ -1,0 +1,94 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: knuxify <knuxify@gmail.com>
+pkgname=kvantum
+pkgver=1.0.10
+pkgrel=1
+pkgdesc="SVG-based theme engine for Qt"
+options="!check" # No testsuite
+url="https://github.com/tsujan/Kvantum"
+arch="all !armhf" # Limited by kwindowsystem-dev
+license="GPL-2.0-or-later"
+depends="hicolor-icon-theme"
+makedepends="
+	cmake
+	kwindowsystem5-dev
+	libx11-dev
+	libxext-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	qt5-qttools-dev
+	qt5-qtx11extras-dev
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	samurai
+	"
+subpackages="$pkgname-lang $pkgname-qt5:_qt5 $pkgname-qt6:_qt6 $pkgname-themes::noarch"
+install="$pkgname.post-install $pkgname.post-upgrade"
+source="$pkgname-$pkgver.tar.gz::https://github.com/tsujan/Kvantum/archive/V$pkgver/kvantum-$pkgver.tar.gz"
+builddir="$srcdir/Kvantum-$pkgver/Kvantum"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build-qt5 -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DENABLE_QT4=OFF \
+		$CMAKE_CROSSOPTS
+	cmake --build build-qt5
+
+	cmake -B build-qt6 -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DENABLE_QT5=OFF \
+		$CMAKE_CROSSOPTS
+	cmake --build build-qt6
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build-qt5
+	DESTDIR="$pkgdir" cmake --install build-qt6
+	rm -rf "$pkgdir"/usr/share/kde4
+}
+
+lang() {
+	pkgdesc="Languages for package $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel lang"
+
+	# We can't use default_lang since there's no /usr/share/locale, only
+	# these two directories:
+	amove usr/share/kvantumpreview/translations
+	amove usr/share/kvantummanager/translations
+}
+
+_qt5() {
+	pkgdesc="$pkgdesc (Qt5 support)"
+	install_if="$pkgname=$pkgver-r$pkgrel qt5-qtbase"
+	depends="kvantum"
+
+	amove usr/lib/qt5
+}
+
+_qt6() {
+	pkgdesc="$pkgdesc (Qt6 support)"
+	install_if="$pkgname=$pkgver-r$pkgrel qt6-qtbase"
+	depends="kvantum"
+
+	amove usr/lib/qt6
+}
+
+themes() {
+	pkgdesc="$pkgdesc (Pre-installed themes)"
+	depends="kvantum"
+
+	amove usr/share/color-schemes
+	amove usr/share/Kvantum
+}
+
+sha512sums="
+fb31f424a16c37eafaaa0a1cdddde165bcaa58ed6ea3ef76e77d689c2b8b47e516a651d066712eaf14b1344e4b30955ce6c955367caf25d51f2aaa2c8970b0fd  kvantum-1.0.10.tar.gz
+"

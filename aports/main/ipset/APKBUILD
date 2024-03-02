@@ -1,0 +1,43 @@
+# Contributor: Kaarle Ritvanen <kunkku@alpinelinux.org>
+# Maintainer: Kaarle Ritvanen <kunkku@alpinelinux.org>
+pkgname=ipset
+pkgver=7.21
+pkgrel=0
+pkgdesc="Manage Linux IP sets"
+url="https://ipset.netfilter.org/"
+arch="all"
+license="GPL-2.0-only"
+depends_dev="libmnl-dev"
+makedepends="$depends_dev automake autoconf curl libtool linux-headers"
+checkdepends="bash iptables"
+options="!check" # Tests require privileges to load kernel modules
+subpackages="$pkgname-dev $pkgname-doc $pkgname-openrc"
+source="https://ipset.netfilter.org/ipset-$pkgver.tar.bz2
+	ipset.initd
+	"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--with-kmod=no \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make tests
+}
+
+package() {
+	make install DESTDIR="$pkgdir"
+
+	mkdir -p "$pkgdir/etc/init.d" \
+		"$pkgdir/etc/ipset.d"
+	install -m 755 "$srcdir/ipset.initd" "$pkgdir/etc/init.d/ipset"
+}
+
+sha512sums="
+175c6516c2091c57738a0324678d8d016e4d7f18fa03cb0dcc502391cac4caf4db1e757f61ad2fe312c1dbe431ec9cfabbc8e15a64a94ebd2fa903155b27c88f  ipset-7.21.tar.bz2
+4c4492258a39b94ef7cdf193d73060af28bef05aad305743f9db698f08d4e89352788e72ef98fad7c099aef0937f333e0b84a5df0ae27740fa2626654576f89c  ipset.initd
+"

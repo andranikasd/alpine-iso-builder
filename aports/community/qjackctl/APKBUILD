@@ -1,0 +1,40 @@
+# Contributor: David Demelier <markand@malikania.fr>
+# Maintainer: David Demelier <markand@malikania.fr>
+pkgname=qjackctl
+pkgver=0.9.13
+pkgrel=0
+pkgdesc="GUI interface for JACK"
+url="https://qjackctl.sourceforge.io"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	alsa-lib-dev
+	cmake
+	dbus-dev
+	jack-dev
+	portaudio-dev
+	qt6-qtbase-dev
+	qt6-qttools-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+subpackages="$pkgname-doc"
+source="https://sourceforge.net/projects/qjackctl/files/qjackctl/$pkgver/qjackctl-$pkgver.tar.gz
+	"
+options="!check" # No tests.
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+89b9d5212654267030f30020085ad3dfe674a041e200796144d1441ba12630e963a06e405de5ab7c27d9ebc42fd8fa0a970bf59b91837dbc7580147db6adc9bc  qjackctl-0.9.13.tar.gz
+"

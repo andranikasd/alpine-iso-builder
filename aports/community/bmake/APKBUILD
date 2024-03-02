@@ -1,0 +1,51 @@
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=bmake
+pkgver=20240212
+pkgrel=0
+pkgdesc="Portable version of the NetBSD make build tool"
+url="https://www.crufty.net/help/sjg/bmake.html"
+arch="all"
+license="BSD-2-Clause"
+subpackages="$pkgname-doc"
+checkdepends="tzdata"
+source="https://www.crufty.net/ftp/pub/sjg/bmake-$pkgver.tar.gz
+	separate-tests.patch
+	"
+builddir="$srcdir/$pkgname"
+
+# Reset MAKEFLAGS since it might contain options not supported
+# by bmake. This is, for instance, the case on the builders.
+export MAKEFLAGS="-j${JOBS:-1}"
+
+prepare() {
+	default_prepare
+
+	# FIXME: Disable tests failing on musl.
+	sed -i unit-tests/Makefile \
+		-e "/deptgt-delete_on_error/d"
+}
+
+build() {
+	sh ./boot-strap --with-default-sys-path=/usr/share/mk op=build
+}
+
+check() {
+	sh ./boot-strap op=test
+}
+
+package() {
+	sh ./boot-strap --prefix=/usr --with-mksrc=/usr/share/mk \
+			--install-destdir="$pkgdir" op=install
+
+	rm -rf "$pkgdir"/usr/share/man/cat1
+	install -Dm644 bmake.1 \
+		"$pkgdir"/usr/share/man/man1/bmake.1
+
+	install -Dm644 README ChangeLog \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+sha512sums="
+f6f5db408262768d551067b9f4c365fdadf7e8702b0e8eb52a86840cc28fbbd0eef023c82cadbe6a7f94794b9392e3c83902a1e18accf68af5fcf391dfeadf16  bmake-20240212.tar.gz
+04217b04aca4252f54c836e982d95106a09166370f84fa672c418d1b1799adb9697f5ac9eb10a6ee3a8527e39196a37ad92bb5945733407bf9ec1a7f223183bb  separate-tests.patch
+"

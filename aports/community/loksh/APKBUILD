@@ -1,0 +1,30 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=loksh
+pkgver=7.4
+pkgrel=0
+pkgdesc="A Linux port of OpenBSD's ksh"
+url="https://github.com/dimkr/$pkgname"
+arch="all"
+license="Public-Domain"
+makedepends="ncurses-dev meson"
+install="$pkgname.post-install $pkgname.post-upgrade $pkgname.pre-deinstall"
+options="!check" # upstream doesn't have a test suite
+subpackages="$pkgname-doc"
+source="loksh-$pkgver.tar.xz::https://github.com/dimkr/loksh/releases/download/$pkgver/loksh-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		--prefix=/ \
+		--bindir=/bin \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+3f0e190363f9e52842fc00375206dfe16fa8b599fc8d7a2c39c6b22deb602a38e0b5211493066a0cd310574c4bd9ec76d34bf715746c6235f51c60f857212f88  loksh-7.4.tar.xz
+"

@@ -1,0 +1,38 @@
+# Contributor: Seung Soo Mun <hamletmun@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=asciidoctor
+pkgver=2.0.20
+pkgrel=1
+pkgdesc="Converter for AsciiDoc to HTML5, DocBook 5 (or 4.5) and other formats"
+url="https://rubygems.org/gems/asciidoctor"
+arch="noarch"
+license="MIT"
+options="!check"
+depends="ruby"
+source="https://rubygems.org/downloads/asciidoctor-$pkgver.gem"
+
+package() {
+	local gemdir="$(ruby -e 'puts Gem.default_dir')"
+
+	gem install \
+		--local \
+		--install-dir "$pkgdir"/$gemdir \
+		--ignore-dependencies \
+		--verbose \
+		--no-document \
+		"$srcdir"/$pkgname-$pkgver.gem
+
+	rm -rf "$pkgdir"/$gemdir/cache
+
+	cd "$pkgdir"
+	local i; for i in usr/lib/ruby/gems/*/bin/*; do
+		if [ -e "$i" ]; then
+			mkdir -p "$pkgdir"/usr/bin
+			ln -s /$i "$pkgdir"/usr/bin/
+		fi
+	done
+}
+
+sha512sums="
+de0179ae27443ddd04153ae0c941939523372203c561e5bb8a900af80b1056d6a3d8b554015d37836efb9bdf870d4d115272607f4d548956fc240c028abfbcf2  asciidoctor-2.0.20.gem
+"

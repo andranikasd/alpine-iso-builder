@@ -1,0 +1,36 @@
+# Contributor: prspkt <prspkt@protonmail.com>
+# Maintainer: prspkt <prspkt@protonmail.com>
+pkgname=scrcpy
+pkgver=2.3.1
+pkgrel=1
+pkgdesc="Display and control your Android device"
+url="https://github.com/Genymobile/scrcpy"
+arch="all !s390x !ppc64le" # limited by android-tools
+license="Apache-2.0"
+options="!check" # no test suite
+depends="android-tools"
+makedepends="ffmpeg-dev mesa-dev meson sdl2-dev libusb-dev"
+subpackages="$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-zsh-completion"
+source="scrcpy-$pkgver.tar.gz::https://github.com/Genymobile/scrcpy/archive/v$pkgver.tar.gz
+	https://github.com/Genymobile/scrcpy/releases/download/v$pkgver/scrcpy-server-v$pkgver"
+
+build() {
+	abuild-meson \
+		-Dcompile_server=false \
+		-Dprebuilt_server=/usr/share/scrcpy/scrcpy-server-v$pkgver \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+	install -Dm644 "$srcdir"/scrcpy-server-v$pkgver \
+		"$pkgdir"/usr/share/scrcpy/scrcpy-server
+}
+
+sha512sums="
+4ef9398f23740edf8d09bb18ecc9f6e120b7d3991b8d359836f5e3f4a568484307a1f020da2edeb3193a4f4d6820b5948d6b80600e7ceeed869a2ed8136bfefd  scrcpy-2.3.1.tar.gz
+9360ad9321554bc9ab38833720e20fada1e0e3a9d1302fced2bbc035b87ea2bbc6802fa8d52fe73ae8d9272ac0f1759c6042badd0043392b90cb68c5c89fc57c  scrcpy-server-v2.3.1
+"

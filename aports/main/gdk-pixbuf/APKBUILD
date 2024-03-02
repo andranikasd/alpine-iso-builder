@@ -1,0 +1,65 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gdk-pixbuf
+pkgver=2.42.10
+pkgrel=6
+pkgdesc="GTK+ image loading library"
+url="https://wiki.gnome.org/Projects/GdkPixbuf"
+arch="all"
+license="LGPL-2.1-or-later"
+depends="shared-mime-info"
+makedepends="
+	glib-dev
+	gobject-introspection-dev
+	libjpeg-turbo-dev
+	libpng-dev
+	meson
+	py3-docutils
+	tiff-dev
+	"
+install="$pkgname.pre-deinstall"
+triggers="$pkgname.trigger=/usr/lib/gdk-pixbuf-2.0/*/loaders"
+subpackages="$pkgname-dbg $pkgname-doc $pkgname-lang $pkgname-dev $pkgname-loaders"
+source="https://download.gnome.org/sources/gdk-pixbuf/${pkgver%.*}/gdk-pixbuf-$pkgver.tar.xz"
+
+case "$CARCH" in
+x86|arm*)
+	# https://gitlab.gnome.org/GNOME/gdk-pixbuf/-/issues/215
+	options="$options !check"
+esac
+
+# secfixes:
+#   2.42.8-r0:
+#     - CVE-2021-44648
+#   2.42.2-r0:
+#     - CVE-2020-29385
+#   2.36.6-r1:
+#     - CVE-2017-6311
+#     - CVE-2017-6312
+#     - CVE-2017-6314
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dinstalled_tests=false \
+		-Dtests="$(want_check && echo true || echo false)" \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test -t 10 --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+loaders() {
+	pkgdesc="Metapackage to pull in gdk-pixbuf loaders"
+	mkdir -p "$subpkgdir"
+}
+
+sha512sums="
+ad64963b61ef8cc84ae450328ec8c90a852f974e29ffdd42263ed32de47af93c058f3ffdf91c5d6e9bba815f4e8e8fe5a19422ac1bfb079666339814ac059b3a  gdk-pixbuf-2.42.10.tar.xz
+"

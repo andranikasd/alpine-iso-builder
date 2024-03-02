@@ -1,0 +1,47 @@
+# Contributor: Paul Onyschuk <blink@bojary.koba.pl>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: David Demelier <markand@malikania.fr>
+pkgname=fossil
+pkgver=2.23
+pkgrel=0
+pkgdesc="Simple, high-reliability, distributed software configuration management"
+url="https://www.fossil-scm.org"
+arch="all"
+license="BSD-2-Clause"
+makedepends="openssl-dev>3 tcl-dev zlib-dev"
+checkdepends="coreutils ed tcl-lib"
+subpackages="$pkgname-bash-completion $pkgname-zsh-completion"
+source="https://www.fossil-scm.org/home/tarball/version-$pkgver/fossil-src-$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-src-$pkgver"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--json \
+		--with-th1-docs \
+		--with-th1-hooks \
+		--with-tcl=1 \
+		--with-tcl-private-stubs
+	make TCC="${CC:-gcc} $CFLAGS"
+}
+
+check() {
+	export USER="${USER:-$(id -un)}"
+	make TESTFLAGS="-verbose" test
+}
+
+package() {
+	install -Dm 755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+	# add shell completions
+	install -Dm644 tools/fossil-autocomplete.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/fossil
+	install -Dm644 tools/fossil-autocomplete.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_fossil
+}
+
+sha512sums="
+bba67e16b26b97aa40023a4a2aa3b2abfc9393ec8d3244ec88dab5b7d2c4d46e7d6ee89b008a6bce1f18c96c351c8d41d64f02ba28c0eb3eb04d01e308f3335b  fossil-src-2.23.tar.gz
+"

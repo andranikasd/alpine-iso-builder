@@ -1,0 +1,58 @@
+# Contributor: Luca Weiss <luca@z3ntu.xyz>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=audiotube
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="Client for YouTube Music"
+url="https://invent.kde.org/plasma-mobile/audiotube"
+# armhf blocked by extra-cmake-modules
+# ppc64le, s390x and riscv64 blocked by purpose -> qt5-qtwebengine
+arch="all !armhf !ppc64le !s390x !riscv64"
+license="GPL-2.0-or-later"
+depends="
+	gst-plugins-bad
+	gst-plugins-good
+	kirigami-addons
+	kirigami2
+	purpose5
+	py3-ytmusicapi
+	qt5-qtbase-sqlite
+	qt5-qtimageformats
+	qt5-qtmultimedia
+	yt-dlp
+	"
+makedepends="
+	extra-cmake-modules
+	futuresql-dev
+	kcrash5-dev
+	ki18n5-dev
+	kirigami-addons-dev
+	kirigami2-dev
+	py3-pybind11-dev
+	python3-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/multimedia/audiotube.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/audiotube-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+49f399ee6924e2c498e0e74cbb55587448899becd5afb84ff457413b2127427f466a0592960566b9771f60486ee5749ac5681bc7e3249a500e1bb4be594a6c7e  audiotube-23.08.5.tar.xz
+"

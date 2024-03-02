@@ -1,0 +1,35 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=swayrbar
+pkgver=0.3.8
+pkgrel=0
+pkgdesc="A status command for Sway's swaybar"
+url="https://sr.ht/~tsdh/swayr/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="cargo cargo-auditable"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~tsdh/swayr/archive/swayrbar-$pkgver.tar.gz"
+builddir="$srcdir/swayr-swayrbar-$pkgver"
+
+export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build -p swayrbar --release --frozen
+}
+
+check() {
+	cargo test -p swayrbar --frozen
+}
+
+package() {
+	install -D -m755 target/release/$pkgname -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+5b525fc397bd3548b6dae101448d52cd5f20166091ba513ec5d7eb31f03102343f665ae60e577a1c393b800641b7de2ea195eae23b3b036d86c6b76da873f7bb  swayrbar-0.3.8.tar.gz
+"

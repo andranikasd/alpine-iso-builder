@@ -1,0 +1,31 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=corepins
+pkgver=4.4.0
+pkgrel=1
+pkgdesc="A bookmarking app from C-Suite"
+arch="all"
+url="https://gitlab.com/cubocore"
+license="GPL-3.0-or-later"
+depends="qt5-qtsvg"
+makedepends="qt5-qtbase-dev libcprime-dev cmake ninja"
+source="$pkgname-$pkgver.tar.gz::https://gitlab.com/cubocore/corepins/-/archive/v$pkgver/corepins-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+build() {
+	cmake -B build \
+		-GNinja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+b2304204336e2239dcaa69729106c0e0f5bda0aa5bc3469ae4388face2e61ea28db5108752a7c3e5f56801e932bd3681975a98eecd071f0761526bcb241eba5c  corepins-4.4.0.tar.gz
+"

@@ -1,0 +1,110 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=containers-common
+pkgver=0.57.0
+pkgrel=0
+pkgdesc="Configuration files for container tools"
+url="https://github.com/containers/common"
+license="Apache-2.0"
+arch="noarch"
+options="!check" # no test suite
+makedepends="go-md2man"
+subpackages="$pkgname-doc"
+# Pick the exact versions of common/storage/image vendored in podman.
+# Ideally, they should be the same in skopeo and buildah.
+# Check them with the list_vendors function.
+_common_ver=$pkgver
+_storage_ver=1.51.0
+_image_ver=5.29.0
+_podman_ver=4.8.0
+_skopeo_ver=1.14.0
+_buildah_ver=1.33.2
+_shortnames_ver=2023.02.20
+source="https://github.com/containers/common/archive/v$_common_ver/common-$_common_ver.tar.gz
+	https://github.com/containers/storage/archive/v$_storage_ver/storage-$_storage_ver.tar.gz
+	https://github.com/containers/image/archive/v$_image_ver/image-$_image_ver.tar.gz
+	https://github.com/containers/podman/archive/v$_podman_ver/podman-$_podman_ver.tar.gz
+	https://github.com/containers/skopeo/archive/v$_skopeo_ver/skopeo-$_skopeo_ver.tar.gz
+	https://github.com/containers/buildah/archive/v$_buildah_ver/buildah-$_buildah_ver.tar.gz
+	https://github.com/containers/shortnames/archive/v$_shortnames_ver/shortnames-$_shortnames_ver.tar.gz
+	"
+
+list_vendors() {
+	unpack
+
+	for tool in podman-$_podman_ver skopeo-$_skopeo_ver buildah-$_buildah_ver; do
+		cd "$srcdir"/$tool
+		msg $tool
+		grep github.com/containers/common go.mod
+		grep github.com/containers/storage go.mod
+		grep github.com/containers/image go.mod
+	done
+}
+
+prepare() {
+	default_prepare
+
+	# fix go-md2man path in containers/storage
+	sed -E 's/(GOMD2MAN =).*/\1 go-md2man/' -i "$srcdir"/storage-$_storage_ver/docs/Makefile
+
+	# set default storage driver
+	sed -E 's/(driver =) ""/\1 "overlay"/' -i "$srcdir"/storage-$_storage_ver/storage.conf
+
+	# set unqualified-search-registries
+	sed -E 's/# (unqualified-search-registries =).*/\1 ["docker.io"]/' -i "$srcdir"/image-$_image_ver/registries.conf
+}
+
+build() {
+	cd "$srcdir"/common-$_common_ver
+	make -C docs
+
+	cd "$srcdir"/storage-$_storage_ver
+	make -C docs
+
+	cd "$srcdir"/image-$_image_ver
+	make docs
+}
+
+package() {
+	install -d "$pkgdir"/etc/containers/certs.d
+	install -d "$pkgdir"/etc/containers/oci/hooks.d
+	install -d "$pkgdir"/var/lib/containers/sigstore
+
+	cd "$srcdir"/common-$_common_ver
+	install -Dm644 pkg/config/containers.conf "$pkgdir"/etc/containers/containers.conf
+	install -Dm644 pkg/config/containers.conf "$pkgdir"/usr/share/containers/containers.conf
+	install -Dm644 pkg/seccomp/seccomp.json "$pkgdir"/etc/containers/seccomp.json
+	install -Dm644 pkg/seccomp/seccomp.json "$pkgdir"/usr/share/containers/seccomp.json
+	make -C docs install PREFIX=/usr DESTDIR="$pkgdir"
+
+	cd "$srcdir"/storage-$_storage_ver
+	install -Dm644 storage.conf "$pkgdir"/etc/containers/storage.conf
+	install -Dm644 storage.conf "$pkgdir"/usr/share/containers/storage.conf
+	make -C docs install DESTDIR="$pkgdir"
+
+	cd "$srcdir"/image-$_image_ver
+	install -Dm644 registries.conf "$pkgdir"/etc/containers/registries.conf
+	make install DESTDIR="$pkgdir"
+
+	cd "$srcdir"/skopeo-$_skopeo_ver
+	install -Dm644 default-policy.json "$pkgdir"/etc/containers/policy.json
+	install -Dm644 default.yaml "$pkgdir"/etc/containers/registries.d/default.yaml
+
+	cd "$srcdir"/shortnames-$_shortnames_ver
+	install -Dm644 shortnames.conf "$pkgdir"/etc/containers/registries.conf.d/00-shortnames.conf
+}
+
+doc() {
+	default_doc
+	pkgdesc="Man pages for container tools"
+}
+
+sha512sums="
+b993821040788085ff44e48023a64cea4e3e7e50731c359087bd287168e6849a543d930acbdaff2437fc7951acc46f7183f337dd977215eca814332e6869d1e3  common-0.57.0.tar.gz
+89916b49438bce8bb774b4aa799676d4b3a946a0b5207a1b5241b1a3ac0875b06b3cd8e81d7e23332ceae6010b693516fc31d8c7f75a37e7ad3056a83c75b6c1  storage-1.51.0.tar.gz
+5e670f85fe0b43769667f1a3e710434ab65c4ec2d8c60b0cad4b0ed41c35f84677528f9dfecb0b946de556ebbdd56f4949760432ec49b1b3c691120a323af869  image-5.29.0.tar.gz
+2178a9c8428a0cf2c402e0f299efe2ad9a797143e641a92438112694a4acbdfb69ba8c104c87f4763d001f17cedb709eef24d86460d095a61a64d29a168a2051  podman-4.8.0.tar.gz
+59d329036a97cbeca4de20b15d9dd8adacd5201834b26ae5e5c88b05594b2a7101c22da91f22c35c07a98e41afa28f2c7103e660b3847c7f8c9691f27f4c4146  skopeo-1.14.0.tar.gz
+574c1a249d93edd5f89e106cd192da94235edcff097d9bce841e3b3b3a9588029deddaceb301505114b994e854016c72090cc0016a00ef027b25f3672a3fab32  buildah-1.33.2.tar.gz
+856dbbeb2acda276e9605bd1ecec0f8d65952c597ee2af61dd8909d7d3c04e5ef06c40b69ec4a98f79e623c536850f614c1b0af3a19637e300e7d3a285933193  shortnames-2023.02.20.tar.gz
+"

@@ -1,0 +1,48 @@
+# Contributor: Orhun Parmaksız <orhunparmaksiz@gmail.com>
+# Maintainer: Orhun Parmaksız <orhunparmaksiz@gmail.com>
+pkgname=rustypaste
+pkgver=0.14.4
+pkgrel=0
+pkgdesc="Minimal file upload/pastebin service"
+url="https://github.com/orhun/rustypaste"
+arch="all"
+license="MIT"
+makedepends="cargo zstd-dev openssl-dev cargo-auditable"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/orhun/rustypaste/archive/v$pkgver.tar.gz"
+options="net"
+
+prepare() {
+	default_prepare
+
+	# Rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# Build against system-provided libzstd.
+	mkdir -p .cargo
+	cat >> .cargo/config.toml <<-EOF
+		[target.$target]
+		zstd = { rustc-link-lib = ["zstd"] }
+	EOF
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release --no-default-features --features openssl
+}
+
+check() {
+	cargo test --frozen -- --test-threads 1
+}
+
+package() {
+	install -Dm 755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+	install -Dm 644 config.toml -t "$pkgdir/etc/rustypaste"
+	install -Dm 644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+	install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}
+
+sha512sums="
+539d368121ccc9122654c3ea0456ca0348f9f81a8789376cb63f9cef1c4e3932cf57f5f038c611b052e1ede2759b7c20531ad75ab120571df032cdf1f1ed31d6  rustypaste-0.14.4.tar.gz
+"

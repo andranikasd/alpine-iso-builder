@@ -1,0 +1,38 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-nltk
+_pkgorig=nltk
+pkgver=3.8.1
+pkgrel=2
+pkgdesc="Natural Language Toolkit"
+url="https://github.com/nltk/nltk"
+arch="noarch"
+license="Apache-2.0"
+depends="python3 py3-yaml py3-click py3-regex"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-nose py3-requests"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/nltk/nltk/archive/$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+# tests require nltk-data; use smoke test for now
+check() {
+	PYTHONPATH=build/lib python3 -c "from nltk import *"
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -r "$pkgdir"/usr/lib/python3.*/site-packages/nltk/test
+}
+
+sha512sums="
+5b13eff5d8e628173f5321c293d896919d369bcd586861a7e09bf6fdca2b09f2580902da98ec647bcf9cdc2b33a87c830dda3793de20c31c8bc38c86df8f7930  py3-nltk-3.8.1.tar.gz
+"

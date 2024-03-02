@@ -1,0 +1,33 @@
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Maintainer:
+pkgname=xapp
+pkgver=2.6.1
+pkgrel=0
+pkgdesc="Components which are common to X-Apps"
+arch="all"
+url="https://github.com/linuxmint/xapp"
+license="LGPL-3.0-only"
+makedepends="
+	gobject-introspection-dev
+	libdbusmenu-gtk3-dev
+	libgnomekbd-dev
+	meson
+	py3-gobject3
+	py3-gobject3-dev
+	vala"
+source="https://github.com/linuxmint/xapp/archive/$pkgver/xapp-$pkgver.tar.gz"
+options="!check"  # no tests
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+f96006fffac67b312caba644e8da75209c443688b08254b9bb5b17eb9148e66b35a8b1fe336e8880c7b950f8fc696884d8f5d610092c2cb44357ad3bf3ef43c7  xapp-2.6.1.tar.gz
+"

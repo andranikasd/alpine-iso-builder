@@ -1,0 +1,158 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Hoang Nguyen <folliekazetani@protonmail.com>
+pkgname=nix
+pkgver=2.20.3
+pkgrel=0
+pkgdesc="The purely functional package manager"
+url="https://nixos.org/nix/"
+arch="x86 x86_64 aarch64"  # supported platforms
+license="LGPL-2.1-or-later"
+depends="ca-certificates"
+depends_dev="boost-dev"
+makedepends="
+	$depends_dev
+	autoconf
+	autoconf-archive
+	automake
+	bash
+	bison
+	brotli-dev
+	bsd-compat-headers
+	busybox-static
+	bzip2-dev
+	coreutils
+	curl-dev
+	editline-dev
+	flex
+	gc-dev
+	gtest-dev
+	jq
+	libarchive-dev
+	libgit2-dev
+	libseccomp-dev
+	libsodium-dev
+	libtool
+	lowdown
+	lowdown-dev
+	mdbook
+	nlohmann-json
+	openssl-dev
+	rapidcheck-dev
+	sqlite-dev
+	xz
+	xz-dev
+	"
+pkggroups="nix nixbld"
+install="$pkgname.pre-install"
+subpackages="
+	$pkgname-dev
+	$pkgname-openrc
+	$pkgname-manual::noarch
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/NixOS/nix/archive/$pkgver/nix-$pkgver.tar.gz
+	0001-absPath-Explicitly-check-if-path-is-empty-before-acc.patch
+
+	README.alpine
+	nix-remote.sh
+	nix-daemon.initd
+	no-linkcheck.patch
+	"
+
+case "$CARCH" in
+	x86*) makedepends="$makedepends libcpuid-dev";;
+esac
+
+prepare() {
+	default_prepare
+	autoreconf -vfi
+}
+
+build() {
+	# NOTE: /nix/var is recommended by upstream and we need /nix anyway.
+	bash ./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/nix/var \
+		--with-sandbox-shell=/bin/busybox.static \
+		--enable-embedded-sandbox-shell \
+		--enable-gc
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	cd "$pkgdir"
+
+	# We don't use systemd and only nix-daemon.sh is needed in
+	# /etc/profile.d for multi-user installations.
+	#
+	# See https://github.com/NixOS/nix/issues/5848
+	rm -R etc/init \
+		usr/lib/systemd \
+		etc/profile.d/nix.sh \
+		etc/profile.d/*.fish
+
+	mkdir -p usr/sbin
+	rm -f usr/bin/nix-daemon
+	ln -s ../bin/nix usr/sbin/nix-daemon
+
+	install -m 755 -D "$srcdir"/nix-remote.sh etc/profile.d/nix-remote.sh
+	install -m 755 -D "$srcdir"/nix-daemon.initd etc/init.d/nix-daemon
+	install -m 644 -D "$srcdir"/README.alpine \
+		"$pkgdir"/usr/share/doc/$pkgname/README.alpine
+
+	# Setup build users.
+	# Note: max-jobs should equal number of created nixbld<n> users.
+	install -d -m 0555 etc/nix
+	cat > etc/nix/nix.conf <<-EOF
+		allowed-users = @nix
+		build-users-group = nixbld
+		max-jobs = 4
+	EOF
+
+	# This is based on https://github.com/NixOS/nix/blob/9617a04/scripts/install-multi-user.sh#L525
+	# NOTE: store dir must be /nix/store, otherwise pre-built binaries from
+	#   the standard Nixpkgs channels would not work.
+	install -d -m 1775 -g nixbld \
+		nix/store
+	install -d -m 0755 \
+		nix/var/log/nix/drvs \
+		nix/var/nix/db \
+		nix/var/nix/gcroots \
+		nix/var/nix/manifests \
+		nix/var/nix/profiles/default \
+		nix/var/nix/temproots \
+		nix/var/nix/userpool \
+		nix/var/nix/profile/per-user/root
+	install -d -m 1777 \
+		nix/var/nix/profiles/per-user \
+		nix/var/nix/gcroots/per-user
+}
+
+manual() {
+	pkgdesc="$pkgdesc (HTML manual)"
+
+	amove usr/share/doc/nix/manual
+}
+
+sha512sums="
+dc1b9020c73aaa149df5995fd561db68767cbbe92b6e736301dd2b248afe17cda8a6658cc904055abedf221605a536bfa39313cb6d0b585cc6a4e26691959fe4  nix-2.20.3.tar.gz
+33774588c6043fa70f019d1eb314fbc386841b159c67349e2c992c8a6d6dff217050f1f688e0ca01376eeb5b6f513ccff758c407eb89e013e7217ceafd4d0770  0001-absPath-Explicitly-check-if-path-is-empty-before-acc.patch
+f6a8d67003a6f0cd54dc4dc26051e9f3d18d9c1c1d66c99324e3db017891a6fdd88d7be53de05ab21fa8f7635164a093069416a89cf322ea6f6888df066ea60b  README.alpine
+ad02313f026fe3286c7c2271f26bf074ba2966c12777d7109275555f1a616bf0f99c8f5e45a57161f383091867f1dfd4d84cfae7a6d8a075312608456975dc81  nix-remote.sh
+9e4568db987fbae5097f7bb086e8ad51742c2d229703104fb7e6f240ffb0ca72e57dc305fb238bcee4ec8002d780007af60f241b1f32b6aa413dd579d9c59e75  nix-daemon.initd
+4bf84827e2757a23680d4f3ad118d92d15010801343083dd362d291672a357d566a94f518afc36265628baaea2a0b1e4d87d33e53ba71e3c3ec7545fac66613e  no-linkcheck.patch
+"

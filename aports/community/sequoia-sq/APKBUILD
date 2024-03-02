@@ -1,0 +1,62 @@
+# Maintainer: Simon Rupf <simon@rupf.net>
+pkgname=sequoia-sq
+pkgver=0.34.0
+pkgrel=0
+pkgdesc="Command-line frontends for Sequoia"
+url="https://gitlab.com/sequoia-pgp/sequoia-sq"
+# rust-ring
+arch="all !ppc64le !s390x !riscv64"
+license="GPL-2.0-or-later"
+makedepends="
+	bzip2-dev
+	capnproto-dev
+	cargo
+	cargo-auditable
+	clang-dev
+	openssl-dev
+	sqlite-dev
+	"
+checkdepends="bash"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://gitlab.com/sequoia-pgp/sequoia-sq/-/archive/v$pkgver/sequoia-sq-v$pkgver.tar.bz2"
+builddir="$srcdir/sequoia-sq-v$pkgver"
+options="net" # cargo deps
+
+export CARGO_PROFILE_RELEASE_LTO=thin
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	export CARGO_TARGET_DIR=target
+	cargo auditable build --frozen --release --no-default-features --features crypto-openssl
+}
+
+check() {
+	cargo test --frozen --no-default-features --features crypto-openssl
+}
+
+package() {
+	install -Dm755 target/release/sq \
+		-t "$pkgdir"/usr/bin/
+	install -Dm644 target/release/build/sequoia-sq-*/out/shell-completions/_sq \
+		"$pkgdir"/usr/share/zsh/site-functions/_sq
+	install -Dm644 target/release/build/sequoia-sq-*/out/shell-completions/sq.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/sq
+	install -Dm644 target/release/build/sequoia-sq-*/out/shell-completions/sq.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/sq.fish
+	install -Dm644 target/release/build/sequoia-sq-*/out/man-pages/*.1 \
+		-t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+9276d7b2a8ecae3df6c7b9d7cdc7daaaca53969290be45d1a33be74bbc530314b9b387b4b7f36625e3405bee7d61566eb9880bdb0df289d8fc170eefca693b60  sequoia-sq-v0.34.0.tar.bz2
+"

@@ -1,0 +1,48 @@
+# Contributor: Yura Kushnir <kushnir.yura@gmail.com>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-urllib3
+_pkgname=urllib3
+pkgver=1.26.18
+pkgrel=0
+pkgdesc="HTTP library with thread-safe connection pooling, file post, and more"
+url="https://github.com/urllib3/urllib3"
+arch="noarch"
+license="MIT"
+depends="python3"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/urllib3/urllib3/releases/download/$pkgver/urllib3-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+options="!check" # needs py3-tornado from community
+
+replaces="py-urllib3" # Backwards compatibility
+provides="py-urllib3=$pkgver-r$pkgrel" # Backwards compatibility
+
+# secfixes:
+#   1.26.18-r0:
+#     - CVE-2023-45803
+#   1.26.17-r0:
+#     - CVE-2023-43804
+#   1.25.9-r0:
+#     - CVE-2020-26137
+#   1.26.4-r0:
+#     - CVE-2021-28363
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+c89e93a032bf6b11375c06ef7c5abc1868f93e7655cfdca09e9bd939ad415d206ea159fe151ecd2e5f725e0e18a831c7a5382ad01dbc32264154fc8af7aec156  urllib3-1.26.18.tar.gz
+"

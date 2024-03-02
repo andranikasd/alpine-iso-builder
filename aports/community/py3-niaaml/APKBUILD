@@ -1,0 +1,41 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-niaaml
+_pkgorig=NiaAML
+pkgver=1.2.0
+pkgrel=0
+pkgdesc="Python automated machine learning framework"
+url="https://github.com/lukapecnik/NiaAML"
+arch="noarch"
+license="MIT"
+depends="python3 py3-numpy py3-pandas py3-niapy py3-scikit-learn"
+checkdepends="py3-pytest-xdist"
+makedepends="py3-poetry-core py3-gpep517"
+subpackages="$pkgname-doc $pkgname-pyc"
+source="https://github.com/lukapecnik/NiaAML/archive/$pkgver/$_pkgorig-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/niaaml-$pkgver-py3-none-any.whl
+
+	install -Dm644 docs/paper/10.21105.joss.02949.pdf -t "$pkgdir"/usr/share/doc/$pkgname
+	install -Dm644 CITATION.md -t "$pkgdir"/usr/share/doc/$pkgname
+	install -Dm644 COMPONENTS.md -t "$pkgdir"/usr/share/doc/$pkgname
+}
+
+sha512sums="
+277550856057c5f61fefb7618c9cde9335062f2ee91f69de8028b20284a4c771886363f273f6fb1f6ea619faef6f97bbb36413ee2ed0cf327fc66f46a394be2c  NiaAML-1.2.0.tar.gz
+"

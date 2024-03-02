@@ -1,0 +1,38 @@
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libksba
+pkgver=1.6.6
+pkgrel=0
+pkgdesc="Libksba is a CMS and X.509 access library"
+url="https://www.gnupg.org/software/libksba/index.html"
+arch="all"
+license="LGPL-3.0-only AND GPL-2.0-only AND GPL-3.0-only"
+makedepends="libgpg-error-dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://www.gnupg.org/ftp/gcrypt/libksba/libksba-$pkgver.tar.bz2"
+
+# secfixes:
+#   1.6.3-r0:
+#     - CVE-2022-47629
+#   1.6.2-r0:
+#     - CVE-2022-3515
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+3b30bef9452ae0c52b4a52e9145fbd6dc57cf7a2b59302e3af063db6b45384e8ed7af62604efd7939b9e0cb5931e946b15609888e9699fafe4acbb0cbf138087  libksba-1.6.6.tar.bz2
+"

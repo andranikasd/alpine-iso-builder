@@ -1,0 +1,53 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kig
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="Interactive Geometry"
+url="https://edu.kde.org/kig"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	karchive5-dev
+	kconfigwidgets5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kparts5-dev
+	ktexteditor5-dev
+	kxmlgui5-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/education/kig.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kig-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+6029b26af85faadcfa35487d021eaa3e8b0d0133067be64fb01d65eac90fcd88cf6f08e0f13b6fc115b61e085f981298a2aba8913e891d91c059fbc1ff453130  kig-23.08.5.tar.xz
+"

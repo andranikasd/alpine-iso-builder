@@ -1,0 +1,87 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=gwenview
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+# ppc64le, s390x and riscv64 blocked by qt5-qtwebengine -> purpose
+arch="all !armhf !ppc64le !s390x !riscv64"
+url="https://kde.org/applications/graphics/org.kde.gwenview"
+pkgdesc="Fast and easy to use image viewer by KDE"
+license="GPL-2.0-only"
+depends="
+	kimageformats5
+	qt5-qtimageformats
+	"
+makedepends="
+	baloo5-dev
+	extra-cmake-modules
+	kactivities5-dev
+	kcolorpicker-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kimageannotator-dev
+	kio5-dev
+	kitemmodels5-dev
+	knotifications5-dev
+	kparts5-dev
+	kwindowsystem5-dev
+	lcms2-dev
+	libjpeg-turbo-dev
+	libkdcraw-dev
+	libpng-dev
+	purpose5-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	qt5-qtx11extras-dev
+	samurai
+	"
+checkdepends="
+	dbus
+	kinit5
+	xvfb-run
+	"
+_repo_url="https://invent.kde.org/graphics/gwenview.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/gwenview-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	cd build
+	# urlutilstest and placetreemodeltest are broken
+	# recursivedirmodeltest and contextmanagertest requires running DBus
+	local skipped_tests="("
+	local tests="
+		contextmanager
+		documenttest
+		jpegcontenttest
+		placetreemodel
+		recursivedirmodel
+		urlutils
+		"
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)test"
+	CTEST_OUTPUT_ON_FAILURE=TRUE dbus-run-session xvfb-run ctest -E "$skipped_tests"
+
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+8607f17b57211e31efc709dbec1091f7ca1587db90877583222acb5a82a19340530068adb85ca1748b0c849cf1f6551bd2fefdc2d55dfae1446b3582dc1615b9  gwenview-23.08.5.tar.xz
+"

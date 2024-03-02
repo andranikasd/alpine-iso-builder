@@ -1,0 +1,35 @@
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=py3-tinycss2
+pkgver=1.2.1
+pkgrel=5
+pkgdesc="Low-level CSS parser for Python"
+url="https://pypi.org/project/tinycss2"
+arch="noarch"
+license="BSD-3-Clause"
+depends="py3-webencodings"
+checkdepends="py3-pytest"
+makedepends="py3-gpep517 py3-flit-core"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/t/tinycss2/tinycss2-$pkgver.tar.gz"
+builddir="$srcdir/tinycss2-$pkgver"
+replaces="py-tinycss py2-tinycss py3-tinycss"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+633198637f1d7cb802d1a7336a01447fc6b902cda1ade6c526e403fc2a5319277e1457c68a06780f7a6254d4c0dbf42df5d32969536ea697887a2de3e98a5f1a  tinycss2-1.2.1.tar.gz
+"

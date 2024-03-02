@@ -1,0 +1,60 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=lxqt-panel
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="The LXQt desktop panel"
+url="https://github.com/lxqt/lxqt-panel"
+arch="all !armhf" # armhf blocked by qt
+license="LGPL-2.0-or-later"
+subpackages="$pkgname-doc $pkgname-dev $pkgname-lang"
+depends="lxqt-menu-data"
+makedepends="
+	cmake
+	kguiaddons5-dev
+	kwindowsystem5-dev
+	libdbusmenu-qt-dev
+	liblxqt-dev
+	libsoundio-dev
+	libstatgrab-dev
+	libsysstat-dev
+	libxrender-dev
+	libxtst-dev
+	lm-sensors-dev
+	lxqt-build-tools
+	lxqt-globalkeys-dev
+	menu-cache-dev
+	pulseaudio-dev
+	qt5-qttools-dev
+	samurai
+	solid5-dev
+	xcb-util-dev
+	xcb-util-image-dev
+	"
+options="!check" # No testsuite
+source="https://github.com/lxqt/lxqt-panel/releases/download/$pkgver/lxqt-panel-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname
+}
+
+sha512sums="
+87d5c89cfc4f5253dbb4048da89a531a99f664fd424eebb535a688934bdb63856edf07276a5ccba826a4658228801ed4cc036aea6664e67c57599990d7e4b997  lxqt-panel-1.4.0.tar.xz
+"

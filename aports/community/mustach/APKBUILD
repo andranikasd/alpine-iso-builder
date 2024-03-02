@@ -1,0 +1,28 @@
+# Contributor: Lucas Ramage <lucas.ramage@infinite-omicron.com>
+# Maintainer: Lucas Ramage <lucas.ramage@infinite-omicron.com>
+pkgname=mustach
+pkgver=1.2.5
+pkgrel=0
+pkgdesc="C implementation of the mustache template specification"
+url="https://gitlab.com/jobol/mustach"
+arch="all"
+license="Apache-2.0"
+makedepends="json-c-dev"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-libs"
+source="https://gitlab.com/jobol/mustach/-/archive/$pkgver/mustach-$pkgver.tar.bz2"
+options="!check" # test1 segfaults
+
+build() {
+	make tool=jsonc libs=single
+}
+
+package() {
+	make -j1 DESTDIR="$pkgdir" PREFIX="/usr" install
+
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/
+	install -m644 AUTHORS README.md \
+		"$pkgdir"/usr/share/doc/$pkgname/
+}
+sha512sums="
+a6c83b19c98d77a1d11013a77539691076cff4dbeca6eb865569bc2bd80b2497c835e2392bf4fcde64822d05037e95aa185c6a77b8ae63dbb71fce86594d52f7  mustach-1.2.5.tar.bz2
+"

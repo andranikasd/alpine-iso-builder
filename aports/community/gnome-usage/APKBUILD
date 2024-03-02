@@ -1,0 +1,33 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gnome-usage
+pkgver=45.0
+pkgrel=2
+pkgdesc="System resources status"
+url="https://wiki.gnome.org/Apps/Usage"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	glib-dev
+	gtk4.0-dev
+	libgee-dev
+	libgtop-dev
+	libadwaita-dev
+	meson
+	tracker-dev
+	vala>=0.56.10
+	"
+options="!check" # no tests
+subpackages="$pkgname-lang $pkgname-dbg"
+source="https://download.gnome.org/sources/gnome-usage/${pkgver%.*}/gnome-usage-$pkgver.tar.xz"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="bdc70394909a4edb7a01554aa7ba40c7c418511e7419a0ed1a32318e1b0fef4ad7d004a03debc8bd6123785a6d38e1ae89a012eece9134716ba3e6a932bcf5b5  gnome-usage-45.0.tar.xz"

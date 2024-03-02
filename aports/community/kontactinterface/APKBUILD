@@ -1,0 +1,49 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kontactinterface
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kontact.kde.org/"
+pkgdesc="Kontact Plugin Interface Library"
+license="LGPL-2.0-only OR LGPL-3.0-only"
+depends_dev="
+	kcoreaddons5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kparts5-dev
+	kwindowsystem5-dev
+	kxmlgui5-dev
+	"
+makedepends="
+	$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+_repo_url="https://invent.kde.org/pim/kontactinterface.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kontactinterface-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+77f9e4a03ee698ec31925b3080ed792b0ce7cbfe230bceb59c64b2a17dcc13935871ead0cf229624c682744d0ec4c189ac596ecc6716a89ad2b3b6caaf73271c  kontactinterface-23.08.5.tar.xz
+"

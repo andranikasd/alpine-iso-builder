@@ -1,0 +1,58 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+pkgname=oxygen
+pkgver=5.27.10
+pkgrel=0
+pkgdesc="Artwork, styles and assets for the Oxygen visual style for the Plasma Desktop"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/plasma-desktop/"
+license="LGPL-2.1-or-later"
+makedepends="
+	extra-cmake-modules
+	frameworkintegration5-dev
+	kcmutils5-dev
+	kcompletion5-dev
+	kconfig5-dev
+	kdecoration-dev
+	kguiaddons5-dev
+	ki18n5-dev
+	kservice5-dev
+	kwayland5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	qt5-qtbase-dev
+	samurai
+	xcb-util-dev
+	"
+
+case "$pkgver" in
+	*.90*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+_repo_url="https://invent.kde.org/plasma/oxygen.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/oxygen-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+84d1893523ab4c512f8416d2fc9d4fdf3b3858a4ae020602058355336cda92cf01c3f3101b74714a504ca8e0a5c04e192675fe1ae040661128bde3f21e59b8a6  oxygen-5.27.10.tar.xz
+"

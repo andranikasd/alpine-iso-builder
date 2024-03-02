@@ -1,0 +1,116 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=abuild
+pkgver=3.12.0
+_ver=${pkgver%_git*}
+pkgrel=3
+pkgdesc="Script to build Alpine Packages"
+url="https://git.alpinelinux.org/cgit/abuild/"
+arch="all"
+license="GPL-2.0-only"
+depends="
+	apk-tools>=2.0.7-r1
+	attr
+	cmd:getcap
+	fakeroot
+	musl-utils
+	lzip
+	openssl>3
+	patch
+	pkgconf
+	scanelf
+	tar
+	"
+makedepends_build="pkgconfig scdoc"
+makedepends_host="openssl-dev>3 zlib-dev"
+makedepends="$makedepends_host $makedepends_build"
+checkdepends="cmd:setcap kyua git"
+install="$pkgname.pre-install $pkgname.pre-upgrade"
+subpackages="
+	apkbuild-cpan:cpan:noarch
+	apkbuild-gem-resolver:gems:noarch
+	apkbuild-pypi:pypi:noarch
+	abuild-rootbld:_rootbld:noarch
+	$pkgname-doc
+	"
+options="suid"
+pkggroups="abuild"
+source="https://gitlab.alpinelinux.org/alpine/abuild/-/archive/$pkgver/abuild-$pkgver.tar.gz
+	abuild-fix-subpackage-setting-arch-to-all-explicitly.patch
+	"
+builddir="$srcdir"/abuild-$pkgver
+
+build() {
+	make VERSION="$pkgver-r$pkgrel"
+}
+
+check() {
+	make check
+}
+
+package() {
+	make install VERSION="$pkgver-r$pkgrel" DESTDIR="$pkgdir"
+
+	install -m 644 abuild.conf "$pkgdir"/etc/abuild.conf
+
+	case "$CARCH" in
+	x86*|ppc64le)
+		# binutils only supports it here
+		cat >>"$pkgdir"/usr/share/abuild/default.conf <<-EOF
+
+		# binutils ld.bfd supports this on this architecture; default to it
+		export RUSTFLAGS="\$RUSTFLAGS -Clink-arg=-Wl,-z,pack-relative-relocs"
+		export LDFLAGS="\$LDFLAGS -Wl,-z,pack-relative-relocs"
+		EOF
+	esac
+
+	case "$CARCH" in
+	x86_64)
+		# https://lists.alpinelinux.org/~alpine/devel/%3C1628515011.zujvcn248v.none%40localhost%3E
+		# note that this is x86-exclusive. on other architectures, this is pretty much always bad
+		# https://github.com/rust-lang/rust/pull/106380
+		cat >>"$pkgdir"/usr/share/abuild/default.conf <<-EOF
+
+		# -fno-plt has very slight improvements to general code size and speed on x86-only,
+		# for the common system dynamic linking case
+		export CFLAGS="\$CFLAGS -fno-plt"
+		export CXXFLAGS="\$CXXFLAGS -fno-plt"
+		EOF
+		;;
+	esac
+
+	install -d -m 775 -g abuild "$pkgdir"/var/cache/distfiles
+}
+
+cpan() {
+	pkgdesc="Script to generate perl APKBUILD from CPAN"
+	depends="perl perl-libwww perl-json perl-module-build perl-module-build-tiny
+		perl-lwp-protocol-https"
+
+	amove usr/bin/apkbuild-cpan
+}
+
+gems() {
+	pkgdesc="APKBUILD dependency resolver for RubyGems"
+	depends="ruby ruby-augeas"
+
+	amove usr/bin/apkbuild-gem-resolver
+}
+
+pypi() {
+	pkgdesc="Script to generate python3 APKBUILD from PYPI"
+	depends="perl perl-libwww perl-json perl-module-build-tiny perl-lwp-protocol-https
+	perl-ipc-system-simple"
+
+	amove usr/bin/apkbuild-pypi
+}
+
+_rootbld() {
+	pkgdesc="Build packages in chroot"
+	depends="abuild bubblewrap cmd:envsubst git"
+	mkdir -p "$subpkgdir"
+}
+
+sha512sums="
+00fac67aa96a83f33406dde60bd9526bfa5fdff690b84dbe867b6ed197f147b2afafcdfbda900c005e00a64a42bcb98ca425ffc8bf2158b9540cbb67d935577d  abuild-3.12.0.tar.gz
+b1b75cce7fe86f5183e68ab37ed1b4742927b0617fac2b200837cacd759443315d0cbcae137cb1fe0b6f0a25ed81c90b33e8ec64cd1033aba6016ec6ea0d68ee  abuild-fix-subpackage-setting-arch-to-all-explicitly.patch
+"

@@ -1,0 +1,91 @@
+# Contributor: Jan Tatje <jan@jnt.io>
+# Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+pkgname=qbittorrent
+pkgver=4.6.3
+pkgrel=0
+pkgdesc="qBittorrent client"
+url="https://www.qbittorrent.org/"
+arch="all"
+license="GPL-2.0-or-later"
+options="!check" # qBittorrent has no tests
+makedepends="
+	boost-dev
+	cmake
+	libtorrent-rasterbar-dev
+	openssl-dev>3
+	qt6-qtbase-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	samurai
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-nox
+	$pkgname-nox-openrc:nox_openrc
+	$pkgname-nox-doc:nox_doc
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/qbittorrent/qBittorrent/archive/refs/tags/release-$pkgver.tar.gz
+	qbittorrent-nox.initd
+	qbittorrent-nox.confd
+	"
+builddir="$srcdir/qBittorrent-release-$pkgver"
+
+# secfixes:
+#   4.1.6-r3:
+#     - CVE-2019-13640
+
+build() {
+	export CFLAGS="$CFLAGS -DNDEBUG -O2 -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -DNDEBUG -O2 -flto=auto"
+
+	cmake -B build-gui -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DSTACKTRACE=OFF \
+		-DQT6=ON
+	cmake --build build-gui
+
+	cmake -B build-nox -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DGUI=OFF \
+		-DSTACKTRACE=OFF \
+		-DQT6=ON
+	cmake --build build-nox
+}
+
+package() {
+	depends="qt6-qtsvg" # needed for ui icons
+	DESTDIR="$pkgdir" cmake --install build-gui
+
+	install -Dm755 build-nox/qbittorrent-nox \
+		-t "$pkgdir"/usr/bin
+	install -Dm755 "$srcdir"/$pkgname-nox.initd \
+		"$pkgdir"/etc/init.d/$pkgname-nox
+	install -Dm644 "$srcdir"/$pkgname-nox.confd \
+		"$pkgdir"/etc/conf.d/$pkgname-nox
+}
+
+nox() {
+	install="$pkgname-nox.pre-install"
+	pkgdesc="$pkgdesc (webui)"
+
+	amove usr/bin/qbittorrent-nox
+}
+
+nox_doc() {
+	install -Dm644 "$builddir"/doc/qbittorrent-nox.1 \
+		-t "$subpkgdir"/usr/share/man/man1
+	default_doc
+}
+
+nox_openrc() {
+	default_openrc
+	pkgdesc="$pkgdesc (webui) (OpenRC init scripts)"
+}
+
+sha512sums="
+c261284cd01f5b2b7b4a243406f160c3661c1c9b96925c93aa953c23d1ef8e167bc7403166399763094b7346ac5be2bb7431ea6fd50a706f4db45d9f260e56f2  qbittorrent-4.6.3.tar.gz
+e84943b4e53717d4c53dc0a454aae2c43390b90afbd7e9d48c50cb914ac9041152a197677343ec81c6881bceb55228a2519bca9fffc158a713305214d0570711  qbittorrent-nox.initd
+5cc840181f8b9febdc99b28dca9fe3f6b27a36bad0b20266e46d6ff148dfc9c5d9e6cba552198cd3d1b8ac5c21e2881d7defd8f13fcc8a862b93f4c80c1d4b19  qbittorrent-nox.confd
+"

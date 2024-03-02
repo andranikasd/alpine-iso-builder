@@ -1,0 +1,74 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Contributor: Danct12 <danct12@disroot.org>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Mike Banon <mikebdp2@gmail.com>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=chatty
+pkgver=0.8.1
+pkgrel=0
+_libcmatrix=702b894675f12ecd43439b3b3eee66cc74899b82
+_libgd=c7c7ff4e05d3fe82854219091cf116cce6b19de0
+pkgdesc="XMPP and SMS messaging via libpurple and Modemmanager"
+# s390x: doubt anyone would use a mainframe for texting
+# ppc64le lacks the libphonenumber / libphonenumber-dev
+arch="all !s390x !ppc64le"
+url="https://source.puri.sm/Librem5/chatty"
+license="GPL-3.0-or-later"
+depends="
+	cyrus-sasl
+	purple-xmpp
+	mmsd-tng
+	purple-carbons
+	purple-lurch
+	purple-xmpp-http-upload
+	"
+makedepends="
+	evolution-data-server-dev
+	evolution-dev
+	feedbackd-dev
+	folks-dev
+	gspell-dev
+	gtk+3.0-dev
+	libadwaita-dev
+	libgee-dev
+	libphonenumber-dev
+	meson
+	modemmanager-dev
+	olm-dev
+	pidgin-dev
+	"
+checkdepends="appstream-glib desktop-file-utils"
+source="https://gitlab.gnome.org/World/Chatty/-/archive/v$pkgver/Chatty-v$pkgver.tar.gz
+	https://source.puri.sm/Librem5/libcmatrix/-/archive/$_libcmatrix/libcmatrix-$_libcmatrix.tar.gz
+	https://gitlab.gnome.org/GNOME/libgd/-/archive/$_libgd/libgd-$_libgd.tar.gz
+	"
+
+subpackages="$pkgname-lang $pkgname-bash-completion $pkgname-dbg"
+options="!check" # Requires running Wayland compositor
+builddir="$srcdir/Chatty-v$pkgver"
+
+prepare() {
+	rm -rf "$builddir"/subprojects/libgd
+	rm -rf "$builddir"/subprojects/libcmatrix
+	mv "$srcdir"/libgd-$_libgd "$builddir"/subprojects/libgd
+	mv "$srcdir"/libcmatrix-$_libcmatrix "$builddir"/subprojects/libcmatrix
+
+	default_prepare
+}
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+962fe7ab333d9bc383ccc4dfeed1eca47365ee0016ef2b06c2268a72a4b34dc987bb3991e88ffe404401ce30171ce879c698a6b0d46526700a47bff3b0dbd749  Chatty-v0.8.1.tar.gz
+9fc66c3f5115c54af76cf90f191c4b7dd78d22ba160feadefefa32590deea01a51aa670fa34b1f849de35dbf95ab4a4c0dc2160db827636e89bd7a2e22b0a188  libcmatrix-702b894675f12ecd43439b3b3eee66cc74899b82.tar.gz
+681cc23b5a33df88a92e3aac33d0dba1c6ebb69a2bd6f15b6ae31f0b444c108f7bfd1391e604433be58d82c0032028b112652d3d0c473abe4db02d66c55cdef3  libgd-c7c7ff4e05d3fe82854219091cf116cce6b19de0.tar.gz
+"

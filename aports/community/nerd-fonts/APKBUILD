@@ -1,0 +1,132 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=nerd-fonts
+pkgver=3.0.2
+pkgrel=0
+provides="nerd-fonts-stable=$pkgver-r$pkgrel"
+replaces="nerd-fonts-stable"
+pkgdesc="Patched developer targeted fonts with a high number of glyphs"
+url="https://nerdfonts.com"
+arch="noarch"
+license="MIT AND OFL-1.1 AND Apache-2.0"
+options="!check"  # no testsuite provided
+builddir="$srcdir"
+
+# If <fontname> is empty, <zipname> will be used instead.
+# <origname> is used only for pkgdesc and it may be empty.
+# "~" will be replaced with " "
+# <id>,<zipname>,<fontname>,<origname>
+_fonts="
+	anonymous-pro,AnonymousPro,Anonymice,Anonymous~Pro
+	arimo,Arimo,,
+	bitstrom-wera-sans-mono,BitstreamVeraSansMono,BitstromWeraNerdFontMono,Bitstrom~Wera~Sans~Mono
+	cascadia-code,CascadiaCode,CaskaydiaCove,Cascadia~Code
+	comic-shanns-mono,ComicShannsMono,ComicShannsMono,Comic~Shanns~Mono
+	dejavu-sans-mono,DejaVuSansMono,DejaVuSansM,DejaVu~Sans~Mono
+	droid-sans-mono,DroidSansMono,DroidSansM,Droid~Sans~Mono
+	fira-code,FiraCode,FiraCode,Fira~Code
+	fira-mono,FiraMono,FiraMono,Fira~Mono
+	go-mono,Go-Mono,GoMono,Go~Mono
+	hack,Hack,,
+	hasklig,Hasklig,Hasklug,Hasklig
+	hermit,Hermit,Hurmit,Hermit
+	ia-writer,iA-Writer,iMWriting,iA~Writer
+	ibm-plex-mono,IBMPlexMono,BlexMono,IBM~Plex~Mono
+	inconsolata,Inconsolata,,
+	jetbrains-mono,JetBrainsMono,JetBrainsMono,JetBrains~Mono
+	liberation-mono,LiberationMono,LiterationMono,Liberation~Mono
+	meslo,Meslo,,
+	monofur,Monofur,Monofur,
+	mononoki,Mononoki,Mononoki,
+	overpass,Overpass,,
+	share-tech-mono,ShareTechMono,ShureTechMono,Share~Tech~Mono
+	source-code-pro,SourceCodePro,SauceCodePro,Source~Code~Pro
+	space-mono,SpaceMono,SpaceMono,Space~Mono
+	terminus,Terminus,Terminess,Terminus
+	tinos,Tinos,,
+	ubuntu,Ubuntu,,
+	ubuntu-mono,UbuntuMono,UbuntuMono,Ubuntu~Mono
+	victor-mono,VictorMono,VictorMono,Victor~Mono
+	"
+_depends_all=""
+subpackages="nerd-fonts-all:_all"
+source=""
+for _font in $_fonts; do
+	_pkgname="font-${_font%%,*}-nerd"
+	_filename=${_font#*,}; _filename=${_filename%%,*}
+
+	_depends_all="$_depends_all $_pkgname"
+	subpackages="$subpackages $_pkgname:_subpackage:noarch"
+	source="$source $_pkgname-$pkgver.tar.xz::https://github.com/ryanoasis/nerd-fonts/releases/download/v$pkgver/$_filename.tar.xz"
+done
+
+package() {
+	mkdir -p "$pkgdir"
+}
+
+_subpackage() {
+	local id=${subpkgname#font-}; id=${id%-nerd}
+
+	local IFS_OLD=$IFS IFS=','
+	set -- $(printf '%s\n' "$_fonts" | grep "^\s*$id," | tr '~' ' ')
+	if [ $# -lt 2 ]; then
+		error "$id was not found in \$_fonts or wrong entry!"
+		return 1
+	fi
+	IFS=$IFS_OLD
+
+	local fontname=${3:-$2}
+	local origname=${4-}
+	depends="fontconfig"
+	pkgdesc="$fontname Nerd Font${origname:+" (modified $origname Font)"}"
+
+	# for backward compatibility (Alpine <3.16)
+	case "$subpkgname" in
+		font-ibm-plex-mono-nerd) provides="font-ibm-plex-nerd=$pkgver-r$pkgrel";;
+		font-libertion-mono-nerd) provides="font-liberation-nerd=$pkgver-r$pkgrel";;
+		font-ubuntu-nerd) depends="$depends font-ubuntu-mono-nerd";;
+	esac
+
+	cd "$builddir"
+	install -Dm644 ./"$fontname"*.*tf -t "$subpkgdir"/usr/share/fonts/${subpkgname#font-}/
+}
+
+_all() {
+	pkgdesc="Meta package for all patched Nerd Fonts"
+	depends="$_depends_all"
+
+	mkdir -p "$subpkgdir"
+}
+
+sha512sums="
+224d831b367ff90c762ce360caa6bffe5448aa2ac9c9ba1983c7a6d7b4dde421e9488dd123d49298182a7cfebfca19aa9b7c4e1758f1269bd340bf72c55091e6  font-anonymous-pro-nerd-3.0.2.tar.xz
+7c658db1105acb87ae254f9dcc0796d3f270659f6332ee66c9f6dade2214548bd38ace8b4f3158f5bc33ba32ea8a62256abcce8cd655bc80ff7a591d7ba6c95e  font-arimo-nerd-3.0.2.tar.xz
+8c81471f07312e17b2339165aabf9829fb084b2cdeb28cbc11791f4a3757d6e1ed8de7cb5a1742af188ff79f31f06ca707af7f3cb175c523eef8cf125363b398  font-bitstrom-wera-sans-mono-nerd-3.0.2.tar.xz
+6ec177ed283adafee008a08b0d4de644e6169ddceca8430ea498b5024c350ab831d22206ba7f82c47f58d1175eec98c84746c57612370d714496ff2f780806df  font-cascadia-code-nerd-3.0.2.tar.xz
+5a93fa34582c8c37f799026ffa72ae00f49700bbf4f1ff08ba05665775cc79ee7d6db9db96b7724d98d2263e80a3a54cbe0fdf129260cc1171e3bc616bdf1ce5  font-comic-shanns-mono-nerd-3.0.2.tar.xz
+fd39880029b990ae0899615bca2ccd5fa32667485569aaf9a56babd38e388ba7b088094947b026652b707e8cb943b671aa987b584a79ca617ba7725b748c2501  font-dejavu-sans-mono-nerd-3.0.2.tar.xz
+a9028ef4566668b0bb6b7253a7b7504907b9d33938a67744d54b88331a3fe0622ace23c224afd41d7e5ff4d1f65377a8d87338ceb41f5015592dc3f76d895c79  font-droid-sans-mono-nerd-3.0.2.tar.xz
+42295dc977c359b8f30ab7dd81cb21ebd750dcdb786b9acd711287ce3334ea808d3229132d91f4fe17c34ffcd0e6d694de5d6522ec67b1459172d058bdea0076  font-fira-code-nerd-3.0.2.tar.xz
+52f57d745d2358ed4ba04453935dbce3dad62100cded9229f805dfad4cff6f1874f66e79f516946c357f141bed2d45e715c62775ef6b7d525581b45e44f91fcf  font-fira-mono-nerd-3.0.2.tar.xz
+b0e3a110b00b02df3e16eecc0beafdea971bcd37ad70d2a738f4ac7cc87c9845f6bb177a93bb25765328932899fd20dc00b55618d1d7beedd0e4e5c4d909ef2a  font-go-mono-nerd-3.0.2.tar.xz
+a66005508057fef5ea899479118f2c575b5fe87183bf9041d6e25f068edfcbffdf00eff3d716c08b6a3600f0ef57b0154ac97149b911c3c3ed55674c7347d082  font-hack-nerd-3.0.2.tar.xz
+0d341135a7be1f89db6c7b8f3ecffd2fc70d8d634b5f228d3b4684e8cfa9628d4f4c1c3a1ef5f9c60f20b8aec47e1b6d6fb1d622818ab6ec1ec794909761f978  font-hasklig-nerd-3.0.2.tar.xz
+e9b70297b329f808f01562d3f492962c05c1fda94e2bba6f0e9522d4893dda1b8ad1312d94c796bc0588de0d0d584e0482a0e11bb5efc49af7fc4d97729d1ca6  font-hermit-nerd-3.0.2.tar.xz
+a1752c3d4ea1359be046f9e1801002ada8949580a57cadc675d6a79b375549c7cdc6746baeae98d87b13b801cc58e04cfbf8ba3ab72bf6b42ade5f2f60bede2c  font-ia-writer-nerd-3.0.2.tar.xz
+91e1e5f851043fe60b2df0b45026ed2fd8d95c9d1a831ad756c09598232bd17ffe616427e655def853f9ec4d5e671e66ef47b6a729ee5f7aeb1baef1a3ce4528  font-ibm-plex-mono-nerd-3.0.2.tar.xz
+457cedb8e1267b14611d9685a423f1a508a8310e97faf1aac4465d8e305523830b8c4561f2735fcb8c601d0f902c72f9e2286473f021c0a45155474d235c1e43  font-inconsolata-nerd-3.0.2.tar.xz
+5ad9452a2ee72c446a9dfb418597b3c6ee003a4e55301b6e59c5ce38553727f5e9b501a9087c9bf3c16e55459115a906b845b528bb28b1333d4757cba349f6c4  font-jetbrains-mono-nerd-3.0.2.tar.xz
+0f899f6e60935aeb9ef442148064b31948fd37cce5f82480c406fc4194716fef761c681a885fe5a47bc391885b7ef3ae58f7ace5bb8a347c15b421654e76eb47  font-liberation-mono-nerd-3.0.2.tar.xz
+cc5d1160ac9a7e4662980e966f6d2d5302b9a8de5bd89df7cfdf97e194ccc043fba53c6d8328ef6decbdfed25f1370a1f510e9c0ce46f461b0ffe3436aa63669  font-meslo-nerd-3.0.2.tar.xz
+d95231348d9274de4afd3d891e8e6e8af9fa6a1381c103fbf74643af09381a10deef87a916457d9da7c8415eafcfdb62cb639561586387a58460b01e0ef196d7  font-monofur-nerd-3.0.2.tar.xz
+765684e598623925eb29924b227c62047073bda5b979c037e38b29d01b08c04721ad82cd5e002f859449e345fa727b440a14bf2a2bb5b6c6bb15860f581204f6  font-mononoki-nerd-3.0.2.tar.xz
+62abd19da01c73f255b99f605bf6261d7aae4c164c24b4ecebf6f33cddfa2b110bd7a34168cd950fb21f10306d4f6809d2732d38dc764c42529822e23e6a8817  font-overpass-nerd-3.0.2.tar.xz
+75ff6c3e2eca219f417406975071c940d76c134b96be62827e556e81a53990093c862822a48ac8932c044d5e95d05d9046e1a8b26addb095685198785ba7a12b  font-share-tech-mono-nerd-3.0.2.tar.xz
+87ad197551c3482a69ad82a136caf6d700a88b371b543ef92359d028b9b43c81d8d32942a73e5160d60818d443685edc35e1554b5c09cf5e37cd9b27fcae3738  font-source-code-pro-nerd-3.0.2.tar.xz
+0fa2fc020c6d503bda7ba2d0c2079be069c25ba4dc2a22845bacac63c2d4722d0b78a267f6c33398aee1cec97cf73a44c46ba8754559611ca02c28999da41701  font-space-mono-nerd-3.0.2.tar.xz
+28e18ee46a69069162fbe7ab4607993b619688584008e2b4a62acc5c0ee343e3ec5fc0300224b6b4b3ca27cfe73b706161e160e24631a244a5faec9dc280bee4  font-terminus-nerd-3.0.2.tar.xz
+3aecf7122474d926475274d5cb5d3ec1b9a13e2e63d707c08d7d0ad50005829bdc861eac24b77d32267ab85fe1ec786cd59da266f149118c2ea8b3df29c85ca0  font-tinos-nerd-3.0.2.tar.xz
+7d4dbe5f95222bffc1bead2674ae1eecb3b0609481211248411a5637d1a6a5cba2b815bfe28d2f5daf1b7759f603393e36cd9e73ce0b56fe0dfa8f0476cd6c8d  font-ubuntu-nerd-3.0.2.tar.xz
+6800ad486aa184d6c9ac74ea0937682555433cb0175063f06bc7418de4ff426e3c69db373bd6567bc741df9771fe0c1ed95cba72c837673a97ca804532cd02ad  font-ubuntu-mono-nerd-3.0.2.tar.xz
+95c228512bdd05628df4007bb973a9dbff8a63c8b779c54f69964b7b25b25bf3593fdce7bfef7d70adb78359b48e77b3e63042b18f3b8ec801b685000764346f  font-victor-mono-nerd-3.0.2.tar.xz
+"

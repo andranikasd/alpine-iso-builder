@@ -1,0 +1,45 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=usbredir
+pkgver=0.13.0
+pkgrel=0
+pkgdesc="USB network redirection protocol libraries"
+url="https://www.spice-space.org/usbredir.html"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="libusb-dev meson glib-dev"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	libusbredirhost
+	libusbredirparser
+	"
+source="https://www.spice-space.org/download/usbredir/usbredir-$pkgver.tar.xz"
+
+# secfixes:
+#   0.12.0-r0:
+#     - CVE-2021-3700
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+libusbredirhost() {
+	amove usr/lib/libusbredirhost.so.*
+}
+
+libusbredirparser() {
+	amove usr/lib/libusbredirparser.so.*
+}
+
+sha512sums="
+dd27b1794233d4a278c3ca0e2a1ef9518946d8c7422cf58bb83d8ed5b4358133da27bdb0f44ad7b679a9983b3c419c3ab014486735614f7ceea85bfa62904273  usbredir-0.13.0.tar.xz
+"

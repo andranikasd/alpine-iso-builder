@@ -1,0 +1,48 @@
+# Maintainer:
+pkgname=py3-pooch
+pkgver=1.8.1
+pkgrel=0
+pkgdesc="Friend to fetch data files"
+url="https://github.com/fatiando/pooch"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	py3-packaging
+	py3-platformdirs
+	py3-requests
+	python3
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="py3-pytest-xdist"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/fatiando/pooch/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/pooch-$pkgver"
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto \
+		-k 'not TestZenodoAPISupport and not test_ftp_downloader and not test_check_availability_on_ftp'
+		# missing httpserver & ftpserver pytest fixtures
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+	rm -r "$pkgdir"/usr/lib/python3*/site-packages/pooch/tests/
+}
+
+sha512sums="
+b0dcb6f7d36cc9ef3f53b414714e725867646f7367a799285cfa2e24e14d4c1c581239478329a5f75e85a6e61c6b37f0af918e2604cd1bde4b3e08a5900b16ec  py3-pooch-1.8.1.tar.gz
+"

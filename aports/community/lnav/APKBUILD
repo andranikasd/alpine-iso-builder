@@ -1,0 +1,49 @@
+# Contributor: Milan P. Stanić <mps@arvanta.net>
+# Maintainer: Heiko Bernloehr <Heiko.Bernloehr@FreeIT.de>
+pkgname=lnav
+pkgver=0.12.0
+pkgrel=0
+pkgdesc="advanced log file navigator and viewer"
+url="https://lnav.org"
+arch="all"
+license="BSD-2-Clause"
+makedepends="
+	bash
+	bzip2-dev
+	curl-dev
+	gpm-dev
+	libarchive-dev
+	libbsd-dev
+	ncurses-dev
+	pcre2-dev
+	readline-dev
+	sqlite-dev
+	zlib-dev
+	"
+checkdepends="
+	openssh-keygen
+	xz
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/tstack/lnav/releases/download/v$pkgver/lnav-$pkgver.tar.gz"
+options="!check" # failed on some tests
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--disable-tinfo
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+5d7e6cd4b71673f5ea226749790e88737373baf4066e4387881c526fc19069cd4eee683dc02c0f05d36148dd78c3e0935ddace42cb7a69c4acaab542383a4c79  lnav-0.12.0.tar.gz
+"

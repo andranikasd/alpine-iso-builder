@@ -1,0 +1,75 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Contributor: omni <omni+alpine@hack.org>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=dune
+pkgver=3.14.0
+pkgrel=0
+pkgdesc="A composable build system for OCaml (formerly Jbuilder)"
+url="https://dune.build/"
+arch="all !riscv64" # limited by ocaml aport
+license="MIT"
+checkdepends="bash"
+makedepends="ocaml"
+provides="jbuilder=$pkgver-r$pkgrel"
+subpackages="$pkgname-doc $pkgname-emacs::noarch $pkgname-configurator"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ocaml/dune/archive/$pkgver.tar.gz"
+options="!check"  # FIXME requires ocaml-menhir
+
+# 32-bit archs
+case "$CARCH" in
+	arm*|x86) options="$options textrels" ;;
+esac
+
+prepare() {
+	default_prepare
+
+	# This allows 'dune --version' to output the correct version instead of "n/a"
+	sed -i "/^(name dune)/a (version $pkgver)" dune-project
+	# This enables dune-configurator to use the vendored csexp module
+	sed -i 's/stdune.csexp/dune-configurator.csexp/' vendor/csexp/src/dune
+}
+
+build() {
+	./configure --libdir="$(ocamlc -where)" \
+		--bindir="/usr/bin" --sbindir="/usr/sbin" --etcdir="/etc" \
+		--mandir="/usr/share/man" --docdir="/usr/share/doc" \
+		--datadir="/usr/share"
+
+	ocaml boot/bootstrap.ml --verbose
+	./dune.exe build \
+		-p dune,dune-configurator \
+		--profile dune-bootstrap --verbose
+}
+
+check() {
+	./dune.exe runtest --verbose
+}
+
+package() {
+	./dune.exe install \
+		--destdir="$pkgdir" \
+		dune dune-configurator
+
+	# Duplicate of usr/share/doc/dune
+	rm -Rf "$pkgdir"/usr/share/doc/dune-configurator
+}
+
+emacs() {
+	depends="$pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel emacs"
+	pkgdesc="Emacs plugins for $pkgname"
+
+	amove usr/share/emacs
+}
+
+configurator() {
+	pkgdesc="System config helper for the Dune OCaml build system"
+	depends="ocaml"
+	provides="$subpkgname-dev=$pkgver-r$pkgrel"
+
+	amove usr/lib/ocaml/"$subpkgname"
+}
+
+sha512sums="
+906539a3a77494efdee59393e91ec555e3a0e83c7ab20795e11d792c6d57f4eed01e3f565cd578d4751cc3fd858ce58732e936bbdca05808e412a3fa70680fa7  dune-3.14.0.tar.gz
+"

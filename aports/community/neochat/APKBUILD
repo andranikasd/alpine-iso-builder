@@ -1,0 +1,73 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=neochat
+pkgver=23.08.5
+pkgrel=1
+pkgdesc="A client for Matrix, the decentralized communication protocol"
+url="https://invent.kde.org/network/neochat/"
+# armhf blocked by extra-cmake-modules
+# riscv64 blocked due to build failure on builders, compiler segfault
+# Wait for real riscv64 hardware before enabling again
+arch="all !armhf !riscv64"
+license="GPL-2.0-or-later AND GPL-3.0-only AND GPL-3.0-or-later AND BSD-2-Clause"
+depends="
+	kirigami-addons
+	kirigami2
+	kitemmodels5
+	kquickcharts5
+	kquickimageeditor
+	qqc2-desktop-style5
+	qt5-qtlocation
+	qt5-qtquickcontrols
+	"
+makedepends="
+	cmark-dev
+	extra-cmake-modules
+	kconfig5-dev
+	kcoreaddons5-dev
+	kdbusaddons5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kio5-dev
+	kirigami-addons-dev
+	kirigami2-dev
+	kitemmodels5-dev
+	knotifications5-dev
+	kquickimageeditor-dev
+	libquotient-dev
+	qcoro-dev
+	qqc2-desktop-style5-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qtkeychain-dev
+	qt5-qtmultimedia-dev
+	qt5-qtquickcontrols2-dev
+	qt5-qtsvg-dev
+	samurai
+	sonnet5-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/network/neochat.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/neochat-$pkgver.tar.xz
+	0002-Always-enable-E2EE-in-libQuotient.patch
+	"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+936e8112818bc925121d71fcc23d43bc448387af7c8c7857f2ce8b5d128f1acedc9c3c2b6d66e50fb317418cbd144c5262e2fb9e6d80364d48e08e42b27316bf  neochat-23.08.5.tar.xz
+c7fc0815162e0b352a28ede871c01c0dca48ca690606ca0932898032f9ff439b74d5cdbd51fca43050d19d8d6430fd189f89d87d514862dda56a9fb77c4156ec  0002-Always-enable-E2EE-in-libQuotient.patch
+"

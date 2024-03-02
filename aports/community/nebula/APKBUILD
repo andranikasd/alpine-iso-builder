@@ -1,0 +1,49 @@
+# Contributor: TBK <alpine@jjtc.eu>
+# Maintainer: TBK <alpine@jjtc.eu>
+pkgname=nebula
+pkgver=1.8.1
+pkgrel=0
+pkgdesc="Scalable overlay networking tool with a focus on performance, simplicity and security"
+url="https://github.com/slackhq/nebula"
+license="MIT"
+# tests seem to fail due to >32-bit allocs, probably doesn't work
+arch="all !x86 !armhf !armv7"
+pkgusers="$pkgname"
+pkggroups="$pkgname"
+install="$pkgname.pre-install"
+makedepends="go"
+subpackages="$pkgname-openrc"
+source="https://github.com/slackhq/nebula/archive/v$pkgver/nebula-$pkgver.tar.gz
+	$pkgname.initd
+	"
+
+# secfixes:
+#   1.8.1-r0:
+#     - CVE-2023-48795
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	make BUILD_ARGS="$GOFLAGS" BUILD_NUMBER="$pkgver" bin
+}
+
+check() {
+	make test
+}
+
+package() {
+	install -Dm750 -o nebula -g nebula nebula -t "$pkgdir"/usr/sbin/
+
+	install -Dm755 nebula-cert -t "$pkgdir"/usr/bin/
+
+	install -Dm644 examples/config.yml -t "$pkgdir"/etc/$pkgname
+
+	install -Dm755 "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+}
+
+sha512sums="
+c5c286adbdf287d9a0cc72149f35fabbaf86f076812ae8942888881c069e1b07620c85f24aecb8fc936c181d533972b20fa85275ae319a0527b4cebaa24e81e1  nebula-1.8.1.tar.gz
+b86a38a0e558f2bc00b062d713cd3ad3e6b5e7a0695c92d7bfe5633edb80184fcd64ebf5af6c35677c91719159dad8cd38c2278b5f4d9f5d2e42f101e6e354b2  nebula.initd
+"

@@ -1,0 +1,62 @@
+# Contributor: Timo Teräs <timo.teras@iki.fi>
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Timo Teräs <timo.teras@iki.fi>
+pkgname=libfprint
+pkgver=1.94.6
+pkgrel=0
+pkgdesc="Library for fingerprint readers"
+url="https://fprint.freedesktop.org/"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	eudev-dev
+	glib-dev
+	gobject-introspection-dev
+	libgudev-dev
+	libgusb-dev
+	meson
+	nss-dev
+	pixman-dev
+	"
+checkdepends="
+	py3-cairo
+	py3-gobject3
+	umockdev
+	"
+subpackages="$pkgname-dev"
+source="https://gitlab.freedesktop.org/libfprint/libfprint/-/archive/v$pkgver/libfprint-v$pkgver.tar.gz
+	tests-mktemp-compat.patch
+	hack-generate-rules-instead-of-hwdb.patch
+	"
+builddir="$srcdir/$pkgname-v$pkgver"
+
+build() {
+	abuild-meson \
+		-Dgtk-examples=false \
+		-Ddoc=false \
+		-Dudev_hwdb=disabled \
+		-Dudev_rules=enabled \
+		-Dinstalled-tests=false \
+		output
+	meson compile -C output
+
+	# See comment in hack-generate-rules-instead-of-hwdb.patch.
+	HACK_GEN_RULES=1 ./output/libfprint/fprint-list-udev-hwdb > 60-fprint-autosuspend.rules
+}
+
+check() {
+	# FIXME: Some tests fail on builders, but not on a local machine.
+	meson test -C output --no-rebuild --print-errorlogs --no-stdsplit || true
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install -C output --no-rebuild
+
+	install -m644 60-fprint-autosuspend.rules -t "$pkgdir"/lib/udev/rules.d/
+}
+
+sha512sums="
+99cfce5828d7df771bfc1fd92ad357b76c265bc96443af3398c415d2bb54a931fa3018811c59ceb62b43ef416b430db4acf324aa1dca4f374eaef1f1595a154a  libfprint-v1.94.6.tar.gz
+7c9eb1dd3b1de5549b5b178f0b3251d5cbe253f2c71c86071c9fcdea0358478bb6ab0fd1488466434021c52d7df746af135b837b965faf4b7d2e245b9d773e2d  tests-mktemp-compat.patch
+5997cb0e3bfc0f625a0803d2d59fa55ce34baf7aee7c4fb3d82c74ea680d916a4e1294bbaf97a4567053672f1115d51f2a8b887927af063e2750e6a0e40d8d64  hack-generate-rules-instead-of-hwdb.patch
+"

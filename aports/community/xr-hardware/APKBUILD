@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=xr-hardware
+pkgver=1.1.0
+pkgrel=0
+pkgdesc="Hardware description for XR devices"
+url="https://gitlab.freedesktop.org/monado/utilities/xr-hardware"
+arch="noarch"
+license="BSL-1.0"
+depends="eudev"
+makedepends="
+	python3
+	py3-attrs
+	"
+checkdepends="py3-flake8"
+source="https://gitlab.freedesktop.org/monado/utilities/xr-hardware/-/archive/$pkgver/xr-hardware-$pkgver.tar.gz"
+
+build() {
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make PREFIX=/usr DESTDIR="$pkgdir" install_package
+}
+
+sha512sums="
+9a4a18ca92484649f6712688c28a829d0dcdbe05a0f2af93b94b2c0d4aac3d7290822864c42310c3b84b807a08b88d5bc88f67cfbd406a8139694dbe5edd6ff8  xr-hardware-1.1.0.tar.gz
+"

@@ -1,0 +1,79 @@
+# Maintainer: Alex McGrath <amk@amk.ie>
+pkgname=foot
+pkgver=1.16.2
+pkgrel=1
+pkgdesc="Fast, lightweight and minimalistic Wayland terminal emulator"
+url="https://codeberg.org/dnkl/foot"
+license="MIT"
+arch="all"
+depends="ncurses-terminfo"
+makedepends="
+	cage
+	font-dejavu
+	fcft-dev
+	fontconfig-dev
+	freetype-dev
+	libxkbcommon-dev
+	meson
+	ncurses
+	pixman-dev
+	scdoc
+	tllist-dev
+	utf8proc-dev
+	wayland-dev
+	wayland-protocols
+	"
+subpackages="
+	$pkgname-dbg
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	$pkgname-extra-terminfo:_extra_terminfo:noarch
+	$pkgname-themes:_themes:noarch
+	"
+source="
+	$pkgname-$pkgver.tar.gz::https://codeberg.org/dnkl/foot/archive/$pkgver.tar.gz
+	"
+options="!check" # ran during profiling
+builddir="$srcdir/foot"
+
+build() {
+	export CFLAGS="$CFLAGS -O3" # -O3 as the package is intended to use it
+	export CXXFLAGS="$CXXFLAGS -O3"
+	export CPPFLAGS="$CPPFLAGS -O3"
+
+	abuild-meson \
+		-Db_pgo=generate \
+		-Db_lto=true \
+		-Dterminfo-base-name=foot-extra \
+		-Dutmp-backend=none \
+		. output
+	meson compile -C output
+
+	ninja -C output test
+	./pgo/full-headless-cage.sh . output
+
+	meson configure -Db_pgo=use output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+_extra_terminfo() {
+	pkgdesc="$pkgdesc (extra terminfo data)"
+
+	amove /usr/share/terminfo/f
+}
+
+_themes() {
+	pkgdesc="$pkgdesc (color schemes)"
+
+	amove /usr/share/foot/themes
+}
+
+sha512sums="
+c357f4c8479e70ba716ab65ddc6605c1705702306273eb6de9797892c7b2a6ea5b8c1b05d74f552f630307356ce2b5546a5bed8ae38dc3d45f090a77cb74bb49  foot-1.16.2.tar.gz
+"

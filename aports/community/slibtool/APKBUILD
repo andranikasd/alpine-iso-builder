@@ -1,0 +1,28 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=slibtool
+pkgver=0.5.35
+pkgrel=0
+pkgdesc="Surrogate libtool implementation written in C"
+options="!check" # No testsuite
+url="https://git.foss21.org/slibtool"
+arch="all"
+license="MIT"
+source="https://dl.foss21.org/slibtool/slibtool-$pkgver.tar.xz"
+makedepends="m4"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--mandir=/usr/share/man
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+e1d2f03596432f970f8c1f93d4387cafb11355a520fb5adb9bbc02f3dcdea0bbb78ca6fe84c24faebee848279050c5bec13fd64a168b12d7fc885ac9d31a7560  slibtool-0.5.35.tar.xz
+"

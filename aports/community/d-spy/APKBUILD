@@ -1,0 +1,30 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=d-spy
+pkgver=1.9.0
+pkgrel=0
+pkgdesc="Like d-feet, but written in C and blisteringly fast"
+url="https://gitlab.gnome.org/GNOME/d-spy"
+license="GPL-3.0-or-later"
+arch="all !s390x !riscv64" # limited by gtk4.0 and libadwaita
+makedepends="meson desktop-file-utils glib-dev gtk4.0-dev libadwaita-dev"
+subpackages="$pkgname-dev $pkgname-lang"
+source="https://gitlab.gnome.org/GNOME/d-spy/-/archive/$pkgver/d-spy-$pkgver.tar.gz"
+options="!check" # no test suite
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+335e63ddaef3bde22eb0e7e3a3cf559d22c6fc202e884842dcb28c50ff5b59676135c502156f22b574ea74d932d715a1a00ccb9c27a04b425cd9e08a30e5df46  d-spy-1.9.0.tar.gz
+"

@@ -1,0 +1,23 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=osinfo-db
+pkgver=20231215
+pkgrel=0
+pkgdesc="osinfo database files"
+url="https://libosinfo.org/"
+arch="noarch"
+license="LGPL-2.0-or-later"
+makedepends="osinfo-db-tools"
+source="https://releases.pagure.org/libosinfo/osinfo-db-$pkgver.tar.xz"
+
+check() {
+	osinfo-db-validate --dir "$builddir"
+}
+
+package() {
+	osinfo-db-import --root "$pkgdir" \
+		--dir /usr/share/osinfo "$srcdir"/osinfo-db-$pkgver.tar.xz
+}
+
+sha512sums="
+fed7b1fc28aa625a73242768776c451fc459bbbba71dcda33194e9e0d8d049cdfdfcc354ca4289e1a97f82b23d4ec3a105e23d18438789fe1fe64e7bbb84a6b7  osinfo-db-20231215.tar.xz
+"

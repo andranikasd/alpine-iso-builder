@@ -1,0 +1,69 @@
+# Contributor: TBK <alpine@jjtc.eu>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=pijul
+pkgver=1.0.0_beta8
+_pkgver=1.0.0-beta.8
+pkgrel=1
+pkgdesc="Patch-based distributed version control system"
+url="https://pijul.org/"
+# s390x: fails to build due to nix crate
+# riscv64: rlimit::Resource::NOFILE not found
+arch="all !s390x !riscv64"
+license="GPL-2.0-or-later"
+makedepends="
+	cargo
+	cargo-auditable
+	libsodium-dev
+	openssl-dev
+	zstd-dev
+	"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://crates.io/api/v1/crates/pijul/$_pkgver/download
+	thrussh-0.35.1.patch
+	"
+builddir="$srcdir/$pkgname-$_pkgver"
+options="net"
+
+# secfixes:
+#   1.0.0_beta8-r1:
+#     - CVE-2023-48795
+
+export SODIUM_USE_PKG_CONFIG=1
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+
+	for shell in bash fish zsh; do
+		./target/release/pijul completion $shell > pijul.$shell
+	done
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dvm755 target/release/pijul -t "$pkgdir"/usr/bin/
+
+	install -Dvm644 pijul.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/pijul
+	install -Dvm644 pijul.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/pijul.fish
+	install -Dvm644 pijul.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_pijul
+}
+
+sha512sums="
+eca5190ca0b7bf6a79823319793c32e372231d76508d5ff3278a767641305377893a98a9959a4a7c3e6ffca7c4ee1d1bd3828837e5e08ed44d69ec9263963432  pijul-1.0.0_beta8.tar.gz
+9f4347682d1663c160fc86f1f206b19c3ebc6814419905aa7b9cca7e2d9e87840c2b242d8699bb83361b402a0e96cf5fb9ea6c19bcd12ddd14b244ce75f0f9d8  thrussh-0.35.1.patch
+"

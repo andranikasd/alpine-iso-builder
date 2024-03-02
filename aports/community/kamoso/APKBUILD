@@ -1,0 +1,59 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kamoso
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+# ppc64le, s390x and riscv64 blocked by qt5-qtwebengine -> purpose
+arch="all !armhf !ppc64le !s390x !riscv64"
+url="https://kde.org/applications/multimedia/org.kde.kamoso"
+pkgdesc="An application to take pictures and videos out of your webcam"
+license="GPL-2.0-or-later AND LGPL-2.1-only"
+depends="
+	gst-plugins-bad
+	gst-plugins-good
+	kirigami2
+	qt5-qtquickcontrols2
+	"
+makedepends="
+	extra-cmake-modules
+	glib-dev
+	gobject-introspection-dev
+	gst-plugins-base-dev
+	gstreamer-dev
+	kconfig5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kio5-dev
+	knotifications5-dev
+	purpose5-dev
+	qt5-qtbase-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/multimedia/kamoso.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kamoso-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # Broken
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+1c89795a67cf10eae4769d7505f502771c6f1951ff056ca810801cf3dfbb86c188b75898842c5d9e782005605560371edcb2e2237dc7b2b698741c55b8dad519  kamoso-23.08.5.tar.xz
+"

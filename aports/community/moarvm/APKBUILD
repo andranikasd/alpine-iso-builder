@@ -1,0 +1,42 @@
+# Contributor: Curt Tilmes <Curt.Tilmes@nasa.gov>
+# Maintainer: Curt Tilmes <Curt.Tilmes@nasa.gov>
+pkgname=moarvm
+pkgver=2024.02
+pkgrel=0
+pkgdesc="VM with adaptive optimization and JIT compilation, built for Rakudo"
+url="https://moarvm.org/"
+# riscv64 doesn't compile, "Cannot implement AO_compare_and_swap_full on this architecture"
+arch="all !riscv64"
+license="Artistic-2.0"
+depends_dev="$pkgname=$pkgver-r$pkgrel perl zstd-dev libffi-dev libuv-dev"
+makedepends="$depends_dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://moarvm.org/releases/MoarVM-$pkgver.tar.gz"
+builddir="$srcdir"/MoarVM-"$pkgver"
+options="!check" # No tests
+
+build() {
+	unset CPPFLAGS CFLAGS
+	perl Configure.pl --prefix=/usr --has-libffi \
+		--has-libuv --no-mimalloc --debug
+	make -j"$JOBS"
+}
+
+package() {
+	make PKGCONFIGDIR=/usr/lib/pkgconfig \
+		DESTDIR="$pkgdir" install
+
+	install -Dvm644 Artistic2.txt CREDITS LICENSE \
+		MANIFEST README.markdown VERSION \
+		-t "$pkgdir"/usr/share/doc/"$pkgname"
+	cp -vr docs "$pkgdir"/usr/share/doc/"$pkgname"/
+}
+
+dev() {
+	default_dev
+	amove usr/share/nqp/lib
+}
+
+sha512sums="
+e629edb3fb365fd4cd988d9c08d46ecaf002156452e22c3a0c716641eeadb5b7f0434de4e2ec3ce9c8dc354280dc419d716382c160d400ba3970decffc996ed8  moarvm-2024.02.tar.gz
+"

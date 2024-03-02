@@ -1,0 +1,44 @@
+# Contributor: Lucas Ramage <ramage.lucas@protonmail.com>
+# Maintainer: Lucas Ramage <ramage.lucas@protonmail.com>
+pkgname=ecl
+pkgver=23.9.9
+pkgrel=0
+pkgdesc="Embeddable Common Lisp"
+arch="all"
+url="https://common-lisp.net/project/ecl"
+options="!check"
+license="LGPL-2.1-or-later"
+makedepends="gmp-dev libffi-dev gc-dev texinfo"
+source="https://common-lisp.net/project/ecl/static/files/release/ecl-$pkgver.tgz"
+subpackages="$pkgname-doc $pkgname-dev"
+
+prepare() {
+	default_prepare
+
+	update_config_sub
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--infodir=/usr/share/info \
+		--mandir=/usr/share/man \
+		--localstatedir=/var/state/ecl \
+		--enable-boehm=system \
+		--with-cxx
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+c8f1dcf2bffad7358c3d4e5bb0924cbb69afaf79871e6444bd780a594e1e96e6c547346b7c9c5184a6b12ce920a6a959334cf2a85c3f3ea0e0c8f22f72fb84df  ecl-23.9.9.tgz
+"

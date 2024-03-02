@@ -1,0 +1,33 @@
+# Contributor: Maarten van Gompel <proycon@anaproy.nl>
+# Maintainer: Maarten van Gompel <proycon@anaproy.nl>
+pkgname=frog
+pkgver=0.32
+pkgrel=0
+pkgdesc="Integration of natural language processing models for Dutch"
+options="!check"
+arch="all"
+url="https://github.com/LanguageMachines/frog"
+license="GPL-3.0-only"
+depends="frogdata"
+makedepends="libtool ticcutils-dev ucto-dev libfolia-dev timbl-dev
+	mbt-dev mbtserver-dev icu-dev libxml2-dev libexttextcat-dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/LanguageMachines/frog/releases/download/v$pkgver/frog-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+971398fc6b8925319057ddfba68d543ac6710a0c0d06efb25b9362002f07f78255ab5ea822e428f6cc6034b4895c93ab3aa367ffb3e7fb3e429263d8d4c45dae  frog-0.32.tar.gz
+"

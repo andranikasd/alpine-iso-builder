@@ -1,0 +1,40 @@
+# Contributor: Richard Patel <me@terorie.dev>
+# Contributor: John Kerl <kerl.john.r@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=miller
+pkgver=6.11.0
+pkgrel=0
+pkgdesc="Name-indexed data processing tool"
+url="https://miller.readthedocs.io/"
+arch="all"
+license="BSD-2-Clause"
+subpackages="$pkgname-doc"
+makedepends="go bash"
+checkdepends="tzdata"
+options="net"
+source="https://github.com/johnkerl/miller/archive/v$pkgver/miller-$pkgver.tar.gz"
+
+export GOFLAGS="$GOFLAGS -modcacherw"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build github.com/johnkerl/miller/cmd/mlr
+}
+
+check() {
+	msg "unit tests"
+	go test github.com/johnkerl/miller/pkg/...
+	msg "regression tests"
+	go test regression_test.go
+}
+
+package() {
+	install -Dm755 mlr -t "$pkgdir"/usr/bin/
+	install -Dm644 man/mlr.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+b72de673ac34e8c6631124be69fc57c822b34fb3fa56ce22e310a7aba85bdc2de9e3308a763ea0ec00e532e3e8ad2e9625d3119e6e883736c912b005be67ac83  miller-6.11.0.tar.gz
+"

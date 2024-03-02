@@ -1,0 +1,45 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-dnspython
+_pyname=dnspython
+pkgver=2.4.2
+pkgrel=1
+pkgdesc="DNS toolkit for Python3"
+url="https://www.dnspython.org/"
+arch="all"
+license="ISC"
+makedepends="
+	cython
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://github.com/rthalley/dnspython/archive/v$pkgver/dnspython-$pkgver.tar.gz
+	0001-ignore-setuptools-scm.patch
+	"
+builddir="$srcdir/$_pyname-$pkgver"
+options="!check" # network tests are failing on CI
+
+replaces="py-dnspython" # Backwards compatibility
+provides="py-dnspython=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--backend 'setuptools.build_meta:__legacy__' \
+		--config-json '{"--build-option": ["--cython-compile"]}' \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+6a76331fc8bc282bb8ef61509317b1956bec6fb516a57409b1df38c8f5094e5ddfcaabc951f7678f1be75e735962c94f225b6e78eb4abe56b27e075180c62576  dnspython-2.4.2.tar.gz
+a23e6c450a7b5c3786d488a1e0701922603ea19e50de9e9372d57aec056b320e2b58b062fa1b610c5651709b8b7b6b9960ad4d1455981973f85ce64fc2ca678f  0001-ignore-setuptools-scm.patch
+"

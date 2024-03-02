@@ -1,0 +1,65 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=tk
+pkgver=8.6.14
+_major=${pkgver%.*}
+pkgrel=0
+pkgdesc="GUI toolkit for the Tcl scripting language"
+url="https://tcl.sourceforge.net/"
+arch="all"
+options="!check"  # Requires a running X11 server.
+license="TCL"
+depends_dev="tcl-dev libx11-dev libxft-dev fontconfig-dev"
+makedepends="$depends_dev libpng-dev"
+subpackages="$pkgname-doc $pkgname-dev"
+source="https://downloads.sourceforge.net/sourceforge/tcl/tk$pkgver-src.tar.gz
+	"
+builddir="$srcdir"/tk$pkgver/unix
+
+build() {
+	local _64bit="--disable-64bit"
+	case "$CARCH" in
+		x86_64) _64bit="--enable-64bit";;
+	esac
+
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		$_64bit
+	make
+}
+
+package() {
+	export LD_LIBRARY_PATH="$builddir"
+	make INSTALL_ROOT="$pkgdir" install install-private-headers
+
+	ln -sf wish$_major "$pkgdir"/usr/bin/wish
+	install -Dm644 ../license.terms \
+		$pkgdir/usr/share/licenses/$pkgname/LICENSE
+
+	# remove buildroot traces
+	find "$pkgdir" -name '*Config.sh' -print0 | xargs -0 sed -i -e "s#${srcdir}#/usr/src#"
+
+	# move demos to -doc directory
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/examples/
+	mv "$pkgdir"/usr/lib/tk$_major/demos/ \
+		"$pkgdir"/usr/share/doc/$pkgname/examples/
+}
+
+dev() {
+	# libtk8.6.so is the only library made and it remains in the mainpackage
+	# so depending on the main package automatically is never done
+	# https://gitlab.alpinelinux.org/alpine/aports/issues/11232#note_68789
+	depends_dev="$depends_dev tk=$pkgver-r$pkgrel"
+	default_dev
+	cd $pkgdir
+	for i in $(find . -name '*.c' -o -name '*Config.sh'); do
+		mkdir -p "$subpkgdir"/${i%/*}
+		mv $i "$subpkgdir"/${i%/*}/
+	done
+}
+
+sha512sums="
+756903dfa56cf77c7934bb3680c9bef6027f99196f4e6a2e823b85c342ca860cbb4b42154f576cc88f7f1265d28ce2d84ab5f52f848b16cca0cf9af4c770183f  tk8.6.14-src.tar.gz
+"

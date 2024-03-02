@@ -1,0 +1,107 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=yash
+pkgver=2.55
+pkgrel=0
+pkgdesc="Yet another shell"
+url="https://yash.osdn.jp"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="ncurses-dev"
+install="
+	$pkgname.post-install
+	$pkgname.pre-deinstall
+	$pkgname.post-upgrade
+	"
+subpackages="$pkgname-doc $pkgname-binsh"
+source="https://github.com/magicant/yash/releases/download/$pkgver/yash-$pkgver.tar.xz
+	default-yashrc.patch
+	sample-yashrc.patch
+	global-yashrc
+	"
+
+_compdir="usr/share/yash/completion"
+
+# Move some bigger completion files to separate subpackages.
+_comps="git:git:git[gkx]:git-*
+	openssh-client:ssh:ssh-*
+	subversion:svn
+	valgrind:valgrind
+	"
+for _i in $_comps; do
+	subpackages="$subpackages ${_i%%:*}-yash-completion:_completion:noarch"
+done
+subpackages="$subpackages $pkgname-completion::noarch"
+
+prepare() {
+	default_prepare
+
+	# XXX: Disable hanging tests.
+	sed -i -e 's/\bkill[24]-p.tst\b//g' \
+		-e 's/\bsignal[12]-y.tst\b//g' \
+		tests/Makefile.in
+
+	# Remove completions for programs that are not available on Alpine
+	# (just to decrease size of the package).
+	cd share/completion
+	rm carthage dnf pgawk useradd
+}
+
+build() {
+	sh ./configure \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--disable-nls
+	make
+}
+
+check() {
+	# FIXME: Fix broken tests.
+	make tests LANG=en_US.UTF-8 || true
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	rm -Rf "$pkgdir"/usr/share/man/ja
+
+	install -D -m644 "$srcdir"/global-yashrc "$pkgdir"/etc/yashrc
+}
+
+_completion() {
+	local name="${subpkgname%-yash-completion}"
+	pkgdesc="Yash completions for $name"
+	depends="$pkgname-completion"
+	install_if="$pkgname-completion=$pkgver-r$pkgrel $name"
+
+	local files=$(printf '%s\n' $_comps \
+		| sed -En "s|^$name:(.*)|\1|p" \
+		| tr : ' ')
+	[ "$files" ] || die "$name not found in \$_comps"
+
+	local f; for f in $files; do
+		amove usr/share/yash/completion/$f
+	done
+}
+
+completion() {
+	pkgdesc="$pkgdesc (command-line completion)"
+	depends=""
+
+	amove usr/share/yash/completion
+}
+
+binsh() {
+	pkgdesc="yash as /bin/sh"
+	provides="/bin/sh"
+	provider_priority=50  # lower (other provider is busybox-binsh)
+
+	mkdir -p "$subpkgdir"/bin
+	ln -s /usr/bin/yash "$subpkgdir"/bin/sh
+}
+
+sha512sums="
+9e92fc86884b0b315a98fcb5da0f319f431515185a970762946b919ccccc72aa8756e337dfa7cec763a7d8496bf4838eb9ef88664b35512180f13cc4146e9816  yash-2.55.tar.xz
+ae73048c6f1d8be1f39441242fefc8d261d256dc02421c9bc0cfe300e5eff47b1300411bc8f35f7cd8e96f2902241d4426ffe9f9d006116918bf6de090ba933d  default-yashrc.patch
+ac24612a82a353d65e2e1a6b99727363be62eb7801eae3109c4661d694d82ddd5c9fc1233443e69d8b26abab725eeaac2c4110e26b1b366983b13cbf7699ebf5  sample-yashrc.patch
+778b6a4fa415692293cc9a91074be373572106dc90aeb7490b37643a737f223861f05a7245e4889d8ffea975570f56fd746877726630b9486c481d3159a23e30  global-yashrc
+"

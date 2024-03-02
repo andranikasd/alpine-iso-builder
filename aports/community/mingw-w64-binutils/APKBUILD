@@ -1,0 +1,84 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+pkgname=mingw-w64-binutils
+pkgver=2.40
+pkgrel=2
+pkgdesc="Cross binutils for the MinGW-w64 cross-compiler"
+url="https://www.gnu.org/software/binutils"
+arch="x86_64 x86"
+license="GPL-3.0-or-later"
+makedepends="texinfo zlib-dev zstd-dev"
+source="$pkgname-$pkgver.tar.xz::https://ftp.gnu.org/gnu/binutils/binutils-$pkgver.tar.xz"
+builddir="$srcdir/binutils-$pkgver"
+
+# secfixes:
+#   2.36-r0:
+#     - CVE-2020-35448
+
+case "$CARCH" in
+x86_64)
+	_targets="x86_64-w64-mingw32 i686-w64-mingw32"
+	subpackages="$subpackages i686-$pkgname:x32"
+	;;
+x86)
+	_targets="i686-w64-mingw32"
+	;;
+esac
+
+build() {
+	export CFLAGS="$CFLAGS -O2"
+	export CXXFLAGS="$CXXFLAGS -O2"
+	export CPPFLAGS="$CPPFLAGS -O2"
+
+	local target
+	for target in $_targets; do
+		msg "building target: $target"
+		(
+		local bld="$srcdir"/bld-$target
+		mkdir -p "$bld"
+		cd "$bld"
+		"$builddir"/configure \
+			--prefix=/usr \
+			--program-prefix=$target- \
+			--target=$target \
+			--enable-deterministic-archives \
+			--enable-ld=default \
+			--enable-plugins \
+			--disable-default-execstack \
+			--disable-gprofng \
+			--disable-internal-libiberty \
+			--disable-multilib \
+			--disable-nls \
+			--disable-shared \
+			--disable-werror \
+			--with-mmap \
+			--with-system-zlib
+		make
+		)
+	done
+}
+
+package() {
+	local target
+	for target in $_targets; do
+		make -C "$srcdir"/bld-$target DESTDIR="$pkgdir" install
+	done
+
+	# delete bfd-plugins directory, so it does not conflict with host toolchain
+	rm -rf "$pkgdir"/usr/lib/bfd-plugins
+
+	# quite redundant given this is just regular binutils docs
+	rm -rf "$pkgdir"/usr/share/info
+	rm -rf "$pkgdir"/usr/share/man
+}
+
+x32() {
+	pkgdesc="$pkgdesc (i686-mingw target)"
+
+	amove usr/i686-w64-mingw32
+	amove usr/bin/i686-w64-mingw32*
+}
+
+sha512sums="
+a37e042523bc46494d99d5637c3f3d8f9956d9477b748b3b1f6d7dfbb8d968ed52c932e88a4e946c6f77b8f48f1e1b360ca54c3d298f17193f3b4963472f6925  mingw-w64-binutils-2.40.tar.xz
+"

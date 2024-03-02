@@ -1,0 +1,93 @@
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Oleg Titov <oleg.titov@gmail.com>
+pkgname=singularity
+pkgver=4.1.1
+pkgrel=0
+pkgdesc="Application containers focused on reproducibility for scientific computing and HPC world."
+url="https://www.sylabs.io/singularity/"
+# ppc64le: produces a non-PIE suid binary
+arch="all !ppc64le"
+license="BSD-3-Clause AND BSD-3-Clause-LBNL"
+options="!check" # no test suite from upstream
+depends="squashfs-tools"
+makedepends="
+	autoconf
+	automake
+	bash
+	cni-plugins
+	cryptsetup
+	fuse3-dev
+	go
+	glib-dev
+	libseccomp-dev
+	libtool
+	squashfuse-dev
+	"
+subpackages="$pkgname-doc $pkgname-bash-completion"
+source="https://github.com/sylabs/singularity/releases/download/v$pkgver/singularity-ce-$pkgver.tar.gz"
+builddir="$srcdir/singularity-ce-$pkgver"
+
+# secfixes:
+#   4.1.1-r0:
+#     - CVE-2024-23650
+#     - CVE-2024-23651
+#     - CVE-2024-23652
+#     - CVE-2024-23653
+#   3.8.5-r0:
+#     - CVE-2021-41190
+#     - GHSA-77vh-xpmg-72qh
+#   3.7.4-r0:
+#     - CVE-2021-32635
+#   3.7.3-r0:
+#     - CVE-2021-29136
+#   3.6.4-r0:
+#     - CVE-2020-15229
+#   3.6.3-r0:
+#     - CVE-2020-25039
+#     - CVE-2020-25040
+#   3.6.0-r0:
+#     - CVE-2020-13845
+#     - CVE-2020-13846
+#     - CVE-2020-13847
+#   3.5.2-r0:
+#     - CVE-2019-19724
+
+export GOFLAGS="$GOFLAGS -modcacherw -trimpath"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+# workaround for
+# sqlite3-binding.c:37644:42: error: 'pread64' undeclared here
+# error as of
+# https://github.com/mattn/go-sqlite3/issues/1164#issuecomment-1635253695
+export CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
+
+prepare() {
+	default_prepare
+	echo "$pkgver" > "$builddir"/VERSION
+}
+
+build() {
+	# override git dir so it picks up our version above
+	GIT_DIR=. ./mconfig \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/infodir \
+		--localstatedir=/var \
+		--without-network \
+		--without-suid
+
+	make -C builddir GOFLAGS="$GOFLAGS"
+}
+
+package() {
+	make -C builddir DESTDIR="$pkgdir" GOFLAGS="$GOFLAGS" install
+
+	install -Dm644 -t "$pkgdir"/usr/share/doc/$pkgname README.md
+}
+
+sha512sums="
+28d2e588e66e93a52af29cb91a5fcd7ef10e555b0d5ddc8e0521d05faa5ba149350a7d8bd24d35a18b58f8beee7588880f836c0391a054523b5ef091ce275484  singularity-ce-4.1.1.tar.gz
+"

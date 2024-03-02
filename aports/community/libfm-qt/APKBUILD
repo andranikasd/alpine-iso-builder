@@ -1,0 +1,52 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=libfm-qt
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="Qt port of libfm"
+url="https://github.com/lxqt/libfm-qt"
+arch="all"
+license="LGPL-2.0-or-later"
+depends="lxqt-menu-data"
+depends_dev="
+	libfm-dev
+	libexif-dev
+	lxqt-build-tools
+	menu-cache-dev
+	qt5-qtbase-dev
+	qt5-qttools-dev
+	qt5-qtx11extras-dev
+	"
+makedepends="
+	$depends_dev
+	cmake
+	samurai
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+options="!check" # No testsuite
+source="https://github.com/lxqt/libfm-qt/releases/download/$pkgver/libfm-qt-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/$pkgname/translations
+}
+
+sha512sums="
+d5a9bbb1f295dfbe88add760fc9c8da60771d4d49b64408b1278315b52dd071d7e24dbc9ff8354f0c68e5ad58e809e78a2dae77e2d4f52cd8e0b8409c0d7f5cb  libfm-qt-1.4.0.tar.xz
+"

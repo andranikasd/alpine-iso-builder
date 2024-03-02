@@ -1,0 +1,61 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Contributor: Dominika Liberda <ja@sdomi.pl>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=fluidsynth
+pkgver=2.3.4
+pkgrel=0
+arch="all"
+url="https://www.fluidsynth.org/"
+pkgdesc="A real-time software synthesizer based on the SoundFont 2 specifications"
+license="LGPL-2.1-or-later"
+depends="soundfont-timgm"
+makedepends="
+	alsa-lib-dev
+	cmake
+	dbus-dev
+	doxygen
+	glib-dev
+	graphviz
+	jack-dev
+	ladspa-dev
+	libsndfile-dev
+	pipewire-dev
+	portaudio-dev
+	pulseaudio-dev
+	readline-dev
+	samurai
+	"
+source="https://github.com/fluidsynth/fluidsynth/archive/v$pkgver/fluidsynth-v$pkgver.tar.gz"
+subpackages="$pkgname-dev $pkgname-libs $pkgname-doc"
+
+# tests are broken on s390x
+case "$CARCH" in
+	s390x) options="!check"
+esac
+
+build() {
+	# need to set gnu_source globally to fix implicit decls
+	CFLAGS="$CFLAGS -D_GNU_SOURCE" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DLIB_INSTALL_DIR=lib \
+		-DFLUID_DAEMON_ENV_FILE=/etc/conf.d/fluidsynth \
+		-Denable-ladspa=ON \
+		-Denable-portaudio=ON
+	cmake --build build
+}
+
+check() {
+	# ctest can't currently be used https://github.com/FluidSynth/fluidsynth/issues/881
+
+	ninja -C build check
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+79891116d78b9be1c38bce9e5759b9bb732c3d8ee31c6e57d1a3e2b5548879b91d19582e73ee7fb0fd243beba3bf1bbc341a26aab0b6440eef36fc55dce3e8b0  fluidsynth-v2.3.4.tar.gz
+"

@@ -1,0 +1,52 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-rpy2
+_pyname="rpy2"
+pkgver=3.5.15
+pkgrel=0
+# riscv64: R missing
+arch="all !riscv64"
+pkgdesc="A very simple, yet robust, Python interface to the R Programming Language"
+url="https://pypi.python.org/project/rpy2"
+license="GPL-2.0-only"
+depends="
+	py3-cffi
+	py3-numpy
+	py3-tz
+	py3-tzlocal
+	py3-jinja2
+	R
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	R-dev
+	"
+checkdepends="
+	py3-pytest
+	"
+options="!check" # test failures due to missing R packages
+source="$pkgname-$pkgver.tar.gz::https://pypi.io/packages/source/r/rpy2/rpy2-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+subpackages="$pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	PYTHONPATH="$PWD"/$(echo build/lib.*) \
+	pytest -v -k 'not test_rendertofile and not test_rendertobytes_plot' # Skip test that segfaults in build server
+}
+
+package() {
+	python3 -m installer --destdir="$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+e145f102b4a5fc77e77861ea2355cd2c1cd0c5360fcbc2bd0fc87a28638bf98bb8b987f944459f3b5ed2108cef03ad36fe4b1107c05279488de8c6c202334335  py3-rpy2-3.5.15.tar.gz
+"

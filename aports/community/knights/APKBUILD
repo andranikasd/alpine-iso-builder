@@ -1,0 +1,50 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=knights
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="Chess board by KDE with XBoard protocol support"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://www.kde.org/applications/games/knights/"
+license="GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kconfigwidgets5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kdoctools5-dev
+	kio5-dev
+	kplotting5-dev
+	ktextwidgets5-dev
+	kwallet5-dev
+	kxmlgui5-dev
+	libkdegames-dev
+	plasma-framework5-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/games/knights.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/knights-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+e71fcbf60216711cd2740a2f44b9937da2a244a4be2e57b1b4afbf772a1f096b72664f36cbdce86a61ffd123694c608e24d106681ff56bb8dc68e9daf0529a63  knights-23.08.5.tar.xz
+"

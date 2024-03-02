@@ -1,0 +1,44 @@
+# Contributor: Galen Abell <galen@galenabell.com>
+# Maintainer: Galen Abell <galen@galenabell.com>
+pkgname=toot
+pkgver=0.41.1
+pkgrel=0
+pkgdesc="mastodon cli & tui"
+url="https://github.com/ihabunek/toot"
+arch="noarch"
+license="GPL-3.0-only"
+depends="
+	py3-beautifulsoup4
+	py3-click
+	py3-requests
+	py3-tomlkit
+	py3-urwid
+	py3-urwidgets
+	py3-wcwidth
+	"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/t/toot/toot-$pkgver.tar.gz"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# Integration tests require a running Mastodon instance.
+	.testenv/bin/python3 -m pytest --ignore=tests/integration/
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+af6e66afaf54d0406dd6de0d7e9b55fd8ce33854e60c2a73b5e1783a47392a976b9569bda9ee5143a060ead7fd9dd7b58e83b85e03a4e63232d9020e9f559d52  toot-0.41.1.tar.gz
+"

@@ -1,0 +1,43 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=corestuff
+pkgver=4.4.0
+pkgrel=2
+pkgdesc="An activity viewer from C-Suite"
+# armhf blocked by extra-cmake-modules -> kglobalaccel
+arch="all !armhf"
+url="https://gitlab.com/cubocore"
+license="GPL-3.0-or-later"
+depends="qt5-qtsvg"
+makedepends="
+	cmake
+	kglobalaccel5-dev
+	libcprime-dev
+	libcsys-dev
+	libxcomposite-dev
+	libxi-dev
+	qt5-qtbase-dev
+	qt5-qtx11extras-dev
+	samurai
+	xcb-util-dev
+	xcb-util-wm-dev
+	"
+source="https://gitlab.com/cubocore/corestuff/-/archive/v$pkgver/corestuff-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+build() {
+	cmake -B build -GNinja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f5dc5d544056f81436522930ef461b1875a58cd4f5a79ffdfe472b81c36ae568ca8c588579ecf14e10e535c435fd984e5ac0a1e3a5ff5e4e4662e470e2c4c7d4  corestuff-v4.4.0.tar.gz
+"

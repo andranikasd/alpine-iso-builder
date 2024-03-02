@@ -1,0 +1,44 @@
+# Contributor: Celeste <cielesti@protonmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=py3-whitenoise
+pkgver=6.6.0
+pkgrel=0
+pkgdesc="Radically simplified static file serving for Python web apps"
+url="https://whitenoise.readthedocs.io/"
+arch="noarch"
+license="MIT"
+depends="py3-brotli"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="
+	py3-django
+	py3-pytest
+	py3-requests
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/evansd/whitenoise/archive/$pkgver/py3-whitenoise-$pkgver.tar.gz"
+builddir="$srcdir/whitenoise-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+523070b760d17ff3b1ae263ea36d6b875acb2d9d05d562b1e24a24be84ebb026b7ebf558c6b6322a028a321c75dc3dfe7b3d84e8b3710754f05553820bc12f51  py3-whitenoise-6.6.0.tar.gz
+"

@@ -1,0 +1,39 @@
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=pv
+pkgver=1.8.5
+pkgrel=0
+pkgdesc="CLI tool for monitoring the progress of data through a pipeline"
+url="https://www.ivarch.com/programs/pv.shtml"
+arch="all"
+license="Artistic-2.0"
+subpackages="$pkgname-doc"
+source="https://www.ivarch.com/programs/sources/pv-$pkgver.tar.gz"
+
+build() {
+	CFLAGS="$CFLAGS -flto=auto" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--disable-nls
+	make
+}
+
+check() {
+	# IPC tests fail when running in parallel
+	make -j1 check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+6d7a0f785ace5e25c5677af4cf38a003386774e60563865de7f1dae60f1785685541da93e1f88236b8b2e14431584bc2cb2adb3a575fb90dc774bc6bacf22e21  pv-1.8.5.tar.gz
+"

@@ -1,0 +1,62 @@
+# Contributor: S.M Mukarram Nainar <theone@sm2n.ca>
+# Maintainer: team/rust <alpine@ptrcnull.me>
+pkgname=rust-analyzer
+pkgver=2024.02.12
+_pkgver=${pkgver//./-}
+pkgrel=1
+pkgdesc="Rust compiler front-end for IDEs"
+url="https://github.com/rust-lang/rust-analyzer"
+# armhf, armv7, x86: some tests fail, not supported by upstream
+# riscv64, s390x: blocked by cargo/rust
+arch="aarch64 ppc64le x86_64"
+license="MIT OR Apache-2.0"
+depends="rust-src"
+makedepends="cargo mimalloc2-dev cargo-auditable"
+checkdepends="rustfmt"
+subpackages="$pkgname-doc"
+source="https://github.com/rust-lang/rust-analyzer/archive/$_pkgver/rust-analyzer-$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$_pkgver"
+# requires rustup toolchain to run rustup rustfmt for sourcegen
+options="net !check"
+
+# crashes otherwise
+export CARGO_PROFILE_RELEASE_PANIC="unwind"
+
+
+prepare() {
+	default_prepare
+
+	# rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# build against system-provided mimalloc.
+	# newline because file doesn't end in newline..
+	cat >> .cargo/config.toml <<-EOF
+
+		[target.$target]
+		mimalloc = { rustc-link-lib = ["mimalloc"] }
+	EOF
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	CFG_RELEASE="$pkgver" \
+		cargo auditable build \
+		--frozen \
+		--release \
+		--features="mimalloc"
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/rust-analyzer -t "$pkgdir"/usr/bin/
+	install -Dm644 docs/user/manual.adoc -t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+sha512sums="
+2fa7f1b8b99f8155785175c7e698b9d7333a8530f316c5ebc9d3d3c10b405829692b5ea15837389fd45653d09de7d3a6d5291dad094bada4e943cdbaccfe7191  rust-analyzer-2024.02.12.tar.gz
+"

@@ -1,0 +1,23 @@
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=execline-man-pages
+pkgver=2.9.4.0.1
+pkgrel=0
+pkgdesc="Unofficial mdoc versions of the execline documentation"
+url="https://git.sr.ht/~flexibeast/execline-man-pages"
+arch="noarch"
+license="ISC"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~flexibeast/execline-man-pages/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check" # no tests
+install_if="execline>=${pkgver%.*} docs"
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	find "$pkgdir" -type f ! -name "*.gz" \
+		-exec gzip -9 {} \;
+}
+
+sha512sums="
+1dab22ac99644ded604c140b6c16a6920248409f41ad451c500361acd6b2218dfc6bd1ceac6062e5cebc9a6453ab5dde0291680118ada0145f0bd16c661e7075  execline-man-pages-2.9.4.0.1.tar.gz
+"

@@ -1,0 +1,33 @@
+# Contributor: ScrumpyJack <scrumpyjack@st.ilet.to>
+# Maintainer: ScrumpyJack <scrumpyjack@st.ilet.to>
+pkgname=nmh
+pkgver=1.8
+pkgrel=0
+pkgdesc="nmh is a powerful electronic mail handling system"
+url="https://nongnu.org/nmh/"
+arch="all"
+license="BSD-3-Clause"
+makedepends="openssl-dev>3 ncurses-dev gnutls-dev readline-dev gdbm-dev"
+subpackages="$pkgname-doc"
+source="https://download.savannah.nongnu.org/releases/nmh/nmh-$pkgver.tar.gz"
+
+build() {
+	# strcasestr
+	CFLAGS="$CFLAGS -D_GNU_SOURCE" \
+	./configure \
+		--host=$CHOST \
+		--build=$CBUILD \
+		--prefix=/usr \
+		--with-readline \
+		--with-tls \
+		--sysconfdir=/etc/nmh
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+12fc28d6a11da9e5a7d0ec1ca2811906ccdecdace94c06e17825d0029f6fbd1e5e1b81e82fe991ba1b7f8f045c2b60007473de0e2387e96d19262e94f0cafbf6  nmh-1.8.tar.gz
+"

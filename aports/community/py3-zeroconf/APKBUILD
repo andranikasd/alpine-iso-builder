@@ -1,0 +1,45 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-zeroconf
+pkgver=0.74.0
+pkgrel=0
+pkgdesc="Python implementation of multicast DNS service discovery"
+url="https://github.com/jstasiak/python-zeroconf"
+arch="all"
+license="LGPL-2.0-or-later"
+replaces="py-zeroconf" # for backwards compatibility
+provides="py-zeroconf=$pkgver-r$pkgrel" # for backwards compatibility
+depends="python3 py3-ifaddr"
+makedepends="
+	cython
+	py3-gpep517
+	py3-poetry-core
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+checkdepends="py3-pytest py3-pytest-cov py3-pytest-asyncio"
+subpackages="$pkgname-pyc"
+source="python-zeroconf-$pkgver.tar.gz::https://github.com/jstasiak/python-zeroconf/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir"/python-zeroconf-$pkgver
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+c95348f406f93d38a6ae527250007d3556a6b1aa417331bc902249725bfb749d4e3639fe9eeed38697953d985a9ff9cef8b3177f8f2b3a8474d1a2a491827db7  python-zeroconf-0.74.0.tar.gz
+"

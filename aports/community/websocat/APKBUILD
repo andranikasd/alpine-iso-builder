@@ -1,0 +1,32 @@
+# Maintainer: Olliver Schinagl <oliver@schinagl.nl>
+pkgname=websocat
+pkgver=1.12.0
+pkgrel=0
+pkgdesc="Netcat, curl and socat for WebSockets"
+url="https://github.com/vi/websocat"
+arch="all"
+license="MIT"
+makedepends="cargo openssl-dev>3 cargo-auditable"
+options="net"
+source="https://github.com/vi/websocat/archive/v$pkgver/websocat-$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --locked
+}
+
+check() {
+	cargo test --release --locked
+}
+
+package() {
+	install -D -m 0755 "target/release/websocat" -t "$pkgdir/usr/bin"
+}
+
+sha512sums="
+043e175d557fee92d381ed1f1aa510056e1d59d0bd25c8f1cc9bf78c3ef59e9e76c5ac283f6bf4e8c9563365cd57deaf5e6f3b0040e6d680a9e8dc80ad931610  websocat-1.12.0.tar.gz
+"

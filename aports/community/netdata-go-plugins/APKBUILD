@@ -1,0 +1,38 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Henrik Riomar <henrik.riomar@gmail.com>
+pkgname=netdata-go-plugins
+pkgver=0.58.0
+pkgrel=0
+pkgdesc="netdata go.d.plugin"
+url="https://github.com/netdata/go.d.plugin"
+arch="all !x86 !armv7 !armhf" # checks fail
+license="GPL-3.0-or-later"
+depends="netdata"
+makedepends="go"
+source="$pkgname-$pkgver.tar.gz::https://codeload.github.com/netdata/go.d.plugin/tar.gz/refs/tags/v$pkgver"
+builddir="$srcdir/go.d.plugin-$pkgver"
+
+export GOFLAGS="$GOFLAGS -modcacherw"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -v -o go.d.plugin ./cmd/godplugin
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	 mkdir -p "$pkgdir/usr/lib/netdata/conf.d"
+	 cp -r "$builddir/config/go.d.conf" "$builddir/config/go.d" "$pkgdir/usr/lib/netdata/conf.d/"
+
+	 mkdir -p "$pkgdir/usr/libexec/netdata/plugins.d/"
+	 install -D -m755 -t "$pkgdir/usr/libexec/netdata/plugins.d" "$builddir/go.d.plugin"
+}
+
+sha512sums="
+cab04ea45008b668a6103a6d147e4f96e55a132f13e5ca3054b5ea6cff263dba048a9f7f52f4781495425f9a9cbb9e43786047188b0165ca1071c7c216486e12  netdata-go-plugins-0.58.0.tar.gz
+"

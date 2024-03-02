@@ -1,0 +1,34 @@
+# Contributor: Olliver Schinagl <oliver@schinagl.nl>
+# Maintainer: Olliver Schinagl <oliver@schinagl.nl>
+pkgname=stress-ng
+pkgver=0.17.05
+pkgrel=0
+pkgdesc="stress-ng will stress test a computer system in various selectable ways"
+url="https://github.com/ColinIanKing/stress-ng"
+arch="all"
+license="GPL-2.0-or-later"
+options="!check" # tests are not portable
+makedepends="
+	judy-dev
+	libaio-dev
+	libbsd-dev
+	linux-headers
+	lksctp-tools-dev
+	zlib-dev
+	"
+subpackages="$pkgname-doc $pkgname-bash-completion"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ColinIanKing/stress-ng/archive/refs/tags/V$pkgver.tar.gz"
+
+build() {
+	export CFLAGS="${CFLAGS/-Os/-O2}"
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" \
+		JOBDIR="/usr/share/doc/$pkgname/example-jobs/" install
+}
+
+sha512sums="
+cc16ea5a805c5e4606972bfd4c9a125521a52294a3384dd90b69ca470aa7d5d9862b3dee96eed0b84cd596bc0f4f6819d2a8f9f9b6621509eb97a7c5c837fe8f  stress-ng-0.17.05.tar.gz
+"

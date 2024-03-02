@@ -1,0 +1,38 @@
+# Contributor: John Gebbie <me@johngebbie.com>
+# Maintainer: John Gebbie <me@johngebbie.com>
+pkgname=dotool
+pkgver=1.4
+pkgrel=0
+pkgdesc="Command to simulate input anywhere (X11, Wayland, TTYs)"
+url="https://sr.ht/~geb/dotool"
+arch="all"
+license="GPL-3.0-only"
+makedepends="go libxkbcommon-dev scdoc"
+install="$pkgname.pre-install"
+subpackages="$pkgname-doc $pkgname-openrc"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~geb/dotool/archive/$pkgver.tar.gz
+	dotoold.initd
+	"
+options="!check" # no test suite
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	export DOTOOL_VERSION="$pkgver"
+	export DOTOOL_DESTDIR="$pkgdir"
+	export DOTOOL_BINDIR=usr/bin
+	export DOTOOL_UDEV_RULES_DIR=usr/lib/udev/rules.d
+	./build.sh
+}
+
+package() {
+	./build.sh install
+	install -Dm755 "$srcdir"/dotoold.initd "$pkgdir"/etc/init.d/dotoold
+}
+
+sha512sums="
+9bf735365f6b5dd41473134cca1efaecf702b8733ca5026ac1b568ff4e2168c9120d35c3da5296002d16bd5d2af9910c0011a501d3628059f77221e3de51e362  dotool-1.4.tar.gz
+2d2744d75178aa57c653c5bdc6370caa205d96525f9aa6e5480c6c98c6f3528f0a4eb8997eb1d85acfadf97e790937244b017f5cc7981f2000908619b64dfed1  dotoold.initd
+"

@@ -1,0 +1,48 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=hcloud
+pkgver=1.38.3
+pkgrel=2
+pkgdesc="Command-line interface for Hetzner Cloud"
+url="https://github.com/hetznercloud/cli"
+license="MIT"
+arch="all"
+makedepends="go"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/hetznercloud/cli/archive/v$pkgver/hcloud-$pkgver.tar.gz"
+builddir="$srcdir/cli-$pkgver"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build \
+		-ldflags "-X github.com/hetznercloud/cli/internal/version.Version=$pkgver" \
+		-v \
+		./cmd/hcloud
+
+	./hcloud completion bash > $pkgname.bash
+	./hcloud completion fish > $pkgname.fish
+	./hcloud completion zsh > $pkgname.zsh
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 hcloud -t "$pkgdir"/usr/bin/
+
+	install -Dm644 $pkgname.bash "$pkgdir"/usr/share/bash-completion/completions/$pkgname
+	install -Dm644 $pkgname.fish "$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+	install -Dm644 $pkgname.zsh "$pkgdir"/usr/share/zsh/site-functions/_$pkgname
+}
+
+sha512sums="
+60a1b12bd3644c32e978cb93e487a3e468e269c970308eb41a4515bab59522be6a0684829d133bca4892bc4300179de5b83e8846034ea842b0c1ee87d61dcd43  hcloud-1.38.3.tar.gz
+"

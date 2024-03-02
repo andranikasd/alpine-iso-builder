@@ -1,0 +1,50 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kmousetool
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/applications/utilities/org.kde.kmousetool"
+pkgdesc="A program that clicks the mouse for you"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	qt5-qtbase-dev
+	kdbusaddons5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	knotifications5-dev
+	kxmlgui5-dev
+	phonon-dev
+	libxt-dev
+	libxtst-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/accessibility/kmousetool.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kmousetool-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+bb74c282384be910cafa59e41e2f6ac0c311bd968b03f9d079ae538eb46c0c653574a4983ca694b64c4ba783b38baf6acd7e7aa6294f72e243bb42e2c62cf1ad  kmousetool-23.08.5.tar.xz
+"

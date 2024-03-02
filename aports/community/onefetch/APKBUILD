@@ -1,0 +1,71 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: omni <omni+alpine@hack.org>
+pkgname=onefetch
+pkgver=2.19.0
+pkgrel=0
+pkgdesc="Git repository summary on your terminal"
+url="https://github.com/o2sh/onefetch"
+# s390x: build failure
+arch="all !s390x"
+license="MIT"
+makedepends="
+	cargo
+	cargo-auditable
+	libgit2-dev
+	zlib-dev
+	zlib-ng-dev
+	zstd-dev
+	"
+checkdepends="bash"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://crates.io/api/v1/crates/onefetch/$pkgver/download"
+options="net"
+
+# Reduce binary size
+export CARGO_PROFILE_RELEASE_OPT_LEVEL="z"
+
+prepare() {
+	default_prepare
+
+	# Rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# Build against system-provided libzstd.
+	mkdir -p .cargo
+	cat >> .cargo/config.toml <<-EOF
+		[target.$target]
+		git2 = { rustc-link-lib = ["git2"] }
+		z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+		zstd = { rustc-link-lib = ["zstd"] }
+	EOF
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+	for shellcomp in bash fish zsh; do
+		./target/release/onefetch --generate "$shellcomp" > onefetch."$shellcomp"
+	done
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm0755 target/release/onefetch "$pkgdir"/usr/bin/onefetch
+	install -Dm0644 docs/onefetch.1 "$pkgdir"/usr/share/man/man1/onefetch.1
+	install -Dm0644 onefetch.bash "$pkgdir"/usr/share/bash-completion/completions/onefetch
+	install -Dm0644 onefetch.fish "$pkgdir"/usr/share/fish/vendor_completions.d/onefetch.fish
+	install -Dm0644 onefetch.zsh "$pkgdir"/usr/share/zsh/site-functions/_onefetch
+}
+
+sha512sums="
+5e3bc2ad3ea8be9a2b44931b1b6de2b715c59c70cd947c134b9a64f3d2a862833c429724226dc4857d748126d1391408768f84c4811afb10aaf43e462b7926d0  onefetch-2.19.0.tar.gz
+"

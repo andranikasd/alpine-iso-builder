@@ -1,0 +1,19 @@
+# Maintainer: Hugo Osvaldo Barrera <hugo@whynothugo.nl>
+pkgname=superd-services
+pkgver=0.8.0
+pkgrel=0
+pkgdesc="A collection of service files for use by superd"
+url="https://git.sr.ht/~whynothugo/superd-services"
+arch="noarch"
+license="ISC"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~whynothugo/superd-services/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+package() {
+	make DESTDIR="$pkgdir/" install
+}
+
+sha512sums="
+f20fc64e03f6ded629a2350bee95fdc20c94e3099e3bd79c6c61d144b70242db6f1409f669b5942a40219d999b3dad55b33c2e745cece401db1a1aca7de0608f  superd-services-0.8.0.tar.gz
+"

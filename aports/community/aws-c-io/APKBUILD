@@ -1,0 +1,63 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+# Maintainer:
+pkgname=aws-c-io
+pkgver=0.14.3
+pkgrel=0
+pkgdesc="Module for the AWS SDK for C handling all IO and TLS work for application protocols"
+url="https://github.com/awslabs/aws-c-io"
+# s390x: aws-c-common
+# ppc64le: fails tests
+# arm*: fails a bunch of tests / segfaults
+arch="all !armhf !armv7 !ppc64le !s390x"
+license="Apache-2.0"
+makedepends="
+	aws-c-cal-dev
+	aws-c-common-dev
+	cmake
+	openssl-dev
+	s2n-tls-dev
+	samurai
+	"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/awslabs/aws-c-io/archive/refs/tags/v$pkgver.tar.gz"
+options="net" # required for tests to make connections
+
+case "$CARCH" in
+aarch64)
+	# broken on new networking builder setup
+	options="$options !check"
+	;;
+esac
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	CFLAGS="$CFLAGS -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=/usr/lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure -j${JOBS:-2}
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+	amove usr/lib/aws-c-io
+}
+
+sha512sums="
+bb8666853abbd583aea2f30099fe947562809ccab36ae11708c118b5bd6a7876b8d94ef45bb988b44c4dd1dc76e6dff70adb7a20b8b5d89d2d7ea2138b3ecea8  aws-c-io-0.14.3.tar.gz
+"

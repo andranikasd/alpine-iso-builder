@@ -1,0 +1,31 @@
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=py3-schedule
+pkgver=1.2.1
+pkgrel=0
+pkgdesc="Job scheduling for humans"
+url="https://github.com/dbader/schedule"
+arch="noarch"
+license="MIT"
+depends="python3"
+makedepends="py3-setuptools"
+checkdepends="py3-pytest py3-pytest-mock"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/s/schedule/schedule-$pkgver.tar.gz"
+builddir="$srcdir/schedule-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+f2802bb7c49afd649f3e4650366bcd03c64db0301e929c981e1888323b6debac1280d668dad0e2fd7149534cfccefc46eaaafc0a009828ba11606c6a2cfbcc81  schedule-1.2.1.tar.gz
+"

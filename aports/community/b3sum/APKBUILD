@@ -1,0 +1,44 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=b3sum
+pkgver=1.5.0
+pkgrel=0
+pkgdesc="Command line implementation of the BLAKE3 hash function"
+url="https://blake3.io"
+arch="all"
+license="CC0-1.0 OR Apache-2.0"
+makedepends="cargo cargo-auditable"
+source="b3sum-$pkgver.tar.gz::https://crates.io/api/v1/crates/b3sum/$pkgver/download"
+
+case "$CARCH" in
+armhf)
+	# hang forever, probably due to non-native hardware
+	options="$options !check"
+	;;
+aarch64|armv7)
+	_features="neon"
+	;;
+esac
+
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen ${_features:+--features $_features}
+}
+
+check() {
+	cargo test --frozen ${_features:+--features $_features}
+}
+
+package() {
+	install -Dm755 target/release/b3sum -t "$pkgdir"/usr/bin
+}
+
+sha512sums="
+d4e924a0a1da5e21ae8b2058de62b88803751967a58e7fbc5c246931be20de191afa0eb6813e56dbca7d22dd851e6d1b9c2b87909daddbb921eb354044196673  b3sum-1.5.0.tar.gz
+"

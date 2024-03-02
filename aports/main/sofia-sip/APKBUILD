@@ -1,0 +1,57 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=sofia-sip
+pkgver=1.13.17
+pkgrel=0
+pkgdesc="RFC3261 compliant SIP User-Agent library"
+url="https://github.com/freeswitch/sofia-sip"
+arch="all"
+license="LGPL-2.1-only"
+options="!check" #tests are broken
+makedepends="automake autoconf libtool m4
+glib-dev openssl-dev>3 lksctp-tools-dev"
+checkdepends="check-dev"
+subpackages="$pkgname-dev $pkgname-dbg"
+source="$pkgname-$pkgver.tar.gz::https://github.com/freeswitch/sofia-sip/archive/v$pkgver.tar.gz
+	Support-forking-SIP-calls.patch
+	"
+
+# secfixes:
+#   1.13.11-r0:
+#     - CVE-2023-22741
+#   1.13.8-r0:
+#     - CVE-2022-31001
+#     - CVE-2022-31002
+#     - CVE-2022-31003
+
+prepare() {
+	default_prepare
+	sh autogen.sh
+}
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--with-openssl \
+		--enable-sctp \
+		--enable-static=no \
+		--disable-rpath
+	make
+}
+
+check() {
+	TPORT_DEBUG=9 TPORT_TEST_HOST=0.0.0.0 make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+doc() {
+	default_doc
+	make doxygen
+}
+sha512sums="
+356577d415d6dc4191f0f49f7fa1d6f33fafdb9e455556f83e091159055a215fc1ebfa9c7dc23b5f5e533b85e23afa7b1444170419fdf137aeb2ea048de77e08  sofia-sip-1.13.17.tar.gz
+e79ba6dbc742e0dba9bb7364cf78cf192950900c139f74a59dd4e1713e97d947959a4d4987c06d29fadfd9e7dd0f970389ba640756a88e80f3093d697396a1e4  Support-forking-SIP-calls.patch
+"

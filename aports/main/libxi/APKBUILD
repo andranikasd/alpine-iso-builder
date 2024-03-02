@@ -1,0 +1,43 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libxi
+pkgver=1.8.1
+pkgrel=2
+pkgdesc="X11 Input extension library"
+url="https://www.x.org"
+arch="all"
+license="MIT AND X11"
+options="!check"  # No test suite.
+subpackages="$pkgname-dev $pkgname-doc"
+makedepends="
+	xorgproto
+	libx11-dev
+	libxext-dev
+	libxfixes-dev
+	util-macros
+	xmlto
+	"
+source="https://www.x.org/releases/individual/lib/libXi-$pkgver.tar.xz"
+
+builddir="$srcdir"/libXi-$pkgver
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--with-xmlto \
+		--without-fop \
+		--disable-static
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+}
+
+sha512sums="
+a30b1a07e6d710f5196e7477415d68074736f89d954e8f2d5ccc9b5f349e7d1d440c90fb512508176b5db5ecad55608cfb540872936b731963fd83343db3a0b9  libXi-1.8.1.tar.xz
+"

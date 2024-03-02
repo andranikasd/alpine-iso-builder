@@ -1,0 +1,52 @@
+# Contributor: John Regan <john@jrjrtech.com>
+# Maintainer: Laurent Bercot <ska-devel@skarnet.org>
+pkgname=s6
+pkgver=2.12.0.3
+pkgrel=1
+pkgdesc="skarnet.org's small & secure supervision software suite."
+url=https://skarnet.org/software/s6/
+arch="all"
+license="ISC"
+makedepends="skalibs-dev>=2.14 execline-dev"
+depends="s6-ipcserver execline"
+options="!check"
+subpackages="$pkgname-ipcserver $pkgname-static $pkgname-dev $pkgname-doc $pkgname-openrc"
+source="https://skarnet.org/software/s6/s6-$pkgver.tar.gz s6-svscanboot s6.initd"
+install="s6.pre-install s6.pre-upgrade"
+triggers="s6.trigger=/run/service"
+
+_ipcserver_binaries="bin/s6-ipcserver bin/s6-ipcserver-socketbinder bin/s6-ipcserverd bin/s6-applyuidgid"
+
+build() {
+	./configure \
+		--enable-shared \
+		--enable-static \
+		--disable-allstatic \
+		--libdir=/usr/lib \
+		--libexecdir="/lib/$pkgname" \
+		--with-dynlib=/lib
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -D "$srcdir/s6-svscanboot" "$pkgdir/lib/s6/s6-svscanboot"
+	install -D "$srcdir/s6.initd" "$pkgdir/etc/init.d/s6"
+}
+
+doc() {
+	default_doc
+	mkdir -p "$subpkgdir/usr/share/doc"
+	cp -a "$builddir/doc" "$subpkgdir/usr/share/doc/$pkgname"
+}
+
+ipcserver() {
+	depends=""
+	amove $_ipcserver_binaries
+}
+
+sha512sums="
+ecc57b5a06fb413d74337324f8942c905075cf14d87c1471568a836c747271cf95d0edecac69dea54cee55f7a3dbd102493876356c2d36065ab35962b87b559a  s6-2.12.0.3.tar.gz
+bcb503c64fe4644b8f33775e94f03f08e422854247d14c9ff85f5d593b37fb2373fadf373da4226a1e2f4eba17a99fdcd40acb3645f8533f2f3e1a55c984f053  s6-svscanboot
+d4ff33bbd674160f3d47ed8d566fe756ee5a54e1e8febd7d873f5f5158d1c4eeac1ddf460fbc6f23b75a8ee2d007117c3ababa6311ae9dcc5ad087dc4a154eee  s6.initd
+"

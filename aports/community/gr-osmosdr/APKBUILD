@@ -1,0 +1,54 @@
+# Contributor: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
+# Maintainer: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
+pkgname=gr-osmosdr
+pkgver=0.2.5
+pkgrel=0
+pkgdesc="osmocom Gnu Radio Blocks"
+url="https://osmocom.org/projects/gr-osmosdr/wiki"
+arch="armv7 x86_64 aarch64" # limited by libvolk and gnuradio
+license="GPL-3.0-only"
+depends_dev="
+	airspyhf-dev
+	airspyone-host-dev
+	bladerf-dev
+	gnuradio-dev
+	gr-funcube-dev
+	hackrf-dev
+	librtlsdr-dev
+	"
+makedepends="
+	$depends_dev
+	cmake
+	doxygen
+	graphviz
+	libvolk-dev
+	py3-six
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://gitea.osmocom.org/sdr/gr-osmosdr/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DENABLE_AIRSPY=ON \
+		-DENABLE_AIRSPYHF=ON \
+		-DENABLE_FCD=ON \
+		-Wno-dev
+	cmake --build build
+}
+
+check() {
+	cmake --build build --target test
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+d1c126d94accbd292624022df6ff7febecb1c73c3a1a0c3e8d0e3e4d882076df5b77ad14d79966a150e2c9d889c391239b1dc831acf49cdf891a19db7f830901  gr-osmosdr-0.2.5.tar.gz
+"

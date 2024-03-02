@@ -1,0 +1,100 @@
+# Contributor: Daniel Sabogal <dsabogalcc@gmail.com>
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=octave
+pkgver=8.4.0
+pkgrel=1
+pkgdesc="A high-level language, primarily intended for numerical computations"
+url="https://www.gnu.org/software/octave/"
+# ppc64le, s390x missing texlive
+# missing openjdk on riscv64
+arch="all !s390x !riscv64 !ppc64le"
+license="GPL-3.0-or-later"
+subpackages="$pkgname-dev $pkgname-doc"
+makedepends="
+	arpack-dev
+	bison
+	curl-dev
+	fftw-dev
+	fltk-dev
+	fontconfig-dev
+	freetype-dev
+	gfortran
+	ghostscript-dev
+	glpk-dev
+	glu-dev
+	gnuplot
+	graphicsmagick-dev
+	hdf5-dev
+	imagemagick-dev
+	java-jdk
+	lcms2-dev
+	libltdl
+	libsm-dev
+	libsndfile-dev
+	libtool
+	openblas-dev
+	pcre2-dev
+	perl
+	portaudio-dev
+	qhull-dev
+	qrupdate-dev
+	qscintilla-dev
+	qt5-qttools-dev
+	rapidjson-dev
+	readline-dev
+	suitesparse-dev
+	texinfo
+	xz-dev
+	zlib-dev
+	"
+checkdepends="
+	bzip2
+	gzip
+	tar
+	zip
+	"
+source="https://ftp.gnu.org/gnu/octave/octave-$pkgver.tar.xz
+	abs.patch
+	"
+
+case "$CARCH" in
+	x86)
+		#x86 libjava.so cannot find libjvm.so
+		options="!check" ;;
+esac
+
+build() {
+	# https://savannah.gnu.org/bugs/?63318
+	export CXXFLAGS="${CXXFLAGS/-D_GLIBCXX_ASSERTIONS=1}"
+
+	export JAVA_HOME="/usr/lib/jvm/default-jvm"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--infodir=/usr/share/info \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-shared \
+		--disable-static \
+		--disable-rpath
+	make
+}
+
+check() {
+	LD_LIBRARY_PATH="/usr/lib/jvm/default-jvm/lib/server:$LD_LIBRARY_PATH" make check
+}
+
+package() {
+	make DESTDIR="$pkgdir/" \
+		-C "$builddir" install
+	rm -rf "$pkgdir"/usr/lib/charset.alias
+	rm -rf "$pkgdir"/usr/share/octave/"$pkgver"/etc/tests
+}
+
+sha512sums="
+9d9e6103105cd98298083c9f8b7ba07265cddb689189d03347c5e85cbee782084a93e1829994e410464651925c8bfd9d30a54d9519069a586e498bcdf91cd80e  octave-8.4.0.tar.xz
+f6cd1a52686a66d9914029b3c70eba88d2468700abfb16c3bdc5c0bae2a29cbf06143e15c2828be1112d45403247ff5713edf1b1261eaf132465ac05df6c7c7c  abs.patch
+"

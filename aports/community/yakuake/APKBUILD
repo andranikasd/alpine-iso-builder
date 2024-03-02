@@ -1,0 +1,59 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=yakuake
+pkgver=23.08.5
+pkgrel=0
+arch="all !armhf"
+url="https://kde.org/applications/system/org.kde.yakuake"
+pkgdesc="A drop-down terminal emulator based on KDE Konsole technology"
+license="GPL-2.0-only OR GPL-3.0-only"
+depends="konsole"
+makedepends="
+	extra-cmake-modules
+	karchive5-dev
+	kconfig5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kglobalaccel5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kio5-dev
+	knewstuff5-dev
+	knotifications5-dev
+	knotifyconfig5-dev
+	kparts5-dev
+	kwayland5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	qt5-qtx11extras-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/utilities/yakuake.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/yakuake-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+264e98a764d21be2182b04acb689ad8ade5b1b402582cd1f6deb2141088173adf1c64c9751a4a07677b1bcea1f376c220f14075d72f630b0409a0e2d4ff9f92e  yakuake-23.08.5.tar.xz
+"

@@ -1,0 +1,125 @@
+# Contributor: Hoang Nguyen <folliekazetani@protonmail.com>
+# Contributor: Fraser Waters <frassle@gmail.com>
+# Maintainer: Hoang Nguyen <folliekazetani@protonmail.com>
+pkgname=pulumi
+pkgver=3.108.0
+pkgrel=0
+pkgdesc="Infrastructure as Code SDK"
+url="https://pulumi.com/"
+# Tests show that pulumi's plugin system doesn't work on any other platforms
+arch="x86_64 aarch64"
+license="Apache-2.0"
+makedepends="go"
+checkdepends="tzdata"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	$pkgname-language-go:_go
+	$pkgname-language-nodejs:_nodejs
+	$pkgname-language-python:_python
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pulumi/pulumi/archive/v$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	local _goldflags="-X github.com/pulumi/pulumi/sdk/v${pkgver%%.*}/go/common/version.Version=v$pkgver"
+	mkdir -p "$builddir"/bin
+
+	cd "$builddir"/sdk/go
+	go generate ./...
+	go build -C pulumi-language-go -v \
+		-o "$builddir"/bin/pulumi-language-go \
+		-ldflags "$_goldflags"
+
+	for lang in python nodejs; do
+		cd "$builddir"/sdk/$lang/cmd/pulumi-language-$lang
+		go build -v \
+			-o "$builddir"/bin/pulumi-language-$lang \
+			-ldflags "$_goldflags"
+	done
+
+	cd "$builddir"/pkg
+	go build -v \
+		-o "$builddir"/bin/pulumi \
+		-ldflags "-X github.com/pulumi/pulumi/pkg/v${pkgver%%.*}/version.Version=v$pkgver" \
+		./cmd/pulumi
+
+	cd "$builddir"
+	for shell in bash fish zsh; do
+		./bin/pulumi gen-completion $shell > pulumi.$shell
+	done
+}
+
+check() {
+	cd "$builddir"/pkg
+
+	# codegen tests require runtime dependencies (python, yarn, dotnet-runtime).
+	# integration tests require node, and hardcode pulumi/ as the root path to search for sdk/go.mod file.
+	# httpstate tests fail with microseconds difference in time.
+	# secrets/cloud tests try to call corresponding cloud KMS endpoints
+	# TestPluginMapper_MappedNamesDifferFromPulumiName fails occasionally (seems like the AWS provider plugin isn't cached as intended sometimes)
+	# lifecycletest exhausts github API limit
+	# TestPclConvert|TestExpectEOFOnHTTPBackend|TestErrorsOnNonHTTPBackend fail on package builders
+	# shellcheck disable=2046
+	go test \
+		-skip "TestPluginMapper_MappedNamesDifferFromPulumiName|TestPclConvert|TestExpectEOFOnHTTPBackend|TestErrorsOnNonHTTPBackend" \
+		$(go list ./... | grep -v \
+		-e 'github.com/pulumi/pulumi/pkg/v3/backend/httpstate' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/codegen/dotnet' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/codegen/go' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/codegen/python' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/codegen/nodejs' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/testing/integration' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/engine/lifecycletest' \
+		-e 'github.com/pulumi/pulumi/pkg/v3/secrets/cloud' \
+		)
+}
+
+package() {
+	install -Dm755 bin/pulumi -t "$pkgdir"/usr/bin/
+
+	install -Dm644 pulumi.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/pulumi
+	install -Dm644 pulumi.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/pulumi.fish
+	install -Dm644 pulumi.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_pulumi
+}
+
+_go() {
+	pkgdesc="$pkgdesc (Go language provider)"
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	install -Dm755 "$builddir"/bin/pulumi-language-go -t "$subpkgdir"/usr/bin/
+}
+
+_nodejs() {
+	pkgdesc="$pkgdesc (NodeJS language provider)"
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	install -Dm755 "$builddir"/bin/pulumi-language-nodejs -t "$subpkgdir"/usr/bin/
+	install -Dm755 "$builddir"/sdk/nodejs/dist/pulumi-analyzer-policy \
+		-t "$subpkgdir"/usr/bin/
+	install -Dm755 "$builddir"/sdk/nodejs/dist/pulumi-resource-pulumi-nodejs \
+		-t "$subpkgdir"/usr/bin/
+}
+
+_python() {
+	pkgdesc="$pkgdesc (Python language provider)"
+	depends="$pkgname=$pkgver-r$pkgrel python3"
+
+	install -Dm755 "$builddir"/bin/pulumi-language-python -t "$subpkgdir"/usr/bin/
+	install -Dm755 "$builddir"/sdk/python/cmd/pulumi-language-python-exec -t "$subpkgdir"/usr/bin/
+	install -Dm755 "$builddir"/sdk/python/dist/pulumi-analyzer-policy-python \
+		-t "$subpkgdir"/usr/bin/
+	install -Dm755 "$builddir"/sdk/python/dist/pulumi-resource-pulumi-python \
+		-t "$subpkgdir"/usr/bin/
+}
+
+sha512sums="
+f4b6f1908c2b09f7cfbe9bad66505be59b344157045c909f449a30f554ef5bdb2ddb2a1cfc2eff60521c259bdd383b91bcdac7c11945c133554645aaa11012fe  pulumi-3.108.0.tar.gz
+"

@@ -1,0 +1,24 @@
+# Contributor: Stefan Wagner <stw@bit-strickerei.de>
+# Maintainer: Stefan Wagner <stw@bit-strickerei.de>
+pkgname=wireless-regdb
+pkgver=2024.01.23
+pkgrel=0
+pkgdesc="Central Regulatory Domain Database"
+url="https://wireless.wiki.kernel.org/en/developers/regulatory/wireless-regdb"
+arch="noarch"
+license="ISC"
+subpackages="$pkgname-doc"
+options="!check"
+source="https://mirrors.edge.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-$pkgver.tar.xz"
+
+package() {
+	install -D -m644 "$builddir"/regulatory.bin "$pkgdir"/usr/lib/crda/regulatory.bin
+	install -D -m644 "$builddir"/regulatory.bin.5 "$pkgdir"/usr/share/man/man5/regulatory.bin.5
+	install -D -m644 "$builddir"/regulatory.db "$pkgdir"/lib/firmware/regulatory.db
+	install -D -m644 "$builddir"/regulatory.db.5 "$pkgdir"/usr/share/man/man5/regulatory.bin.5
+	install -D -m644 "$builddir"/regulatory.db.p7s "$pkgdir"/lib/firmware/regulatory.db.p7s
+}
+
+sha512sums="
+09cf2308e459bbc5755cf648aa9afcfac7232391f189403000091eef3ae4265c99c0df3364160ef48a2efa3ce6443099ac735c1d82e03f0f24f7017872afbdba  wireless-regdb-2024.01.23.tar.xz
+"

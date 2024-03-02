@@ -1,0 +1,31 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Steven Guikal <void@fluix.one>
+pkgname=py3-itsdangerous
+_pkgname=itsdangerous
+pkgver=2.1.2
+pkgrel=3
+pkgdesc="Python3 helper to pass trusted data to untrusted environments"
+url="https://github.com/pallets/itsdangerous"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3"
+makedepends="py3-setuptools"
+options="!check" # no tests
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-itsdangerous" # Backwards compatibility
+provides="py-itsdangerous=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+e4d870a33992b309ed778f403c0c1e098983a693d1165260748bf36385ebfadb583811e05ddd48001a33cf6a4e963b7dd8a8c68919c5b4b86f63621d8869e259  itsdangerous-2.1.2.tar.gz
+"

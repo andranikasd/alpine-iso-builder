@@ -1,0 +1,60 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=gitui
+pkgver=0.24.3
+pkgrel=0
+pkgdesc="Blazing fast terminal client for git"
+url="https://github.com/extrawurst/gitui"
+arch="x86_64 armv7 armhf aarch64 x86 ppc64le"  # limited by rust/cargo
+license="MIT"
+makedepends="
+	cargo
+	cargo-auditable
+	libgit2-dev
+	oniguruma-dev
+	openssl-dev
+	zlib-dev
+	"
+source="https://github.com/extrawurst/gitui/archive/v$pkgver/gitui-$pkgver.tar.gz"
+options="net"
+
+export LIBSSH2_SYS_USE_PKG_CONFIG=1  # use system libssh2
+export RUSTONIG_DYNAMIC_LIBONIG=1  # use system libonig
+
+_cargo_opts="--frozen --no-default-features --features regex-onig"
+
+prepare() {
+	default_prepare
+
+	# Rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# Build against system-provided libs
+	mkdir -p .cargo
+	cat >> .cargo/config <<-EOF
+
+		[target.$target]
+		git2 = { rustc-link-lib = ["git2"] }
+	EOF
+
+	# open64
+	cargo update -p getrandom --precise 0.2.10
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build $_cargo_opts --release
+}
+
+check() {
+	cargo test $_cargo_opts
+}
+
+package() {
+	install -D -m755 target/release/gitui "$pkgdir"/usr/bin/gitui
+}
+
+sha512sums="
+c8bd20dc3ad9ca8b673b2be21293cba212e34da834233bd412303163725a1cde2c5338861e0743036a817825c3a5783bd5f2e89b61627f19033105d44d6e29aa  gitui-0.24.3.tar.gz
+"

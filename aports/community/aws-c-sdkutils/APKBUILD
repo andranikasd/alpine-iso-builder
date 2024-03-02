@@ -1,0 +1,50 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+# Maintainer:
+pkgname=aws-c-sdkutils
+pkgver=0.1.14
+pkgrel=0
+pkgdesc="C99 library implementing AWS SDK specific utilities"
+url="https://github.com/awslabs/aws-c-sdkutils"
+# s390x: aws-c-common
+arch="all !s390x"
+license="Apache-2.0"
+makedepends="
+	aws-c-common-dev
+	cmake
+	samurai
+	"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/awslabs/aws-c-sdkutils/archive/refs/tags/v$pkgver.tar.gz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	CFLAGS="$CFLAGS -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja\
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=/usr/lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure -j${JOBS:-2}
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+	amove usr/lib/aws-c-sdkutils
+}
+
+sha512sums="
+e364613363c6dd50a97209bd4fa7b926fec2ca5eb4bac07fb0c44eecbf847d2d1a671ffa7edda613bbbab4eaf27973945be61d66b32b851ae31c8f3508e7137a  aws-c-sdkutils-0.1.14.tar.gz
+"

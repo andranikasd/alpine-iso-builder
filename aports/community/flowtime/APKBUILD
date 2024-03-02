@@ -1,0 +1,43 @@
+# Contributor:
+# Maintainer: Krassy Boykinov <kboykinov@teamcentrixx.com>
+pkgname=flowtime
+pkgver=6.1
+pkgrel=0
+pkgdesc="GTK4 / libadwaita assistant for the Flowtime working technique"
+url="https://github.com/Diego-Ivan/Flowtime"
+# s390x: blueprint-compiler missing
+arch="all !s390x"
+license="GPL-3.0-or-later"
+makedepends="
+	blueprint-compiler
+	desktop-file-utils
+	gtk4.0-dev
+	libadwaita-dev
+	libgee-dev
+	libportal-dev
+	libxml2-dev
+	meson
+	vala
+	"
+checkdepends="appstream-glib"
+options="!check" # upstream bug in third check
+subpackages="$pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Diego-Ivan/Flowtime/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/Flowtime-$pkgver"
+
+build() {
+	abuild-meson -Db_lto=true . build
+	meson compile -C build
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+sha512sums="
+b695a967009a9c67137c6f59769ecbc26570458d4d48f19d8095ab269f0dc7eea130b8914b6ca1bb01ae54b25e3a24c76ce2f11be58d6d30b1865800cfd280eb  flowtime-6.1.tar.gz
+"

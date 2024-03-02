@@ -1,0 +1,93 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=mbedtls
+pkgver=2.28.7 # long-time support branch
+pkgrel=0
+pkgdesc="Light-weight cryptographic and SSL/TLS library"
+url="https://www.trustedfirmware.org/projects/mbed-tls/"
+arch="all"
+license="Apache-2.0 OR GPL-2.0-or-later"
+makedepends="cmake perl python3 samurai"
+subpackages="$pkgname-static $pkgname-dev $pkgname-utils"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ARMmbed/mbedtls/archive/v$pkgver.tar.gz"
+
+# Track security issues
+# https://tls.mbed.org/security
+
+# secfixes:
+#   2.28.7-r0:
+#     - CVE-2024-23170
+#     - CVE-2024-23775
+#   2.28.5-r0:
+#     - CVE-2023-43615
+#   2.28.1-r0:
+#     - CVE-2022-35409
+#   2.16.12-r0:
+#     - CVE-2021-44732
+#   2.16.8-r0:
+#     - CVE-2020-16150
+#   2.16.6-r0:
+#     - CVE-2020-10932
+#   2.16.4-r0:
+#     - CVE-2019-18222
+#   2.16.3-r0:
+#     - CVE-2019-16910
+#   2.14.1-r0:
+#     - CVE-2018-19608
+#   2.12.0-r0:
+#     - CVE-2018-0498
+#     - CVE-2018-0497
+#   2.7.0-r0:
+#     - CVE-2018-0488
+#     - CVE-2018-0487
+#     - CVE-2017-18187
+#   2.6.0-r0:
+#     - CVE-2017-14032
+#   2.4.2-r0:
+#     - CVE-2017-2784
+
+prepare() {
+	default_prepare
+
+	# Enable flags for non-embedded systems.
+	python3 scripts/config.py set MBEDTLS_THREADING_C
+	python3 scripts/config.py set MBEDTLS_THREADING_PTHREAD
+}
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DUSE_SHARED_MBEDTLS_LIBRARY=ON
+	cmake --build build
+}
+
+check() {
+	cd build
+	# tests break in parallel
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -j1
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+utils() {
+	pkgdesc="Utilities for mbedtls (including gen_key / cert_write)"
+
+	mkdir -p "$subpkgdir"/usr
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+}
+
+static() {
+	pkgdesc="Static files for mbedtls"
+
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/*.a "$subpkgdir"/usr/lib/
+	chmod -x "$subpkgdir"/usr/lib/*.a
+}
+
+sha512sums="
+b61dd319606c88c834b3a8e8f9f85e68a22b6b21ca177b340a972dfabe9efee984b8a9f6ed5d3b1829f229c689394e9f393b94efb38d82bda3a1e53d1e7a2861  mbedtls-2.28.7.tar.gz
+"

@@ -1,0 +1,41 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=qps
+pkgver=2.8.0
+pkgrel=0
+pkgdesc="LXQt process manager"
+url="https://github.com/lxqt/qps"
+arch="all !armhf !riscv64" # limited by lxqt-config
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake samurai lxqt-build-tools qt5-qtbase-dev qt5-qttools-dev
+	libqtxdg-dev liblxqt-dev kwindowsystem5-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No testsuite
+source="https://github.com/lxqt/qps/releases/download/$pkgver/qps-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/$pkgname/translations
+}
+
+sha512sums="
+1dc4e0018eec82a70f33604d3f5b58a20892f1d97bb0334596d9ca47bc9d4e51c5acbdc8f72289612ab12a9a180c04b87de5f91a2fc0872791f68d0e6a1a2129  qps-2.8.0.tar.xz
+"

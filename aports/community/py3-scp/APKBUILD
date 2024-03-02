@@ -1,0 +1,34 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-scp
+_pkgname=scp.py
+pkgver=0.14.5
+pkgrel=1
+pkgdesc="scp module for paramiko"
+url="https://github.com/jbardin/scp.py"
+arch="noarch"
+license="LGPL-2.1-or-later"
+depends="python3 py3-paramiko py3-cffi py3-idna py3-cparser"
+makedepends="py3-setuptools"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/jbardin/$_pkgname/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-scp" # Backwards compatibility
+provides="py-scp=$pkgver-r$pkgrel" # Backwards compatibility
+
+check() {
+	python3 setup.py check
+}
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+05d88d001b68f239e5eb5327abd3e5d87c09aecaba138160b54fc587135b8ce55de2af5dcd48a4ce8d1e279ddf0bd120060f9b540556942961856ad87f674349  py3-scp-0.14.5.tar.gz
+"

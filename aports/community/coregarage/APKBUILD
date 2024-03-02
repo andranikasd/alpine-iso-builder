@@ -1,0 +1,30 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=coregarage
+pkgver=4.4.0
+pkgrel=1
+pkgdesc="A settings manager for C-Suite"
+arch="all"
+url="https://gitlab.com/cubocore/coreapps/coregarage"
+license="GPL-3.0-or-later"
+depends="qt5-qtsvg"
+makedepends="qt5-qtbase-dev libcprime-dev libcsys-dev libarchive-qt-dev cmake ninja"
+source="https://gitlab.com/cubocore/coreapps/coregarage/-/archive/v$pkgver/coregarage-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+build() {
+	cmake . \
+		-GNinja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	ninja
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja install
+}
+
+sha512sums="
+5130438d8b1c91fda324ab0cc5278333fb5fefa6b2625f7d77c46d32c38ea59bd4bec464bcf09ff9ef4a2bc5975b9dde4eb5071aa3e25c9a1f90ac6c1cc7862b  coregarage-v4.4.0.tar.gz
+"

@@ -1,0 +1,36 @@
+# Contributor: Jacek Pruciak <alpine@juniorjpdj.pl>
+# Maintainer: Jacek Pruciak <alpine@juniorjpdj.pl>
+pkgname=py3-dirty-equals
+pkgver=0.6.0
+pkgrel=0
+pkgdesc="Doing dirty (but extremely useful) things with equals."
+url="https://github.com/samuelcolvin/dirty-equals"
+license="MIT"
+arch="noarch"
+depends="py3-tz"
+makedepends="py3-gpep517 py3-installer py3-wheel py3-hatchling"
+checkdepends="py3-pytest py3-pydantic"
+subpackages="$pkgname-pyc"
+source="https://github.com/samuelcolvin/dirty-equals/archive/v$pkgver/dirty-equals-$pkgver.tar.gz"
+builddir="$srcdir/dirty-equals-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	# needs pytest-examples but that requires ruff that limits it a bunch
+	pytest \
+		--ignore tests/test_docs.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+aff41b31c255294c2d6c3a3170daea56d98da4875f9ffdef96b522db24fbed92edf4618646b3e1b50680ce03fca1b9c2bb591730c397b85143ace846c513ac01  dirty-equals-0.6.0.tar.gz
+"

@@ -1,0 +1,55 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=fuzzel
+pkgver=1.9.2
+pkgrel=0
+pkgdesc="Application launcher for wlroots-based Wayland compositors"
+url="https://codeberg.org/dnkl/fuzzel"
+license="MIT"
+arch="all"
+makedepends="
+	meson
+	pixman-dev
+	cairo-dev
+	libpng-dev
+	wayland-protocols
+	wayland-dev
+	libxkbcommon-dev
+	tllist-dev
+	fcft-dev
+	scdoc
+	"
+subpackages="$pkgname-doc $pkgname-fish-completion $pkgname-zsh-completion"
+source="$pkgname-$pkgver.tar.gz::https://codeberg.org/dnkl/fuzzel/archive/$pkgver.tar.gz
+	no-werror.patch
+	"
+options="!check" # no test suite
+builddir="$srcdir/fuzzel"
+
+# use librsvg where possible
+case "$CARCH" in
+	s390x|riscv64)
+		_svg_backend=nanosvg
+		license="MIT AND Zlib"
+		;;
+	*)
+		_svg_backend=librsvg
+		makedepends="$makedepends librsvg-dev"
+		;;
+esac
+
+build() {
+	abuild-meson \
+		-Dsvg-backend=$_svg_backend \
+		. output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+a92f0b6eb9470aa099651c2f5d095986347565bbd7366bffe0719801dbb1ae4f7e413460c59872d40e910bb1d3bc8195e9d9038a73c2de835bcda77f9372b393  fuzzel-1.9.2.tar.gz
+59fb7099a959b00542e938643b0e04ccaf414fa7d281a8cf362fb28aa1061d452d1a8e594fd9008de492d0fdeb5708bef94713de2438b3a933e837e30d6ff483  no-werror.patch
+"

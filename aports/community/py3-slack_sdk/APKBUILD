@@ -1,0 +1,49 @@
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+_pyname="slack_sdk"
+pkgname=py3-$_pyname
+pkgver=3.27.1
+pkgrel=0
+arch="noarch"
+pkgdesc="The Slack API Platform SDK for Python"
+url="https://pypi.python.org/project/slack_sdk"
+license="MIT"
+depends="
+	py3-aiohttp
+	py3-aiodns
+	"
+makedepends="
+	py3-setuptools
+	py3-wheel
+	py3-gpep517
+	"
+checkdepends="
+	py3-flask
+	py3-flask-sockets
+	py3-moto
+	"
+options="!check" # Missing checkdepend
+source="$pkgname-$pkgver.tar.gz::https://pypi.io/packages/source/s/slack_sdk/slack_sdk-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+subpackages="$pkgname-pyc"
+replaces=py3-slack-sdk # Backwards compatibility
+provides=py3-slack-sdk=$pkgver-r$pkgrel # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	PYTHONPATH="$builddir" pytest -v
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+e430aebef8a4f9fb1152a1d3db5095c2cb998c37a50d7d030bf5c11f93f662ad08ae8219b33215fba76abc01f8efba20ef49cef9e778d7bff2fb7dc462ddac11  py3-slack_sdk-3.27.1.tar.gz
+"

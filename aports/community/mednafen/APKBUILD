@@ -1,0 +1,42 @@
+# Contributor: August Klein <amatcoder@gmail.com>
+# Contributor: Will Sinatra <wpsinatra@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=mednafen
+pkgver=1.29.0
+pkgrel=1
+pkgdesc="A command-line multi-system emulator"
+url="https://mednafen.github.io/"
+arch="all !s390x"
+license="GPL-2.0-only"
+makedepends="alsa-lib-dev flac-dev libogg-dev libsndfile-dev libvorbis-dev
+	lzo-dev sdl2-dev zlib-dev"
+subpackages="$pkgname-lang"
+source="https://mednafen.github.io/releases/files/mednafen-$pkgver.tar.xz"
+builddir="$srcdir"/$pkgname
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+lang() {
+	default_lang
+	mkdir -p "$subpkgdir"/usr/share/$pkgname
+	mv "$subpkgdir"/usr/share/locale "$subpkgdir"/usr/share/$pkgname
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	rm -rf "$pkgdir"/usr/lib/charset.alias
+}
+
+sha512sums="
+375f0fb4f12907faf56b4e9ecdc44c1655b0660a3773240fe3118f2b261e171479b8eb254299f899fc442b54041c941eab2a5f343aec559d9731c3e92cde0569  mednafen-1.29.0.tar.xz
+"

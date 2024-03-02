@@ -1,0 +1,29 @@
+# Contributor: Michał Polański <michal@polanski.me>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=jose
+pkgver=12
+pkgrel=0
+pkgdesc="C-language implementation of Javascript Object Signing and Encryption"
+url="https://github.com/latchset/jose"
+license="Apache-2.0"
+arch="all"
+makedepends="meson zlib-dev jansson-dev openssl-dev>3 asciidoc"
+subpackages="$pkgname-doc lib$pkgname:libs $pkgname-dev"
+source="https://github.com/latchset/jose/releases/download/v$pkgver/jose-$pkgver.tar.xz"
+
+build() {
+	abuild-meson . build
+	meson compile -C build
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+sha512sums="
+318308b7b82f669efb2b73652a5d2f98902a4ccf04e7db366a73777c59d8ec9866e047aa210e1e220e5e717e86a2a303931d81dab03070901e3e703f478b265b  jose-12.tar.xz
+"

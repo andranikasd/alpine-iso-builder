@@ -1,0 +1,55 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=khelpcenter
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="Application to show KDE Applications' documentation"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://userbase.kde.org/KHelpCenter"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	grantlee-dev
+	karchive5-dev
+	kbookmarks5-dev
+	kconfig5-dev
+	kcoreaddons5-dev
+	kdbusaddons5-dev
+	kdoctools5-dev
+	khtml-dev
+	ki18n5-dev
+	kinit5-dev
+	kservice5-dev
+	kwindowsystem5-dev
+	libxml2-dev
+	qt5-qtbase-dev
+	samurai
+	xapian-core-dev
+	"
+_repo_url="https://invent.kde.org/system/khelpcenter.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/khelpcenter-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+2ba3dc6485fe0fca94263123ab577e92d17ed30cadf296266ba2f1d3ffa3352bd4964e2aff00404933035aafeef57795e1dbe31dea63ca9d67cf24ac4fbaabd6  khelpcenter-23.08.5.tar.xz
+"

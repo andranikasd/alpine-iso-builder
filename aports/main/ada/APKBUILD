@@ -1,0 +1,60 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=ada
+# NOTE: The primary use of this library is for main/nodejs and community/nodejs-current.
+pkgver=2.7.4
+pkgrel=0
+pkgdesc="WHATWG-compliant and fast URL parser written in modern C++"
+url="https://ada-url.github.io/ada"
+arch="all"
+license="( Apache-2.0 OR MIT ) AND MPL-2.0"
+depends_dev="$pkgname=$pkgver-r$pkgrel"
+makedepends="
+	cmake
+	cxxopts-dev
+	fmt-dev
+	gtest-dev
+	samurai
+	"
+checkdepends="simdjson-dev"
+subpackages="$pkgname-static $pkgname-dev $pkgname-libs"
+source="https://github.com/ada-url/ada/archive/v$pkgver/ada-$pkgver.tar.gz
+	use-system-simdjson-cxxopts.patch
+	"
+
+build() {
+	local crossopts=
+	[ "$CBUILD" != "$CHOST" ] && crossopts="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+
+	local shared; for shared in OFF ON; do
+		cmake -G Ninja -B build \
+			-DCMAKE_BUILD_TYPE=MinSizeRel \
+			-DCMAKE_INSTALL_PREFIX=/usr \
+			-DCMAKE_INSTALL_LIBDIR=lib \
+			-DBUILD_SHARED_LIBS=$shared \
+			-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+			-DADA_BENCHMARKS=OFF \
+			$crossopts
+		cmake --build build
+	done
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	install -m644 build/src/libada.a -t "$pkgdir"/usr/lib/
+}
+
+tools() {
+	pkgdesc="$pkgdesc (cli tools)"
+	amove usr/bin
+}
+
+sha512sums="
+1814365f98cc85e97fe135a840241c66ddd8a9d6d10f0be548f72bc22b840673ea30291633e4d90e2023b99b59533fa7c77eab65ed41bf9c2bf79fd261cfeba0  ada-2.7.4.tar.gz
+63b4585bb29df3d922f31eefd60e37029c10ef654aa0bd098bffae622f6d74520d9e47ae76cadb9347eb6cea5140386f8c794bf9236f8c1ad014007e5597c1db  use-system-simdjson-cxxopts.patch
+"

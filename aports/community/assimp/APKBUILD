@@ -1,0 +1,68 @@
+# Contributor: Russ Webber <russ@rw.id.au>
+# Maintainer: Russ Webber <russ@rw.id.au>
+pkgname=assimp
+pkgver=5.3.1
+pkgrel=0
+pkgdesc="Open Asset Import Library imports and exports 3D model formats"
+url="https://www.assimp.org/"
+arch="all"
+license="BSD-3-Clause"
+makedepends="
+	cmake
+	samurai
+	zlib-dev
+	"
+subpackages="$pkgname-dev $pkgname-libs"
+source="https://github.com/assimp/assimp/archive/v$pkgver/assimp-v$pkgver.tar.gz
+	version.patch
+	"
+
+case "$CARCH" in
+s390x)
+	# a few tests fail
+	options="$options !check"
+	;;
+esac
+
+prepare() {
+	default_prepare
+
+	# tests report correct values, but comparison fails
+	case $CARCH in
+	x86)
+		sed -i \
+			-e "/AssimpAPITest_aiMatrix3x3/d" \
+			-e "/AssimpAPITest_aiMatrix4x4/d" \
+			-e "/utFastAtof/d" \
+			test/CMakeLists.txt
+		;;
+	esac
+}
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DASSIMP_IGNORE_GIT_HASH=ON \
+		-DASSIMP_BUILD_ASSIMP_TOOLS=ON \
+		-DASSIMP_BUILD_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DASSIMP_WARNINGS_AS_ERRORS=OFF \
+		-DASSIMP_BUILD_MINIZIP=True  # use vendored fork of minizip
+	cmake --build build
+}
+
+check() {
+	./build/bin/unit
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	rm -vf "$pkgdir"/usr/lib/libIrrXML.a
+}
+
+sha512sums="
+49963f84ed0a8145f3af249890a533f0b12f5553ae09581289cb1f20cb49cb1a3ed3f3c4c966ceb43aa897b90deca268aa6554066b2bd34f2ac9c15041420ddb  assimp-v5.3.1.tar.gz
+c1b9dd92be4bf0702db25b124e2ffd982ef5cd3054e31c31311facf49ab4f1990b6611e0a0d1ffb62ce610911bffd9664f47109fc2d3ed20ba3051be84a3ed51  version.patch
+"

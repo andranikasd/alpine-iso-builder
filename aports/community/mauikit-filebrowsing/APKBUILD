@@ -1,0 +1,46 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=maui
+pkgname=mauikit-filebrowsing
+pkgver=3.0.2
+pkgrel=0
+pkgdesc="MauiKit File Browsing utilities and controls"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://mauikit.org/"
+license="GPL-2.0-or-later"
+depends="kirigami2"
+depends_dev="
+	kio5-dev
+	mauikit-dev
+	qt5-qtbase-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+_repo_url="https://invent.kde.org/maui/mauikit-filebrowsing.git"
+source="https://download.kde.org/stable/maui/mauikit-filebrowsing/$pkgver/mauikit-filebrowsing-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+5a02506ce8ff73fac44dc2eb39b4b7ceb56552fb447c7582d5db3c199393bea6a722276b1514158d51ef03b986ce371bc36b91e6407ac13b907a3b14805d41bf  mauikit-filebrowsing-3.0.2.tar.xz
+"

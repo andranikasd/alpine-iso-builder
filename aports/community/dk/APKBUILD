@@ -1,0 +1,37 @@
+# Contributor: Matthew T Hoare <matthew.t.hoare@gmail.com>
+# Maintainer: Matthew T Hoare <matthew.t.hoare@gmail.com>
+pkgname=dk
+pkgver=1.9
+_commit=edae089a4d70
+pkgrel=1
+pkgdesc="tiling window manager taking inspiration from dwm, bspwm, and xmonad"
+url="https://bitbucket.org/natemaia/dk"
+arch="all"
+license="MIT"
+makedepends="
+	libxcb-dev
+	xcb-util-cursor-dev
+	xcb-util-dev
+	xcb-util-keysyms-dev
+	xcb-util-wm-dev
+	"
+options="!check" # no tests
+install="$pkgname.post-install"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://bitbucket.org/natemaia/dk/get/v$pkgver.tar.gz"
+builddir="$srcdir/natemaia-dk-$_commit"
+
+build() {
+	make PREFIX=/usr
+}
+
+package() {
+	make PREFIX=/usr DESTDIR="$pkgdir" install
+
+	install -Dm644 LICENSE \
+		-t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+83db5e057401e7607bab5c31c7db6fc6e52c3abb35acc3620cb323c1a92809f66bbc0b0db058ef01d82a61ba5eea72c1d107bd3784ce4fe8c3eff20169bfeb59  dk-1.9.tar.gz
+"

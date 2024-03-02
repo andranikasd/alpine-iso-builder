@@ -1,0 +1,37 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-cx_freeze
+_pkgname=cx_Freeze
+pkgver=6.15.15
+pkgrel=0
+pkgdesc="Set of utilities for freezing Python scripts into executables"
+url="https://github.com/marcelotduarte/cx_Freeze"
+arch="all !ppc64le"
+license="PSF-2.0"
+depends="patchelf"
+makedepends="py3-gpep517 py3-setuptools python3-dev py3-wheel"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/marcelotduarte/cx_Freeze/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
+options="!check" # todo
+
+prepare() {
+	default_prepare
+
+	sed -i 's/DESTSHARED/DESTLIB/' "$builddir/cx_Freeze/freezer.py"
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+152b24782fb93429f141f1243746d648b7de84ee93f24225b89b69237ab30f5941160c359023871dd9336dc3232fd747ad846855e2b57a1369a1ef409f809861  py3-cx_freeze-6.15.15.tar.gz
+"

@@ -1,0 +1,57 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=khangman
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by qt5-qtdeclarative
+arch="all !armhf"
+url="https://edu.kde.org/khangman"
+pkgdesc="Hangman game"
+license="GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kcompletion5-dev
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdeclarative5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kio5-dev
+	knewstuff5-dev
+	knotifications5-dev
+	kxmlgui5-dev
+	libkeduvocdocument-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/education/khangman.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/khangman-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+9a3d360384dfa93365caa962b8ca0aba4903b7fa1291033788d7ca9b24b11dd154081a8888f6518db0e919e22f20acb1444e2297967cdef0554b6c580e9c1c4b  khangman-23.08.5.tar.xz
+"

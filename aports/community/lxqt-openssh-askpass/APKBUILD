@@ -1,0 +1,41 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=lxqt-openssh-askpass
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="GUI to query passwords on behalf of SSH agents"
+url="https://github.com/lxqt/lxqt-openssh-askpass"
+arch="all !armhf" # qt5
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake samurai lxqt-build-tools qt5-qtbase-dev
+	qt5-qttools-dev liblxqt-dev kwindowsystem5-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No testsuite
+source="https://github.com/lxqt/lxqt-openssh-askpass/releases/download/$pkgver/lxqt-openssh-askpass-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt//translations/$pkgname
+}
+
+sha512sums="
+3f6862c70cc184246433eb0d9c3ad4a045f171f25144288b3e244c6e203c3bcfb14da62505b586f0b20b27a5b4b5c39ffbc709bf88863f87deb5b4a610cfd26f  lxqt-openssh-askpass-1.4.0.tar.xz
+"

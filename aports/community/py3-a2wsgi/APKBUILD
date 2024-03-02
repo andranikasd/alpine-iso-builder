@@ -1,0 +1,40 @@
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=py3-a2wsgi
+pkgver=1.10.2
+pkgrel=0
+pkgdesc="Convert WSGI app to ASGI app or ASGI app to WSGI app"
+url="https://github.com/abersheeran/a2wsgi"
+arch="noarch"
+license="Apache-2.0"
+depends="python3"
+makedepends="py3-gpep517 py3-pdm-backend py3-wheel"
+checkdepends="py3-pytest py3-httpx py3-pytest-asyncio"
+subpackages="$pkgname-pyc"
+source="https://github.com/abersheeran/a2wsgi/archive/refs/tags/v$pkgver/a2wsgi-$pkgver.tar.gz"
+builddir="$srcdir/a2wsgi-$pkgver"
+
+case "$CARCH" in
+	# test suite blocked by py3-httpx
+	armhf|ppc64le) options="!check" ;;
+esac
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+119564d7dadc51e08144ce8870d90602cc797e65546062cf6fe367a987dde11b0bfae749711e80dbd5a1d68a4afef8c2107e2b8f71dcf4580176d563df847f70  a2wsgi-1.10.2.tar.gz
+"

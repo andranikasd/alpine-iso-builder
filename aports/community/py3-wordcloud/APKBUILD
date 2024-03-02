@@ -1,0 +1,48 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-wordcloud
+_pkgorig=wordcloud
+pkgver=1.9.2
+pkgrel=1
+pkgdesc="A little word cloud generator in Python"
+url="https://github.com/amueller/word_cloud"
+arch="all"
+license="MIT"
+depends="python3 py3-matplotlib py3-numpy py3-pillow"
+makedepends="cython python3-dev py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-coverage py3-mock py3-pytest-xdist py3-pytest-cov"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver-3.tar.gz::https://github.com/amueller/word_cloud/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/word_cloud-$pkgver"
+
+build() {
+	rm -fv wordcloud/query_integral_image.c
+	cythonize wordcloud/query_integral_image.pyx
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	local _exclude='
+		not test_unicode_with_stopwords
+		and not test_wordcloud_cli
+		and not test_recolor_too_small
+		and not test_recolor_too_small_set_default
+		and not test_coloring_black_work
+	'
+
+	mv wordcloud wordcloud.src
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -k "$(echo $_exclude)"
+}
+
+package() {
+		python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+a0722274f4f2a0463fbd7b3d1205ffe18ad7f642b0be667031178fa1ccd1da6398071fc12ed3532c5a3f17f0066f82bbb2ecb7b0b60e321b5a7c0e2c06c23f6b  py3-wordcloud-1.9.2-3.tar.gz
+"

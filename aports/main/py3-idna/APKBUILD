@@ -1,0 +1,43 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-idna
+_pkgname=idna
+pkgver=3.6
+pkgrel=0
+pkgdesc="IDNA 2008 and UTS #46 for Python3"
+url="https://github.com/kjd/idna"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3"
+makedepends="
+	py3-gpep517
+	py3-flit-core
+	py3-installer
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="$_pkgname-$pkgver.tar.gz::https://github.com/kjd/idna/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-idna" # Backwards compatibility
+provides="py-idna=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/$_pkgname-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+4ffadae74aa69529cd37a6d361564b2a11450af6aa15f6691ba668139f4efe2893361c0fe7bf8e0d8ebcba1dc8937d50a3dfb3782905f1e1983d01455dced1ff  idna-3.6.tar.gz
+"

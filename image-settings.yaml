@@ -1,0 +1,19 @@
+profile_type: profile_standard
+iso_name: "gambit_custom"
+desc: "Minimal Alpine Linux for Gambit"
+arch: "x86_64"
+alpine_version: "3.14"  # Specify custom Alpine version
+kernel_flavors: "lts"
+kernel_addons: ""
+bootloader: "grub"  # Choose bootloader: grub, syslinux, etc. TODO
+profile_name: "gambit_custom"
+users:
+  - bootech
+additional_apks:
+  - linux-firmware
+  - python3
+  - htop
+  - curl
+  - iptables
+  - wget
+  - openssh

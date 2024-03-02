@@ -1,0 +1,42 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=bzrtp
+pkgver=5.2.112
+pkgrel=0
+pkgdesc="BZRTP is an opensource implementation of ZRTP keys exchange protocol"
+url="https://gitlab.linphone.org/BC/public/bzrtp"
+arch="all"
+license="GPL-3.0-only"
+makedepends="cmake bctoolbox-dev sqlite-dev libxml2-dev samurai"
+subpackages="$pkgname-dev"
+source="https://gitlab.linphone.org/BC/public/bzrtp/-/archive/$pkgver/bzrtp-$pkgver.tar.gz"
+options="!check" # need bctoolbox-tester
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DENABLE_STATIC=False \
+		-DENABLE_STRICT=False \
+		-DENABLE_TESTS="$(want_check && echo ON || echo OFF)" \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+7d836b6c5857b6267e36e78660dbf6e6ae912350aac4f4f458b0f1cf08aa755f5a180e2ac793fcef3f3cf486353a27e6a5ec23e585716b316bc6c79d38596d7c  bzrtp-5.2.112.tar.gz
+"

@@ -1,0 +1,68 @@
+# Contributor: Steven Guikal <void@fluix.one>
+# Maintainer: Steven Guikal <void@fluix.one>
+pkgname=py3-sqlalchemy
+pkgver=2.0.27
+pkgrel=0
+pkgdesc="object relational mapper for Python"
+url="https://pypi.org/project/SQLAlchemy"
+arch="all"
+license="MIT"
+# py3-typing-extensions: SQLAlchemy 2.0.25 uses TypeAliasType
+# remove this and uncomment prepare() after Python 3.12 upgrade
+depends="
+	py3-greenlet
+	py3-typing-extensions
+	"
+makedepends="
+	cython
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+checkdepends="
+	py3-mock
+	py3-mypy
+	py3-pytest
+	py3-pytest-xdist
+	"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/S/SQLAlchemy/SQLAlchemy-$pkgver.tar.gz"
+builddir="$srcdir/SQLAlchemy-$pkgver"
+
+replaces="py-sqlalchemy" # Backwards compatibility
+provides="py-sqlalchemy=$pkgver-r$pkgrel" # Backwards compatibility
+
+# crashloops until it eventually passes, fixme
+case "$CARCH" in
+x86) options="$options !check" ;;
+esac
+
+prepare() {
+	default_prepare
+	# we have a new enough python for every typing extension
+#	grep -l -r 'typing_extensions' . \
+#		| grep '.py' \
+#		| xargs -n 1 -P ${JOBS:-1} sed -i 's|typing_extensions|typing|g'
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+78f0aeda4352e05282b86bdcaaf369804e4294e10f944a15cacd518b3741cf6359880d7400ec689e234ad6f8227d32822aa9073ed33f40825c3542102ebcada5  SQLAlchemy-2.0.27.tar.gz
+"

@@ -1,0 +1,44 @@
+# Contributor: Alan Lacerda <alacerda@alpinelinux.org>
+# Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
+pkgname=mate-media
+pkgver=1.26.1
+pkgrel=0
+pkgdesc="Media tools for MATE"
+url="https://github.com/mate-desktop/mate-media"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	dconf-dev
+	gobject-introspection-dev
+	gtk+3.0-dev
+	intltool
+	libcanberra-dev
+	libmatemixer-dev
+	libxml2-dev
+	mate-desktop-dev
+	mate-panel-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/mate-media-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--sysconfdir=/etc \
+		--enable-static=no \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+2d9768628b6ad2f167f9f6759ac6d7cb69fc2a52c0ee261be6848a09b4f6e427c6ead3304951f74f07786944c29d5b79f56fecb4063b04bc0087e78562339f08  mate-media-1.26.1.tar.xz
+"

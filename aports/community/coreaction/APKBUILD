@@ -1,0 +1,36 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=coreaction
+pkgver=4.4.0
+pkgrel=1
+pkgdesc="A side bar for showing widgets from C-Suite"
+arch="all"
+url="https://gitlab.com/cubocore"
+license="GPL-3.0-or-later"
+makedepends="
+	cmake
+	libcprime-dev
+	libcsys-dev
+	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+source="https://gitlab.com/cubocore/coreaction/-/archive/v$pkgver/coreaction-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check" # No tests
+
+build() {
+	cmake -B build -GNinja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+c3b4a37b3acae30745d00a0c14acede8022aaf25f05f2e463019725bc6b123e4cff73aac3d32ce1a4bfc5e2eb7a895ccef60b32f14596014a562dd782274fa3c  coreaction-v4.4.0.tar.gz
+"

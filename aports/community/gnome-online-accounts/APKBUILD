@@ -1,0 +1,55 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gnome-online-accounts
+pkgver=3.48.0
+pkgrel=2
+pkgdesc="Single sign-on framework for GNOME"
+url="https://wiki.gnome.org/Projects/GnomeOnlineAccounts"
+arch="all"
+license="GPL-2.0-or-later"
+depends="dbus:org.freedesktop.Secrets"
+makedepends="
+	docbook-xml
+	docbook-xsl
+	gcr-dev
+	gnome-desktop-dev
+	gobject-introspection-dev
+	gtk-doc
+	itstool
+	json-glib-dev
+	krb5-dev
+	libsecret-dev
+	libxslt
+	libxml2-utils
+	meson
+	rest1-dev
+	vala
+	webkit2gtk-4.1-dev
+	"
+subpackages="$pkgname-dbg $pkgname-dev $pkgname-lang"
+source="https://download.gnome.org/sources/gnome-online-accounts/${pkgver%.*}/gnome-online-accounts-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+dev() {
+	provides="$pkgname-static=$pkgver-r$pkgrel"
+	replaces="$pkgname-static"
+	default_dev
+}
+
+sha512sums="
+67e6c39d38187dc58175f6b694c66a92d9b9152b179db41ee05a8c512db5b16f1dd1eb1503c7d732b09126942abc00206ba956f7a54c6ae7a285a9e3101be7a5  gnome-online-accounts-3.48.0.tar.xz
+"

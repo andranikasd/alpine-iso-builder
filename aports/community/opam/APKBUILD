@@ -1,0 +1,49 @@
+# Contributor: Michael Zuo <muh.muhten@gmail.com>
+# Contributor: Sora Morimoto <sora@morimoto.io>
+# Contributor: Anil Madhavapeddy <anil@recoil.org>
+# Contributor: omni <omni+alpine@hack.org>
+# Maintainer: Kate <kit.ty.kate@disroot.org>
+pkgname=opam
+pkgver=2.1.5
+pkgrel=1
+pkgdesc="OCaml Package Manager"
+url="https://opam.ocaml.org"
+arch="all !riscv64" # ocaml
+license="LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
+depends="curl patch unzip coreutils bubblewrap"
+options="!check" # The tests use bubblewrap which cannot be run inside docker
+makedepends="dune tar ocaml-compiler-libs"
+checkdepends="rsync bash diffutils"
+source="https://github.com/ocaml/opam/releases/download/$pkgver/opam-full-$pkgver.tar.gz
+	makefile.patch
+	"
+subpackages="$pkgname-doc"
+builddir="$srcdir/opam-full-$pkgver"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--with-mccs
+
+	make -j1 DUNE=/usr/bin/dune lib-ext all
+}
+
+check() {
+	make tests
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}
+
+sha512sums="
+e4e33fcee0a9f922f8b43c6b095554a946559a2c50341326d21cca0f24fc7105c0de01db204b408240b12b267c9929435e2c511adf140618c91873f10444ae90  opam-full-2.1.5.tar.gz
+0e9b1ccac3dc6b9f215a01ac9c30ca95a254240752af7ab9c6368b525e108b4b55cc460ca7ba8fcccca33103247a90f12779649d2823643f1e856cb3a8de50f0  makefile.patch
+"

@@ -1,0 +1,39 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer:
+pkgname=catch2-3
+pkgver=3.5.2
+pkgrel=0
+arch="all"
+url="https://github.com/catchorg/Catch2"
+pkgdesc="Modern, C++-native, header-only, test framework for unit-tests (v3)"
+license="BSL-1.0"
+makedepends="
+	cmake
+	python3
+	samurai
+	"
+source="https://github.com/catchorg/Catch2/archive/v$pkgver/catch2-v$pkgver.tar.gz"
+subpackages="$pkgname-doc"
+builddir="$srcdir/Catch2-$pkgver"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	cd build
+	# ApprovalTests is broken https://github.com/catchorg/Catch2/issues/1780
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E "ApprovalTests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+1b9d5f35144f6c7acef0e76558a4adf3ff41c2c2292fbdcb3e2c2917fa2deb7fba593738105dd3c111f02ee8aca64010cf68f69bb8fb1815dbf771b509ab0576  catch2-v3.5.2.tar.gz
+"

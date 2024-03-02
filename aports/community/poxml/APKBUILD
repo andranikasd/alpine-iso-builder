@@ -1,0 +1,36 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=poxml
+pkgver=23.08.5
+pkgrel=0
+arch="all !armhf !riscv64"
+url="https://www.kde.org/applications/development/"
+pkgdesc="Translates DocBook XML files using gettext po files"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kdoctools5-dev gettext-dev samurai"
+_repo_url="https://invent.kde.org/sdk/poxml.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/poxml-$pkgver.tar.xz"
+subpackages="$pkgname-doc"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+0dbc297779ee27a10743cfedda581d58ec52bc3ff2b0098d5d749d171574cd28cd117b2aebd227a4b48ac96e5eb42f07e8b429a46e8190a6e169fc5c1272a0bc  poxml-23.08.5.tar.xz
+"

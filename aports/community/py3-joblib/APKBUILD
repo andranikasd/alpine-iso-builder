@@ -1,0 +1,73 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-joblib
+pkgver=1.3.2
+pkgrel=0
+pkgdesc="Computing with Python functions"
+url="https://joblib.readthedocs.org/en/latest/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	py3-cloudpickle
+	py3-distributed
+	py3-loky
+	"
+makedepends="
+	cython
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="
+	py3-pytest
+	py3-threadpoolctl
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/j/joblib/joblib-$pkgver.tar.gz
+	de-vendor.patch
+	"
+
+builddir="$srcdir/joblib-$pkgver"
+#options="net" # Net access required for tests, https://github.com/joblib/joblib/issues/1084
+options="!check" # Fail to quit properly
+
+# secfixes:
+#   1.2.0-r0:
+#     - CVE-2022-21797
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest joblib/test -k 'not test_joblib_pickle_across_python_versions_with_mmap' \
+		--deselect joblib/test/test_parallel.py::test_threadpool_limitation_in_child[2] \
+		--deselect joblib/test/test_parallel.py::test_threadpool_limitation_in_child[4] \
+		--deselect joblib/test/test_parallel.py::test_threadpool_limitation_in_child_context[2-None] \
+		--deselect joblib/test/test_memmapping.py::test_permission_error_windows_memmap_sent_to_parent[loky] \
+		--deselect joblib/test/test_memmapping.py::test_multithreaded_parallel_termination_resource_tracker_silent \
+		--deselect joblib/test/test_memmapping.py::test_many_parallel_calls_on_same_object[loky] \
+		--deselect joblib/test/test_parallel.py::test_memmapping_leaks[loky] \
+		--deselect joblib/test/test_parallel.py::test_thread_bomb_mitigation[loky] \
+		--deselect joblib/test/test_memory.py::test_parallel_call_cached_function_defined_in_jupyter[True] \
+		--deselect joblib/test/test_memory.py::test_parallel_call_cached_function_defined_in_jupyter[False] \
+		--deselect joblib/test/test_dask.py
+}
+
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -r "$pkgdir"/usr/lib/python3*/site-packages/joblib/test
+	rm -r "$pkgdir"/usr/lib/python3*/site-packages/joblib/externals
+}
+
+sha512sums="
+9b5acba1321351cf2ae548161ced18774b8b316aaf883cc8e77bf58898d1913361a3845d64f1f1f87e4e2394eafd92e0a6a8d67947db0c9a95a40e5f579baae6  joblib-1.3.2.tar.gz
+6f9dcd808c553eac296c9a9bf563add28752e6ae54648e0c20117712846007b662fea4bc4e9435f11f4d69f00f75186301757034dd9b61e21d3c32217138254f  de-vendor.patch
+"

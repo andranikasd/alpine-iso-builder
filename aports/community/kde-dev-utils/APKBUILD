@@ -1,0 +1,46 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kde-dev-utils
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/applications/development/"
+pkgdesc="Small utilities for developers using KDE/Qt libs/frameworks"
+license="(LGPL-2.0-only OR LGPL-3.0-only) AND GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kcoreaddons5-dev
+	ki18n5-dev
+	kparts5-dev
+	kwidgetsaddons5-dev
+	qt5-qttools-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/sdk/kde-dev-utils.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kde-dev-utils-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+08404c3aa9842f18abbcf02ba5ac6d6d07d9f2e2bf65d2c43530a3c16b4ce805d8ca149d9801ee25af392832ccc4504105490620767a75fb04224c2b57932499  kde-dev-utils-23.08.5.tar.xz
+"

@@ -1,0 +1,54 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=ncspot
+pkgver=0.13.4
+pkgrel=0
+pkgdesc="Cross-platform ncurses Spotify client inspired by ncmpc and the likes"
+url="https://github.com/hrkfdn/ncspot"
+# riscv64: takes eternity to build
+# s390x: fails to build nix crate
+arch="all !riscv64 !s390x"
+license="BSD-2-Clause"
+makedepends="
+	cargo
+	cargo-auditable
+	libxcb-dev
+	ncurses-dev
+	openssl-dev>3
+	pulseaudio-dev
+	python3
+	"
+source="https://github.com/hrkfdn/ncspot/archive/v$pkgver/ncspot-$pkgver.tar.gz
+	no-rustls.patch
+	"
+options="!check"  # there's only one unit test (in v0.8.1)
+
+# Build with ncurses_backend instead of termion_backend, enable cover and share_selection.
+_cargo_opts="
+	--frozen
+	--no-default-features
+	--features share_clipboard,pulseaudio_backend,mpris,notify,cover,share_selection,ncurses_backend
+	"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build $_cargo_opts --release
+}
+
+check() {
+	cargo test $_cargo_opts
+}
+
+package() {
+	install -D -m755 target/release/$pkgname -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+af869a6c011a2fe9877027aa0765b361b781292521db325932e04a7fab8a9cc9d805835ea484b82f11e756687a3b0fb2978c315cbd1da9c98c9ce8e86c85cb11  ncspot-0.13.4.tar.gz
+acb170156bd74277461d403ab6467b534c727b7e1e38df5ea0e1103333a51264b7134eee41b879d4bc9f37319e6b602de14814349c735dce7c24732a0d75dcc2  no-rustls.patch
+"

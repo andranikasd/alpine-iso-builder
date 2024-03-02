@@ -1,0 +1,54 @@
+# Maintainer: Rafael Ávila de Espíndola <rafael@espindo.la>
+pkgname=virtiofsd
+pkgver=1.10.1
+pkgrel=0
+pkgdesc="virtio-fs vhost-user device daemon"
+url="https://gitlab.com/virtio-fs/virtiofsd"
+# fails to build on 32-bit
+arch="all !x86 !armhf !armv7"
+license="Apache-2.0 AND BSD-3-Clause"
+makedepends="
+	cargo
+	cargo-auditable
+	libcap-ng-dev
+	libseccomp-dev
+	"
+source="https://gitlab.com/virtio-fs/virtiofsd/-/archive/v$pkgver/virtiofsd-v$pkgver.tar.bz2
+	lfs64.patch
+	"
+builddir="$srcdir/virtiofsd-v$pkgver"
+options="net"
+
+# qemu doesn't ship this anymore, split to this project
+provides="qemu-virtiofsd=$pkgver-r$pkgrel"
+replaces="qemu-virtiofsd"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cargo test --frozen --release
+}
+
+package() {
+	install -Dm755 target/release/virtiofsd \
+		-t "$pkgdir"/usr/libexec/
+	# Keep a symlink at the old install location just in case
+	mkdir -p "$pkgdir"/usr/lib/qemu
+	ln -s ../../libexec/virtiofsd "$pkgdir"/usr/lib/qemu
+
+	install -Dm644 50-virtiofsd.json \
+		-t "$pkgdir"/usr/share/qemu/vhost-user/
+}
+
+sha512sums="
+928922c45893e6a395c8c5fa87521cc87393e6b214fd7e668a00bcf2f86c68387b7323a562266680f60aff33a5c5915a5bd7f13a662465d41eb7ee36f9fd8d18  virtiofsd-v1.10.1.tar.bz2
+a7a92300da2457a74aef7538c79a3ed5833fa511a399cfe4165fe6af16586de34c93570dd0b14e7325accb22cd9e5695dc32a0e425c7daf1b3b13214004f1fc3  lfs64.patch
+"

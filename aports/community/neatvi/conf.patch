@@ -1,0 +1,10 @@
+--- a/conf.h
++++ b/conf.h
+@@ -22,6 +22,7 @@
+ 	{"nm", "\\.nm$"},
+ 	{"diff", "\\.(patch|diff)$"},
+ 	{"ls", "ls$"},
++	{"sh", ".$"}					/* everything else */
+ };
+ 
+ /* syntax highlighting patterns */

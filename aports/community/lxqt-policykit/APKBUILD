@@ -1,0 +1,42 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=lxqt-policykit
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="LXQt PolicyKit agent"
+url="https://github.com/lxqt/lxqt-policykit"
+# armhf blocked by liblxqt-dev
+arch="all !armhf"
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake
+	kwindowsystem5-dev
+	liblxqt-dev
+	lxqt-build-tools
+	polkit-qt-dev
+	qt5-qttools-dev
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://github.com/lxqt/lxqt-policykit/releases/download/$pkgver/lxqt-policykit-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname-agent
+}
+
+sha512sums="
+d63a2f0d3ce2bb794aae6a6315b465fca984de20b107934127f83d3a8614472c7f019f2710a06ee40658a1a4c9ed6df5c5715b593f67e46c6e3d91b3b2b0526f  lxqt-policykit-1.4.0.tar.xz
+"

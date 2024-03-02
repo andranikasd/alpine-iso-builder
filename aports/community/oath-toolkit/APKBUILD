@@ -1,0 +1,70 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Jann - Ove Risvik <jann.ove@dev.usaklig.com>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=oath-toolkit
+pkgver=2.6.11
+pkgrel=0
+pkgdesc="OATH Toolkit One-time password components"
+url="https://nongnu.org/oath-toolkit/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	gtk-doc
+	libxml2-dev
+	linux-pam-dev
+	xmlsec-dev
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-liboath $pkgname-libpskc
+	$pkgname-oathtool $pkgname-pam_oath"
+source="https://download.savannah.gnu.org/releases/oath-toolkit/oath-toolkit-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+liboath() {
+	depends=""
+	pkgdesc="A shared and static C library for OATH handling."
+	license="LGPL-2.1-or-later"
+
+	amove usr/lib/liboath.so.*
+}
+
+libpskc() {
+	depends=""
+	pkgdesc="Library for Portable Symmetric Key Container"
+	license="LGPL-2.1-or-later"
+
+	amove usr/lib/libpskc.so.*
+}
+
+oathtool() {
+	depends=""
+	pkgdesc="A command line tool for generating and validating OTPs."
+	license="GPL-3.0-or-later"
+
+	amove usr/bin/oathtool
+}
+
+pam_oath() {
+	depends=""
+	license="GPL-3.0-or-later"
+	pkgdesc="A PAM module for pluggable login authentication for OATH."
+	mkdir -p "$subpkgdir"/lib/security
+	mv "$pkgdir"/usr/lib/security/pam_oath.so "$subpkgdir"/lib/security
+}
+
+sha512sums="
+42df879bebccdde3d38558ba735e09db14d0c916b9f0d3a1842e0ecc80614b7d1ee44db39d3097970a2a7108446da6eefd09bdd32dd2fb81d6aed06dc19552fd  oath-toolkit-2.6.11.tar.gz
+"

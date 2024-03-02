@@ -1,0 +1,107 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=pidgin
+pkgver=2.14.12
+pkgrel=3
+pkgdesc="Graphical, multi-protocol instant messaging client"
+url="https://pidgin.im/"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	avahi-dev
+	cyrus-sasl-dev
+	gnutls-dev
+	gtk+2.0-dev
+	gtkspell-dev
+	intltool
+	libgnt-dev
+	libidn-dev
+	libsm-dev
+	libxml2-dev
+	ncurses-dev
+	nss-dev
+	startup-notification-dev
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	purple-bonjour:_bonjour
+	purple-xmpp:_xmpp
+	finch
+	libpurple
+	"
+#source="https://bitbucket.org/pidgin/main/downloads/$pkgname-$pkgver.tar.bz2"
+source="https://downloads.sourceforge.net/project/pidgin/Pidgin/$pkgver/pidgin-$pkgver.tar.gz"
+options="!check"
+
+# secfixes:
+#   2.14.9-r0:
+#     - CVE-2022-26491
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--enable-avahi \
+		--disable-dbus \
+		--disable-doxygen \
+		--disable-gnutls \
+		--disable-meanwhile \
+		--disable-nm \
+		--disable-perl \
+		--disable-schemas-install \
+		--disable-screensaver \
+		--disable-tcl \
+		--disable-vv \
+		--disable-gstreamer \
+		--disable-gstreamer-interfaces \
+		--disable-farstream \
+		--disable-gevolution \
+		--enable-cyrus-sasl \
+		--enable-nss
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+finch() {
+	pkgdesc="text-based multi-protocol instant messaging client"
+
+	amove usr/bin/finch
+	mv "$pkgdir"/usr/lib/finch "$subpkgdir"/usr/lib
+}
+
+libpurple() {
+	pkgdesc="multi-protocol instant messaging library"
+
+	amove \
+		usr/lib/*purple* \
+		usr/share/purple \
+		usr/share/sounds
+}
+
+_bonjour() {
+	pkgdesc="bonjour plugin for libpurple"
+	provides="lib$subkgname=$pkgver-r$pkgrel"
+	replaces="lib$subpkgname"
+
+	amove usr/lib/purple-*/libbonjour*
+}
+
+_xmpp() {
+	pkgdesc="Jabber/XMPP plugins for libpurple"
+	provides="lib$subkgname=$pkgver-r$pkgrel"
+	replaces="lib$subpkgname"
+
+	amove \
+		usr/lib/purple-*/libjabber* \
+		usr/lib/purple-*/libxmpp*
+}
+
+sha512sums="
+c1e3c0371fd56cca8087e0ae7a48fb07e7404359ec6c5be955c1345180d6fc48aa103b626a66f80876a3f1b8054145c2591f16f3040de6f58bf8413d7ef4f8a5  pidgin-2.14.12.tar.gz
+"

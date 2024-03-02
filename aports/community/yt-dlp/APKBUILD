@@ -1,0 +1,84 @@
+# Contributor: Peter Bui <pnutzh4x0r@gmail.com>
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Timo Teräs <timo.teras@iki.fi>
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Sodface <sod@sodface.com>
+# Maintainer: lauren n. liberda <lauren@selfisekai.rocks>
+pkgname=yt-dlp
+pkgver=2023.12.30
+pkgrel=0
+pkgdesc="Command-line program to download videos from YouTube"
+url="https://github.com/yt-dlp/yt-dlp"
+arch="noarch"
+license="Unlicense"
+depends="python3"
+_extradeps="
+	attr
+	ca-certificates
+	ffmpeg
+	py3-brotli
+	py3-mutagen
+	py3-pycryptodomex
+	py3-secretstorage
+	py3-websockets
+	"
+makedepends="$_extradeps py3-setuptools"
+checkdepends="py3-flake8 py3-nose py3-pytest-xdist"
+subpackages="
+	$pkgname-core-pyc
+	$pkgname-core
+	$pkgname-doc
+	$pkgname-zsh-completion
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/yt-dlp/yt-dlp/releases/download/$pkgver/yt-dlp.tar.gz
+	"
+builddir="$srcdir/$pkgname"
+
+# secfixes:
+#   2023.11.14-r0:
+#     - CVE-2023-46121
+#   2023.09.24-r0:
+#     - CVE-2023-40581
+#   2023.07.06-r0:
+#     - CVE-2023-35934
+
+prepare() {
+	default_prepare
+
+	:> requirements.txt
+}
+
+build() {
+	python3 setup.py build
+
+	make completions
+}
+
+check() {
+	PYTHON=/usr/bin/python3 make offlinetest
+}
+
+package() {
+	depends="
+		$_extradeps
+		yt-dlp-core=$pkgver-r$pkgrel
+		"
+
+	python3 setup.py install --skip-build --root="$pkgdir"
+	ln -sfv yt-dlp "$pkgdir"/usr/bin/youtube-dl
+}
+
+core() {
+	# provide compat for removed old youtube-dl
+	provides="youtube-dl=$pkgver-r$pkgrel"
+	replaces="youtube-dl"
+
+	amove usr/lib/python3*/site-packages/
+	amove usr/bin
+}
+
+sha512sums="
+23062e61cae9c51436f16de0a5ee0b351e59554ab4b5b90bed819d98b6b677bfd1797abae5baf52964eb64236c4b7abe23e37ca88ed10cbce3f7356081be59c4  yt-dlp-2023.12.30.tar.gz
+"

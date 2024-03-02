@@ -1,0 +1,88 @@
+# Contributor: xrs <xrs@mail36.net>
+# Maintainer: xrs <xrs@mail36.net>
+pkgname=gnunet
+pkgver=0.20.0
+pkgrel=0
+pkgdesc="A framework for secure and privacy enhancing peer-to-peer networking"
+url="https://gnunet.org"
+# ppc64le, s390x, and riscv64 blocked by luatex -> texlive
+arch="all !s390x !ppc64le !riscv64"
+license="AGPL-3.0-only"
+depends="gnutls-utils bash which iptables coreutils runit"
+depends_dev="libgpg-error-dev libgcrypt-dev nettle-dev unbound-dev gnutls-dev
+	curl-dev libmicrohttpd-dev openssl-dev>3 libunistring-dev libidn2-dev
+	nss-dev sqlite-dev zlib-dev miniupnpc-dev gmp-dev gettext openjpeg-dev
+	jansson-dev libsodium-dev jose-dev"
+makedepends="$depends_dev autoconf automake libtool gettext-dev python3
+	texlive texlive-luatex py3-sphinx py3-sphinx_rtd_theme texinfo"
+install="$pkgname.pre-install $pkgname.post-install"
+pkgusers="gnunet"
+pkggroups="gnunet gnunetdns"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-openrc"
+options="!check suid" # No check: GNUnet checks can only run after install
+source="https://ftpmirror.gnu.org/gnu/gnunet/gnunet-$pkgver.tar.gz
+	$pkgname-system.conf
+	$pkgname-system-services.initd
+	$pkgname-user-services.initd
+	setup-$pkgname-user
+	"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--disable-poisoning \
+		--enable-logging=verbose
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	libexecdir=$pkgdir/usr/lib/gnunet/libexec/
+	# Limit access to critical gnunet-helper-dns to group "gnunetdns"
+	chgrp gnunetdns $libexecdir/gnunet-helper-dns
+	chgrp gnunetdns $libexecdir/gnunet-service-dns
+	# Limit access to certain SUID binaries by group "gnunet"
+	chgrp gnunet    $libexecdir/gnunet-helper-exit
+	chgrp gnunet    $libexecdir/gnunet-helper-vpn
+	chgrp gnunet    $libexecdir/gnunet-helper-nat-client
+	chgrp gnunet    $libexecdir/gnunet-helper-nat-server
+	chmod u+s       $libexecdir/gnunet-helper-exit
+	chmod u+s       $libexecdir/gnunet-helper-vpn
+	chmod 2750      $libexecdir/gnunet-helper-dns
+	chmod 2700      $libexecdir/gnunet-service-dns
+	chmod u+s       $libexecdir/gnunet-helper-nat-client
+	chmod u+s       $libexecdir/gnunet-helper-nat-server
+
+	install -m644 -D $srcdir/$pkgname-system.conf \
+		$pkgdir/etc/$pkgname.conf
+	install -m755 -D $srcdir/$pkgname-system-services.initd \
+		$pkgdir/etc/init.d/$pkgname-system-services
+	install -m755 -D $srcdir/$pkgname-user-services.initd \
+		$pkgdir/etc/init.d/$pkgname-user-services
+	install -m755 -D $srcdir/setup-$pkgname-user \
+		$pkgdir/usr/bin/setup-$pkgname-user
+	install -dm0755 -o $pkgusers \
+		$pkgdir/var/run/$pkgname
+}
+
+dev() {
+	default_dev
+
+	# dev() will move gnunet-config from $pkg to $pkg-dev, but it's an
+	# intended part of $pkg.
+	mv $subpkgdir/usr/bin/gnunet-config $pkgdir/usr/bin/
+}
+
+sha512sums="
+bd06ac77d9812569acbc51b79ac6c1259eb0cfa9b44e8ef167723880bc9c1e142589014ad7edd54695a2ac35f2aa0d78ef23b052354d06a01751cc201153a9df  gnunet-0.20.0.tar.gz
+ff516b8a212ae539fee64e5c413041261d451db9867b81b759e138a8bb4dcacb4706fb5418a2e63ea63cd551aed807d20eb9073cfc2fadacc4ad7755681c6f81  gnunet-system.conf
+545cc8faf8897bfece04430c1490e3edabb629b0c02f18c0f354b22e54249461b8b909a7da04ae9cca444dd366cd56c293d38a20d31d3c536bd07daf82d8e6c4  gnunet-system-services.initd
+8daf862f7c81bd5b143a05f786c4edce76c91d4d226903288a4d2d88898b9b7ba017cf683a20d918b9ad93aff5f391eb5f928843a2fcd35e6e48f3a611dc9d8d  gnunet-user-services.initd
+e3fdeb11a36ba92f9995bc919879ee3d5f7358dd29c15f2474986f8e505c04edaf184ae093716ce8d7c5a549ad33a067a6ad63cbc451b200e4cf258a3aba68db  setup-gnunet-user
+"

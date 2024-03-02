@@ -1,0 +1,45 @@
+# Contributor: mio <miyopan@e.email>
+# Maintainer: mio <miyopan@e.email>
+pkgname=offpunk
+pkgver=2.2
+pkgrel=0
+pkgdesc="An offline-first browser for the small internet"
+url="https://git.sr.ht/~lioploum/offpunk"
+license="AGPL-3.0-only"
+install="$pkgname.post-install"
+# Additional features may be unavailable in s390x and riscv64 due to missing
+# optional dependencies.
+arch="noarch"
+depends="
+	file
+	less
+	py3-requests
+	python3
+	timg
+	"
+makedepends="
+	py3-gpep517
+	py3-hatchling
+	py3-installer
+	"
+subpackages="$pkgname-doc $pkgname-pyc"
+source="offpunk-$pkgver.tar.gz::https://git.sr.ht/~lioploum/offpunk/archive/v$pkgver.tar.gz"
+options="!check" # No tests
+builddir="$srcdir"/offpunk-v"$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+	install -Dm0644 man/"$pkgname".1 "$pkgdir"/usr/share/man/man1/"$pkgname".1
+	install -Dm0644 README.md "$pkgdir"/usr/share/doc/"$pkgname"/README.md
+}
+
+sha512sums="
+fa4222b4cc32df9509c9b420239934666c976571ba6381c32350ab4de4b9c379eae701e20516009c852a5961c31327d66e95a23a9bd7de6b18dc5da29587691f  offpunk-2.2.tar.gz
+"

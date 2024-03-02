@@ -1,0 +1,37 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-opfunu
+_pkgorig=opfunu
+pkgver=1.0.1
+pkgrel=0
+pkgdesc="A collection of Benchmark functions for numerical optimization problems"
+url="https://github.com/thieu1995/opfunu"
+arch="noarch"
+license="MIT"
+depends="python3 py3-matplotlib py3-numpy py3-pandas py3-pillow py3-requests py3-scipy"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest-xdist"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/o/opfunu/opfunu-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+03557289ab8c2dcae6554c017e87d46dbd26b84eef23174d2e353c707d43628c68f500a2bf25b41067774dd1375988c9319aa46f06f27a773ade3541df9ebc4b  py3-opfunu-1.0.1.tar.gz
+"

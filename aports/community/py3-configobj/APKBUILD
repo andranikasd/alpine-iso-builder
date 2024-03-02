@@ -1,0 +1,37 @@
+# Maintainer: Leonardo Arena <rnalrd@alpinelinux.org>
+pkgname=py3-configobj
+pkgver=5.0.8
+pkgrel=1
+pkgdesc="Python3 library for reading and writing of configuration files (ini)"
+url="https://github.com/DiffSK/configobj"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3 py3-six"
+makedepends="py3-setuptools py3-gpep517 py3-wheel"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/c/configobj/configobj-$pkgver.tar.gz"
+builddir="$srcdir"/configobj-$pkgver
+options="!check" # no tests on pypi
+
+replaces="py-configobj" # Backwards compatibility
+provides="py-configobj=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+056b1be5b2c50b03af2dbbdc37d7c0b90b1ce39e0e02aa299e7e9975f0d8445fece4224da9f73ec52ca113c7fe14c91627fbb5c12dd19c78a5aebe9aac0d9b2e  configobj-5.0.8.tar.gz
+"

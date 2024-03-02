@@ -1,0 +1,33 @@
+# Maintainer: Luca Weiss <luca@z3ntu.xyz>
+pkgname=libchewing
+pkgver=0.6.0
+pkgrel=0
+pkgdesc="Intelligent Chinese phonetic input method"
+url="https://chewing.im/"
+arch="all"
+license="LGPL-2.1-only"
+makedepends="cmake samurai sqlite-dev"
+subpackages="$pkgname-dev"
+source="https://github.com/chewing/libchewing/releases/download/v$pkgver/libchewing-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+check() {
+	# parallel testing is broken (https://github.com/chewing/libchewing/issues/293)
+	ctest --test-dir build --output-on-failure -j1
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+9df8587061d0f283d2580d03df73472fa0b545db22f52b73606f5b51f5c23051552d5984b49ad509e5464cb6d2743d6862207dcefffc406bcda44d9e3ae9c057  libchewing-0.6.0.tar.xz
+"

@@ -1,0 +1,70 @@
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Oleg Titov <oleg.titov@gmail.com>
+pkgname=rav1e
+pkgver=0.7.1
+pkgrel=0
+pkgdesc="The fastest and safest AV1 encoder"
+url="https://github.com/xiph/rav1e"
+arch="all"
+license="BSD-2-Clause custom"
+makedepends="cargo cargo-c nasm cargo-auditable"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-libs"
+source="$pkgname-$pkgver.tar.gz::https://github.com/xiph/rav1e/archive/v$pkgver.tar.gz
+	$pkgname-$pkgver.lock::https://github.com/xiph/rav1e/releases/download/v$pkgver/Cargo.lock
+	"
+
+# armhf: tests take >6h
+case "$CARCH" in
+arm*|riscv64)
+	options="$options !check"
+	;;
+esac
+
+export CARGO_PROFILE_RELEASE_INCREMENTAL=false
+export CARGO_PROFILE_RELEASE_DEBUG=false
+
+prepare() {
+	default_prepare
+
+	mv "$srcdir"/$pkgname-$pkgver.lock Cargo.lock
+
+	cargo fetch --locked
+}
+
+build() {
+	export CARGO_PROFILE_RELEASE_OPT_LEVEL=3
+
+	cargo auditable build --release --frozen
+	cargo auditable cbuild \
+		--release \
+		--frozen \
+		--prefix /usr \
+		--library-type cdylib \
+		--library-type staticlib
+}
+
+check() {
+	cargo test --frozen --workspace
+}
+
+package() {
+	cargo auditable cinstall --release \
+		--frozen \
+		--prefix /usr \
+		--destdir "$pkgdir" \
+		--library-type cdylib \
+		--library-type staticlib
+
+	install -Dm755 target/release/rav1e -t "$pkgdir"/usr/bin/
+
+	install -Dm644 README.md PATENTS -t "$pkgdir"/usr/share/doc/rav1e
+
+	# fixes static linking flags
+	sed -i 's|Libs.private:.*|Libs.private: -lssp_nonshared -lgcc_eh -lc|' \
+		"$pkgdir"/usr/lib/pkgconfig/rav1e.pc
+}
+
+sha512sums="
+15e95401fe43ff5d28f5cf98122a057566faf291540151eda57fdf941e1ab446afb366ca52fea22dc6e46c5b49878269760f27cbda7487558beac8c5f8c727f9  rav1e-0.7.1.tar.gz
+64e93877650813e27ca2eb6e131ac47d408af0cff6f0884022213dbf0e699b454bf63ac36efc60c331ef58639fa1c9e6ef4520476e7c40cdad731bb9ddb7da8c  rav1e-0.7.1.lock
+"

@@ -1,0 +1,96 @@
+# Contributor: Will Sinatra <wpsinatra@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=chez-scheme
+# XXX: Upgrades require rebuilding community/idris2 & community/idris2-stage0
+pkgver=9.6.4
+_realver=${pkgver%%[a-z]}
+pkgrel=0
+pkgdesc="Cisco R6RS Scheme Compiler"
+url="https://github.com/cisco/ChezScheme"
+# upstream only supports x86/x86_64/armhf.
+#  aarch64: https://github.com/cisco/ChezScheme/issues/545
+#  riscv64: https://github.com/cisco/ChezScheme/issues/601
+arch="x86 x86_64 armhf"
+license="Apache-2.0"
+makedepends="util-linux-dev ncurses-dev libx11-dev zlib-dev lz4-dev"
+subpackages="$pkgname-doc"
+source="https://github.com/cisco/ChezScheme/releases/download/v$pkgver/csv$pkgver.tar.gz
+	check-expected
+
+	disable-iconv-tests.patch
+	armhf-64bit-time_t.patch
+	x86_64bit-time_t.patch"
+builddir="$srcdir"/csv$pkgver
+
+# Only run the testsuite on x86_64.
+#
+# x86:   https://github.com/cisco/ChezScheme/issues/695
+# armhf: doesn't seem to support test status reporting.
+case "$CARCH" in
+x86) options="!check"   ;;
+armhf) options="!check" ;;
+esac
+
+case "$CARCH" in
+	x86)    _chez_host=ti3le   ;;
+	x86_64) _chez_host=ta6le   ;;
+	armhf)  _chez_host=arm32le ;;
+esac
+
+prepare() {
+	default_prepare
+
+	# Ensure we don't use vendored zlib/lz4 versions.
+	rm -r zlib lz4
+}
+
+build() {
+	case "$CARCH" in
+		x86)    conf="--threads" ;;
+		x86_64) conf="--threads" ;;
+		armhf)  conf=""          ;;
+	esac
+
+	# Use system version of zlib/lz4.
+	export LDFLAGS="$LDFLAGS $(pkg-config --libs zlib) $(pkg-config --libs liblz4)"
+
+	./configure \
+		--installprefix=/usr \
+		--temproot=$pkgdir \
+		--installschemename="chez" \
+		--installscriptname="chez-script" \
+		--machine=$_chez_host \
+		$conf \
+		ZLIB= LZ4=
+	make
+}
+
+check() {
+	make test
+
+	# The `make test` command does not exit with a non-zero exit
+	# status when test fail (see BUILDING). For this reason, we
+	# compare the summary file here. This is also the approach
+	# taken by ChezScheme for their GitHub CI configuration.
+	diff -q "$srcdir"/check-expected "$_chez_host"/mats/summary
+}
+
+package() {
+	make install DESTDIR="$pkgdir"
+
+	# Remove pre-compiled example programs (reduces package size).
+	rm -f "$pkgdir"/usr/lib/csv$_realver/examples/*.so
+
+	# Move examples to -doc subpackage.
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/
+	mv "$pkgdir"/usr/lib/csv$_realver/examples \
+		"$pkgdir"/usr/share/doc/$pkgname/
+}
+
+sha512sums="
+00c33650d0f980c9d28ad4871c97da67b9f25e3fde5a3188b2bbbc9cc813e63e3c9055bc6a94addedbea52cd531cbb56bcdc5e2fda6c6ca37b30166c2797e53a  csv9.6.4.tar.gz
+b5dd1371683d2c5fd89d4c390eaabcc3145522527e677c532831a1d76325e4853c2179d71ee473d91f63937ae345f3ce80ecbc1bb4d2c6c3289d4d4fb18a22bb  check-expected
+386dbff9974991a73766f993f0054548d007bd18652e5077034dd40596152470c0822c15d2e9a7356f41e3ee6c7889f31909e15c9faee54e54b923bf954ffded  disable-iconv-tests.patch
+216cd2f932e99d798ab5d01bfa3f811528b79462ce546204af9a071f8288d5e0f0eab5c0da5fc2adcb45d29162f0ee7d4ddc7dd1884b2382137ebb6063380f54  armhf-64bit-time_t.patch
+e3ca092032fbc17e3bb946d5a8909665916941474efdd04b9a8918d5432ce7f3340b6de55658399be24428778b916a181ba8c9d34d29afc998f804a4ff3a2e69  x86_64bit-time_t.patch
+"

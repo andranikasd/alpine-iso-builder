@@ -1,0 +1,58 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-other
+pkgname=subtitlecomposer
+pkgver=0.8.0
+pkgrel=2
+# armhf blocked by extra-cmake-modules
+# s390x, armv7, riscv64 and aarch64 blocked by OpenGLES
+# x86 fails to build, "call of overloaded 'createIndex(const int&, int, long long unsigned int)' is ambiguous"
+arch="all !armhf !s390x !armv7 !aarch64 !riscv64 !x86"
+url="https://subtitlecomposer.kde.org/"
+pkgdesc="The open source text-based subtitle editor"
+license="GPL-2.0-only"
+makedepends="
+	extra-cmake-modules
+	ffmpeg-dev
+	kauth5-dev
+	kcodecs5-dev
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	kio5-dev
+	kross-dev
+	ktextwidgets5-dev
+	kwidgetsaddons5-dev
+	kxmlgui5-dev
+	openal-soft-dev
+	qt5-qtbase-dev
+	samurai
+	sonnet5-dev
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/multimedia/subtitlecomposer.git"
+source="https://download.kde.org/stable/subtitlecomposer/subtitlecomposer-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	xvfb-run ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+463824631b025c760423244434000c6e7f7d44097fb7a9178ada505daa6329de0649219f563431e98d8e780fce2b1f0a39cbd77a998ece3d131166045ae40dee  subtitlecomposer-0.8.0.tar.xz
+"

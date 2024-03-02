@@ -1,0 +1,41 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=lxqt-notificationd
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="LXQt notification daemon"
+url="https://github.com/lxqt/lxqt-notificationd"
+arch="all !armhf" # armhf blocked by liblxqt and kwindowsystem
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake samurai lxqt-build-tools liblxqt-dev
+	qt5-qttools-dev kwindowsystem5-dev
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-lang"
+source="https://github.com/lxqt/lxqt-notificationd/releases/download/$pkgver/lxqt-notificationd-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname
+}
+
+sha512sums="
+5ae28b0f49e1e01c8d0fe96f23b961ca962dab33f16025af172777f385d0fd3471c64a7acb78b46e7dc0c370d324a17f10ec9a4c4b3afbde95d47164a5246d0a  lxqt-notificationd-1.4.0.tar.xz
+"

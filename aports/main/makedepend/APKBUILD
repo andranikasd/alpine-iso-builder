@@ -1,0 +1,33 @@
+# Contributor:
+# Maintainer: Steven Guikal <void@fluix.one>
+pkgname=makedepend
+pkgver=1.0.8
+pkgrel=5
+pkgdesc="utility for making makefile dependencies"
+url="https://www.freedesktop.org/"
+arch="all"
+license="MIT-open-group"
+makedepends="xorgproto util-macros"
+subpackages="$pkgname-doc"
+source="https://www.x.org/releases/individual/util/makedepend-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+6707b1107c07d4ffbcf008181e877d18a0bcc4aea03860ee1158f5630c7fdce4cf9ad7bee3b38ee420c3a44819ed4b56a6f2428a5b695c0dbd17fb3e60825a6d  makedepend-1.0.8.tar.xz
+"

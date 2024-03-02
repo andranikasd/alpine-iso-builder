@@ -1,0 +1,64 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-pynitrokey
+pkgver=0.4.45
+pkgrel=0
+pkgdesc="Python Library for Nitrokey devices"
+url="https://github.com/Nitrokey/pynitrokey"
+# s390x, ppc64le and riscv64 blocked by py3-spsdk and py3-nrfutil
+arch="noarch !s390x !ppc64le !riscv64"
+license="Apache-2.0 AND MIT"
+depends="
+	nitrokey-udev-rules
+	py3-click
+	py3-click-aliases
+	py3-cryptography
+	py3-dateutil
+	py3-ecdsa
+	py3-fido2
+	py3-frozendict
+	py3-intelhex
+	py3-libusb1
+	py3-nethsm
+	py3-nkdfu
+	py3-protobuf
+	py3-pyserial
+	py3-requests
+	py3-semver
+	py3-spsdk
+	py3-tlv8
+	py3-tqdm
+	py3-typing-extensions
+	py3-urllib3
+	"
+makedepends="
+	py3-flit
+	py3-gpep517
+	py3-installer
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/p/pynitrokey/pynitrokey-$pkgver.tar.gz"
+options="!check" # Are integration tests only
+builddir="$srcdir/pynitrokey-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+0fe3d043777e4908d745d3ee59e44be0a16f93ec47bbdb564cef94f7ed49d5073612e4eddf74990264701a2d1a0823ee50d723fcba8ca3ea912e8ac859771c6d  pynitrokey-0.4.45.tar.gz
+"

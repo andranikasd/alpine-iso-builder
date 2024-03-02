@@ -1,0 +1,38 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=py3-pytest-asyncio
+pkgver=0.21.1
+pkgrel=1
+pkgdesc="Pytest support for asyncio"
+url="https://github.com/pytest-dev/pytest-asyncio"
+arch="noarch"
+license="Apache-2.0"
+depends="py3-pytest"
+makedepends="py3-setuptools py3-setuptools_scm py3-gpep517 py3-installer py3-wheel"
+checkdepends="py3-async_generator py3-coverage py3-hypothesis py3-flaky py3-pytest-trio"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pytest-dev/pytest-asyncio/archive/v$pkgver.tar.gz"
+builddir="$srcdir/pytest-asyncio-$pkgver"
+options="!check" # fail for some reason
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages test-env
+	test-env/bin/python3 -m installer .dist/pytest_asyncio-*.whl
+	test-env/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/pytest_asyncio-*.whl
+}
+
+sha512sums="
+315007038d510ce876638d49d2310962f34264440452ed49f7cbdb608340bd1eb4868d529e44812a9cb5bf5dfe123c338ab2fa4c892505329820f5da15d2bb6d  py3-pytest-asyncio-0.21.1.tar.gz
+"

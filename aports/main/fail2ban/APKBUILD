@@ -1,0 +1,77 @@
+# Contributor: prymeroot <pryme@gmx.com>
+# Contributor: Jeff Bilyk <jbilyk@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=fail2ban
+pkgver=1.0.2
+pkgrel=3
+pkgdesc="Scans log files for login failures then updates iptables to reject originating ip address"
+url="https://www.fail2ban.org/"
+arch="noarch"
+license="GPL-2.0-or-later"
+depends="python3 iptables logrotate"
+makedepends="python3-dev py3-setuptools bash"
+subpackages="$pkgname-pyc $pkgname-tests $pkgname-doc $pkgname-openrc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/fail2ban/fail2ban/archive/$pkgver.tar.gz
+	fail2ban.initd
+	fail2ban.confd
+	fail2ban.logrotate
+	alpine-ssh.jaild
+	alpine-sshd.filterd
+	alpine-sshd-ddos.filterd
+	"
+options="!check" # really flaky
+
+# secfixes:
+#   0.11.2-r2:
+#     - CVE-2021-32749
+
+build() {
+	sh fail2ban-2to3
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py test
+}
+
+package() {
+	python3 setup.py install --root "$pkgdir"
+
+	install -Dm755 "$srcdir"/fail2ban.initd "$pkgdir"/etc/init.d/fail2ban
+	install -Dm644 "$srcdir"/fail2ban.confd "$pkgdir"/etc/conf.d/fail2ban
+	install -Dm644 "$srcdir"/fail2ban.logrotate \
+		"$pkgdir"/etc/logrotate.d/fail2ban
+	install -Dm644 "$srcdir"/alpine-ssh.jaild \
+		"$pkgdir"/etc/fail2ban/jail.d/alpine-ssh.conf
+	install -Dm644 "$srcdir"/alpine-sshd.filterd \
+		"$pkgdir"/etc/fail2ban/filter.d/alpine-sshd.conf
+	install -Dm644 "$srcdir"/alpine-sshd-ddos.filterd \
+		"$pkgdir"/etc/fail2ban/filter.d/alpine-sshd-ddos.conf
+
+	install -Dm644 -t "$pkgdir"/usr/share/man/man1 man/*.1
+	install -Dm644 -t "$pkgdir"/usr/share/man/man5 man/*.5
+
+	# TODO: Create paths-alpine.conf and remove paths-debian.conf.
+	find "$pkgdir"/etc/fail2ban/ -name 'paths-*.conf' \
+		-a ! -name 'paths-common.conf' \
+		-a ! -name 'paths-debian.conf' \
+		-delete
+}
+
+tests() {
+	pkgdesc="Fail2ban test cases"
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	amove usr/bin/fail2ban-testcases
+	amove usr/lib/python3.*/site-packages/fail2ban/tests
+}
+
+sha512sums="
+688a84361b5794e1658f53d2d200ce752fe1e3320ddb1742c32c4b4b82a79ace16ae464e7ea3eeb94a0e862bcac73c2d3a0e61dd7b28e179a4c857f950d74dbb  fail2ban-1.0.2.tar.gz
+9ba3da904e2169264ca2ad3af1a6c10ba82f559b9c746d20c515ec806263a7fe0576536e38e4e6107cd551048aa8868b45986f1a803a049ea745158678b8d8be  fail2ban.initd
+1e7581dd04e7777d6fd5c40cc842a7ec5f4e6a0374673d020d89dd61bf4093d48934844bee89bcac9084f9ae44f3beb66e714cf3c2763d79c3e8feb790c5e43b  fail2ban.confd
+ee1c229db970239ebc707cd484a650fcf2347c70b411728ee2a4a35a72f4118cfccecf2a221275603320e0332efcc16e4979201933cec1aef1c5d5a082fc4940  fail2ban.logrotate
+84915967ae1276f1e14a5813680ee2ebf081af1ff452a688ae5f9ac3363f4aff90e39f8e6456b5c33d5699917d28a16308797095fd1ef9bb1fbcb46d4cea3def  alpine-ssh.jaild
+4f982e26d3d066f40172607f20a30edc8a44222185413944584bde50c8ca11baaeedf341a67a7767355bccf88281a47ab80ac121297b2f059aba3d1c58bd567f  alpine-sshd.filterd
+36a81b771be0b36fe0dfb5ee4c72c9cb5b504e110618a8eb6f0f241b4e57d92df01dc5cc04b6b68d5bc6a5e6d68de1000092770285d7a328e5937e50b4b226a3  alpine-sshd-ddos.filterd
+"

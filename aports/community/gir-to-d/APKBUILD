@@ -1,0 +1,28 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gir-to-d
+pkgver=0.23.1
+pkgrel=4
+pkgdesc="Create D bindings from GObject introspection files"
+url="https://github.com/gtkd-developers/gir-to-d"
+# limited by ldc
+arch="aarch64 x86_64"
+license="LGPL-3.0-or-later"
+makedepends="meson ldc"
+options="!check" # no tests
+source="https://github.com/gtkd-developers/gir-to-d/archive/v$pkgver/gir-to-d-$pkgver.tar.gz"
+
+build() {
+	# Pass --allinst to ldc to work around an undefined reference build issue
+	# https://github.com/ldc-developers/ldc/issues/4000
+	LDFLAGS= abuild-meson -Dd_args="--allinst" . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+d1cfb906cd094acdf134a9a748fbd71fdbd4a26ce4d1696be356eb0c1c12edf4a96c73b7ca79da46c36f7e0ee15645991364b2bb2e1cbc46e8023233d4327060  gir-to-d-0.23.1.tar.gz
+"

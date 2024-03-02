@@ -1,0 +1,51 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=wlroots
+pkgver=0.17.1
+pkgrel=0
+pkgdesc="Modular Wayland compositor library"
+url="https://gitlab.freedesktop.org/wlroots/wlroots"
+license="MIT"
+arch="all"
+makedepends="
+	eudev-dev
+	glslang-dev
+	hwdata-dev
+	libcap-dev
+	libdisplay-info-dev
+	libinput-dev
+	libseat-dev
+	libxcb-dev
+	libxkbcommon-dev
+	mesa-dev
+	meson
+	ninja
+	pixman-dev
+	vulkan-loader-dev
+	wayland-dev
+	wayland-protocols
+	xcb-util-image-dev
+	xcb-util-renderutil-dev
+	xcb-util-wm-dev
+	xkeyboard-config-dev
+	xwayland-dev
+	"
+subpackages="$pkgname-dbg $pkgname-dev"
+source="https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/$pkgver/wlroots-$pkgver.tar.gz"
+options="!check" # no test suite
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dexamples=false \
+		. build
+	meson compile -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+sha512sums="
+d73ebe5f48f533daa4ec7d785e0782dc66f2d5877ce7d709311694057f7cec6c740bf20372eb6a46ab18828693eac15db9513881466c011add70be5062880198  wlroots-0.17.1.tar.gz
+"

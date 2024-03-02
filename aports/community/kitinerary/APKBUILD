@@ -1,0 +1,76 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kitinerary
+pkgver=23.08.5
+pkgrel=1
+# armhf blocked by qt5-qtdeclarative
+# ppc64le FTBFS
+arch="all !armhf !ppc64le"
+url="https://kontact.kde.org/"
+pkgdesc="Data model and extraction system for travel reservation information"
+license="LGPL-2.0-or-later"
+depends_dev="
+	kcalendarcore5-dev
+	kcontacts5-dev
+	kmime-dev
+	kpkpass-dev
+	libphonenumber-dev
+	zxing-cpp-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	ki18n5-dev
+	libxml2-dev
+	poppler-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	samurai
+	shared-mime-info
+	zlib-dev
+	"
+_repo_url="https://invent.kde.org/pim/kitinerary.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kitinerary-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+# broken with new libxml
+options="!check"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	cd build
+
+	# jsonlddocumenttest, mergeutiltest, airportdbtest, pkpassextractortest,
+	# postprocessortest, calendarhandlertest, extractortest and knowledgedbtest are broken
+	local skipped_tests="(jsonlddocument"
+	local tests="
+		mergeutil
+		airportdb
+		pkpassextractor
+		postprocessor
+		calendarhandler
+		extractor
+		knowledgedb
+		"
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)"
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+bf62f4c2fbfbaaafe1d6e3acebdf4b19dab9a2f3e0fb6a2ffa16917e91f27386d562a6a9f5676cdd0ab8c1451a0e7e0e9282a0bc481e1f1b538882db5e1c23df  kitinerary-23.08.5.tar.xz
+"

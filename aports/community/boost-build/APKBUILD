@@ -1,0 +1,34 @@
+# Contributor: Pedro Filipe <xpecex@outlook.com>
+# Contributor: Valery Kartel <valery.kartel@gmail.com>
+# Maintainer:
+pkgname=boost-build
+pkgver=1.82.0
+pkgrel=0
+pkgdesc="Boost.Build makes it easy to build C++ projects, everywhere"
+url="https://boost.org/build"
+arch="noarch"
+options="!check"
+license="BSL-1.0"
+depends="boost python3"
+subpackages="$pkgname-doc"
+builddir="$srcdir/${pkgname#*-}-${pkgname%%-*}-$pkgver"
+source="$pkgname-$pkgver.tar.gz::https://github.com/boostorg/${pkgname#*-}/archive/${pkgname%%-*}-$pkgver.tar.gz"
+
+build() {
+	./bootstrap.sh
+}
+
+package() {
+	./b2 install --with-python=/usr/bin/python3 --prefix="$pkgdir"/usr
+
+	# These binaries are provided by the boost package already
+	rm -v -rf "${pkgdir:?}"/usr/bin
+
+	install -Dm0644 LICENSE.txt "$pkgdir"/usr/share/licenses/"$pkgname"/LICENSE
+	mkdir -p "$pkgdir"/usr/share/doc/"$pkgname"
+	mv example "$pkgdir"/usr/share/doc/"$pkgname"/
+}
+
+sha512sums="
+5f8d46f48e037737e3465e3562c9bdbcacb4a075305c073fe665a8e9c7381ecaa4f5b91a42a9c509cf1c2e0f2af10dbb19f9d443a06fd09edf7372c008d91204  boost-build-1.82.0.tar.gz
+"

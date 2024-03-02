@@ -1,0 +1,58 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=maui
+pkgname=mauikit-imagetools
+pkgver=3.0.2
+pkgrel=1
+pkgdesc="MauiKit Image Tools Components"
+# armhf blocked by extra-cmake-modules
+# s390x, armhf, x86, ppc64le blocked by tesseract-ocr
+# riscv64: blocked by opencv
+arch="all !armhf !s390x !x86 !ppc64le !riscv64"
+url="https://mauikit.org/"
+license="GPL-2.0-or-later"
+depends="
+	kirigami2
+	kquickimageeditor
+	"
+depends_dev="
+	exiv2-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	kquickimageeditor-dev
+	mauikit-dev
+	tesseract-ocr-dev
+	opencv-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtlocation-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+_repo_url="https://invent.kde.org/maui/mauikit-imagetools.git"
+source="https://download.kde.org/stable/maui/mauikit-imagetools/$pkgver/mauikit-imagetools-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+901f06040a4c54312b9fa710ad6b425dd0600930a1364b6b41a0fe2a2dea2a9c137229f3b699a5d8d82ff21c1f5dd56e49f01bd9957a2af98cc82f8f68df453f  mauikit-imagetools-3.0.2.tar.xz
+"

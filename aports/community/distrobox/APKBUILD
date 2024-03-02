@@ -1,0 +1,26 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=distrobox
+pkgver=1.7.0
+pkgrel=0
+pkgdesc="Use any Linux distribution inside your terminal"
+url="https://distrobox.privatedns.org/"
+# s390x blocked by podman
+arch="noarch !s390x"
+license="GPL-3.0-only"
+depends="podman"
+subpackages="$pkgname-doc $pkgname-bash-completion"
+source="$pkgname-$pkgver.tar.gz::https://github.com/89luca89/distrobox/archive/refs/tags/$pkgver.tar.gz"
+install="$pkgname.post-upgrade"
+options="!check" # No tests
+
+package() {
+	./install --prefix "$pkgdir"/usr
+
+	install -dm0755 "$pkgdir"/usr/share/doc/distrobox
+	install -m 0644 docs/*.md "$pkgdir"/usr/share/doc/distrobox
+}
+
+sha512sums="
+5e29a5bb4a9fca4e54df979b304c2c23af93a5326383245183fee9bc7fbf6265128e1690c653410cb3063fabc522cf38bfa041dba7b921146010f7e43630613c  distrobox-1.7.0.tar.gz
+"

@@ -1,0 +1,25 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=tree-sitter-bash
+pkgver=0.20.5
+pkgrel=0
+pkgdesc="Bash grammar for tree-sitter"
+url="https://github.com/tree-sitter/tree-sitter-bash"
+arch="all"
+license="MIT"
+makedepends="tree-sitter-dev"
+install_if="tree-sitter-grammars"
+source="https://github.com/tree-sitter/tree-sitter-bash/archive/v$pkgver/tree-sitter-bash-$pkgver.tar.gz"
+options="!check"  # no tests for shared lib
+
+build() {
+	abuild-tree-sitter build
+}
+
+package() {
+	DESTDIR="$pkgdir" abuild-tree-sitter install
+}
+
+sha512sums="
+bc1c4ec816183b4a4990decd45f3c46a424e29d4c417b762f3f761b6396faa984c6eb05237cb4921070e0b478485146889176a862b0935b4b345a704675bef22  tree-sitter-bash-0.20.5.tar.gz
+"

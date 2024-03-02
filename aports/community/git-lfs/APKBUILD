@@ -1,0 +1,101 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=git-lfs
+pkgver=3.4.1
+pkgrel=0
+pkgdesc="Git extension for versioning large files"
+url="https://git-lfs.github.io/"
+arch="all"
+license="MIT"
+depends="git"
+makedepends="asciidoctor go ronn"
+checkdepends="bash coreutils git-daemon perl-utils"
+install="$pkgname.post-install $pkgname.pre-deinstall"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="git-lfs-$pkgver.tar.gz::https://github.com/git-lfs/git-lfs/archive/v$pkgver.tar.gz
+	makefile-extra_go_flags.patch
+	fix-test-branch-name.patch
+	quote-ldflags.patch
+	"
+[ "$CARCH" = "x86" ] && options="!check" # tests broken on x86
+
+# secfixes:
+#   3.1.2-r4:
+#     - CVE-2022-27191
+#   3.1.2-r3:
+#     - CVE-2021-38561
+#   0:
+#     - CVE-2020-27955 # (only affect windows)
+
+# -tags netcgo - use system's DNS resolver by default. Go's built-in DNS
+#   resolver is buggy; it resolved localhost to totally wrong IP
+#   address on ARM builders and so caused test failures.
+_goflags="$GOFLAGS -v -tags netcgo"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+prepare() {
+	default_prepare
+
+	# upgrade golang.org/x/text - CVE-2021-38561
+	go get golang.org/x/text
+
+	# CVE-2022-27191
+	go get golang.org/x/crypto/ssh
+}
+
+build() {
+	make \
+		EXTRA_GO_FLAGS="$_goflags" \
+		GIT_LFS_SHA="v$pkgver" \
+		VERSION="v$pkgver"
+	make man
+
+	./bin/git-lfs completion bash > $pkgname.bash
+	./bin/git-lfs completion fish > $pkgname.fish
+	./bin/git-lfs completion zsh > $pkgname.zsh
+}
+
+check() {
+	make integration EXTRA_GO_FLAGS="$_goflags" TEST_SKIP_LFS_TRANSFER=true
+}
+
+package() {
+	local docdir="$pkgdir/usr/share/doc/$pkgname"
+	local mandir="$pkgdir/usr/share/man"
+
+	install -Dm755 bin/$pkgname "$pkgdir"/usr/bin/$pkgname
+
+	install -Dm644 man/man1/*.1 -t "$mandir"/man1/
+	install -Dm644 man/man5/*.5 -t "$mandir"/man5/
+
+	mkdir -p "$docdir"
+	cp -r docs/*.md docs/api "$docdir"/
+	rm -r "$docdir"/api/schemas
+
+	install -Dm644 $pkgname.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/$pkgname
+	install -Dm644 $pkgname.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/$pkgname.fish
+	install -Dm644 $pkgname.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_$pkgname
+}
+
+cleanup_srcdir() {
+	go clean -modcache
+	default_cleanup_srcdir
+}
+
+sha512sums="
+ef30b7906548594edf28e75046bb78f70043d0363390ec3a241fc2ff7790b0f6ab1869b8a6b10d13a4cbcd559db7ea51aa4c1d64e75707357b84f1ddc0f7095c  git-lfs-3.4.1.tar.gz
+2d793da75b37324936407948fdb634ff4c510c4dd4d3575c2459b81a0a6eb8f2464f5066ae99e88d5bf69e357fd60354b9d9d53e062cb6ba709f5f3a39858466  makefile-extra_go_flags.patch
+7bf0db3be06ba75429a3bbe7d45c4738443912e8e0c80fa2cbdfe76a5ffca720c0f6f638178e0dcc3e2781613b4be575e6583ca3e55f430ab76420118d87cb45  fix-test-branch-name.patch
+6ca2c1d8964f616dc81e1744ebe74736ff5b70f7888eccc315e906e669f78a0d5b5cf8c5018ac14e390f778afc147ee6cbb7175504aa2f6fa4bed3c7ec663317  quote-ldflags.patch
+"

@@ -1,0 +1,32 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=perl-ipc-sharelite
+pkgver=0.17
+pkgrel=12
+pkgdesc="Lightweight interface to shared memory"
+url="https://metacpan.org/pod/IPC::ShareLite"
+arch="all"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
+makedepends="perl-dev"
+subpackages="$pkgname-doc"
+source="https://cpan.metacpan.org/authors/id/A/AN/ANDYA/IPC-ShareLite-$pkgver.tar.gz"
+
+builddir="$srcdir"/IPC-ShareLite-$pkgver
+
+build() {
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
+}
+
+sha512sums="
+f796f6766df11205755de4672ff8a586690545ccaa2f91c3fc65f106f3b61e1cbd86ee3e97dadf787809e3be32f503670cb67dafc9b18eee30d59d8be03b5ee9  IPC-ShareLite-0.17.tar.gz
+"

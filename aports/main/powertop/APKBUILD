@@ -1,0 +1,52 @@
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Steven Guikal <void@fluix.one>
+pkgname=powertop
+pkgver=2.15
+pkgrel=4
+pkgdesc="Power consumption monitor"
+url="https://github.com/fenrus75/powertop"
+arch="all"
+license="GPL-2.0-only"
+makedepends="
+	autoconf
+	autoconf-archive
+	automake
+	gettext-dev
+	libnl3-dev
+	libtool
+	linux-headers
+	ncurses-dev
+	pciutils-dev
+	xz
+	zlib-dev
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/fenrus75/powertop/releases/download/v$pkgver/powertop.tar.gz"
+builddir="$srcdir/$pkgname"
+options="!check" # no tests
+
+prepare() {
+	default_prepare
+	NOCONFIGURE=1 ./autogen.sh
+}
+
+build() {
+	LIBS="-lintl" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--disable-nls
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+8aa71c15a3931f1b62fd22920c8f16d552a3b81335d87ad210121419fd74263ac6956eec7fb0d607247fee71658923a0e049717de946031604085e5d8c108a85  powertop-2.15.tar.gz
+"

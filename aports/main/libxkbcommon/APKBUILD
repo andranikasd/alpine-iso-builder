@@ -1,0 +1,73 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=libxkbcommon
+pkgver=1.6.0
+pkgrel=0
+pkgdesc="keyboard handling library"
+url="https://www.xkbcommon.org/"
+arch="all"
+license="MIT"
+depends="xkeyboard-config"
+depends_dev="libxkbcommon-x11=$pkgver-r$pkgrel"
+makedepends="
+	bison
+	libxcb-dev
+	libxml2-dev
+	meson
+	wayland-dev
+	wayland-protocols
+	xkeyboard-config-dev
+	"
+checkdepends="bash"
+subpackages="
+	$pkgname-static
+	$pkgname-dev
+	$pkgname-x11
+	xkbcli
+	xkbcli-doc
+	xkbcli-bash-completion
+	"
+source="https://xkbcommon.org/download/libxkbcommon-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Denable-wayland=true \
+		-Denable-docs=false \
+		-Denable-x11=true \
+		-Ddefault_library=both \
+		build
+	meson compile -C build
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+x11() {
+	pkgdesc="$pkgdesc (x11 support)"
+
+	amove usr/lib/*x11*.so.*
+}
+
+xkbcli() {
+	pkgdesc="xkb command-line tool with interactive debugger"
+
+	amove usr/bin/xkbcli
+	amove usr/libexec/xkbcommon/xkbcli*
+}
+
+bashcomp() {
+	default_bashcomp
+
+	pkgdesc="Bash completions for xkbcli"
+	install_if="xkbcli=$pkgver-r$pkgrel bash-completion"
+}
+
+
+sha512sums="
+4f93225eada1c5d0806bbc01f72d82d72729f4580ade963ff6a386711c9b2232aae5213c8488abf01c3b81f0e1fdb7f4d8a4d3786113ccc134251ff164c4be5c  libxkbcommon-1.6.0.tar.xz
+"

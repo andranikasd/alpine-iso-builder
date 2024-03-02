@@ -1,0 +1,42 @@
+# Contributor: Stuart Cardall <developer@it-offshore.co.uk>
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Stuart Cardall <developer@it-offshore.co.uk>
+pkgname=cython
+pkgver=0.29.37
+pkgrel=0
+pkgdesc="Cython is an optimising static compiler for both the Python & the extended Cython programming languages."
+url="https://cython.org/"
+arch="all"
+license="Apache-2.0"
+makedepends="py3-gpep517 py3-setuptools py3-wheel python3-dev"
+depends="python3"
+subpackages="cython-pyc cython-doc"
+source="cython-$pkgver.tar.gz::https://github.com/cython/cython/archive/$pkgver.tar.gz"
+
+case "$CARCH" in
+arm*)
+	# hang forever
+	options="$options !check"
+	;;
+esac
+
+build() {
+	gpep517 build-wheel --wheel-dir .dist --output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 runtests.py -j${JOBS:-$(nproc)}
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+
+	install -Dm 644 LICENSE.txt "$pkgdir/usr/share/licenses/cython/license"
+	install -Dm 644 README.rst "$pkgdir/usr/share/doc/cython/readme.rst"
+}
+
+sha512sums="
+666419fc834ecec7b528e61286644e8c30594d4f575b413d3b11bcad30301a6d729eedd5361ea71aea3ad37aa0a9f6f24999758c8d5cb9310ced3b9574559448  cython-0.29.37.tar.gz
+"

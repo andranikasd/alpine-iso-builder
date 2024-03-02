@@ -1,0 +1,48 @@
+# Contributor: Luca Weiss <luca@z3ntu.xyz>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=mygnuhealth
+pkgver=2.0.0
+pkgrel=0
+pkgdesc="The GNU Health Personal Health Record (PHR)"
+url="https://hg.savannah.gnu.org/hgweb/health-mygnuhealth"
+# armhf and riscv64 blocked by py3-pyside2
+arch="noarch !armhf !riscv64"
+license="GPL-3.0-or-later"
+depends="
+	kirigami2
+	py3-bcrypt
+	py3-matplotlib
+	py3-pyside2
+	py3-requests
+	py3-tinydb
+	"
+makedepends="
+	py3-setuptools
+	py3-wheel
+	py3-gpep517
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/m/mygnuhealth/mygnuhealth-$pkgver.tar.gz"
+options="!check" # No tests
+builddir="$srcdir/mygnuhealth-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+cb57095bb80a20d1e6b5954678cb894fd68420c05364ad2ada6e10ad54cea402592b73f59644d3efee10aaa12957e77e29454d70e3202e61a65b0be0c50a7567  mygnuhealth-2.0.0.tar.gz
+"

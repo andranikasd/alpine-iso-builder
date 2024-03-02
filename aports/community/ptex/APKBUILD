@@ -1,0 +1,44 @@
+# Contributor: Leon Marz <main@lmarz.org>
+# Maintainer: Leon Marz <main@lmarz.org>
+pkgname=ptex
+pkgver=2.4.2
+pkgrel=1
+pkgdesc="texture mapping system by Walt Disney Animation Studios"
+url="https://ptex.us/"
+arch="all !s390x" # ptex doesn't like big endian
+license="BSD-3-Clause"
+makedepends="cmake doxygen graphviz samurai zlib-dev"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-tools:tools"
+source="$pkgname-$pkgver.tar.gz::https://github.com/wdas/ptex/archive/v$pkgver.tar.gz
+	0001-cmake-fixes.patch
+	"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DPTEX_VER=$pkgver
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -j1
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+tools() {
+	pkgdesc="$pkgdesc (tools)"
+	depends=""
+	amove /usr/bin
+}
+
+sha512sums="
+3b9607b7803e7c857bb00a6d4d8bbe108810c622a3593fb5d655183f3e6689f274ee5e79bcaab6928de38daf05cf25eb56125f39477f134131a8ad45071551b3  ptex-2.4.2.tar.gz
+0c3f288b882f4090b071c90ca6603bd8c63fe37a5ffefb6ea64adb4b17eb44a7ad8be7c8c44ae90c81b2740e0dd7d2c005a5973931680afcd59ae48821e3f7bf  0001-cmake-fixes.patch
+"

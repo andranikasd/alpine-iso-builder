@@ -1,0 +1,37 @@
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-amqp
+pkgver=5.2.0
+pkgrel=0
+pkgdesc="an AMQP implementation"
+url="https://pypi.org/project/amqp/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="py3-vine python3"
+makedepends="py3-setuptools py3-gpep517 py3-wheel"
+checkdepends="py3-vine py3-case py3-nose py2py3-mock"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/a/amqp/amqp-$pkgver.tar.gz"
+options="!check" # requires a running rabbitmq sever
+builddir="$srcdir"/amqp-$pkgver
+
+replaces="py-amqp" # Backwards compatibility
+provides="py-amqp=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 setup.py test
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+923eae80721ec35e329085e680950db7167c401fac396c74d401331ef7efe369e1cf4420bfde9a1d9005052f49cedef6d2ee621e795b9127614fd5742aa5e0db  amqp-5.2.0.tar.gz
+"

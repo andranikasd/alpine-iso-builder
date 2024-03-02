@@ -1,0 +1,46 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=corrosion
+pkgver=0.4.5
+pkgrel=0
+pkgdesc="Marrying Rust and CMake - Easy Rust and C/C++ Integration!"
+url="https://github.com/corrosion-rs/corrosion"
+arch="all"
+license="MIT"
+depends="
+	cargo
+	cmake
+	rust
+	"
+makedepends="samurai"
+source="https://github.com/AndrewGaspar/corrosion/archive/v$pkgver/corrosion-$pkgver.tar.gz"
+options="net" # Required to download Rust dependencies
+
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	# unset these for tests as they aren't relevant and just slow them down
+	unset CARGO_PROFILE_RELEASE_LTO
+	unset CARGO_PROFILE_RELEASE_CODEGEN_UNITS
+	unset CARGO_PROFILE_RELEASE_PANIC
+
+	# parse_target_triple_build is broken, expects rustup and fails without it
+	# cargo_config_rustflags seems broken
+	# rustup_proxy_build expects to find rustup
+	ctest --test-dir build --output-on-failure -E "(parse_target_triple_build|cargo_config_rustflags_build|cargo_config_rustflags_run_cargo_config_rustflags|rustup_proxy_build)"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+55767ddb5495b77627f03568453236e8eb577c7366b0c0a1662980a469d252b48b98da75aa88aba5a2e971c823549e8c98fc2183d0daefede8ca4664820a98cc  corrosion-0.4.5.tar.gz
+"

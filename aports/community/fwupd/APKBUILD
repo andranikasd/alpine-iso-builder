@@ -1,0 +1,126 @@
+# Contributor: Timo Teräs <timo.teras@iki.fi>
+# Maintainer: Timo Teräs <timo.teras@iki.fi>
+pkgname=fwupd
+pkgver=1.9.13
+pkgrel=0
+pkgdesc="Firmware update daemon"
+url="https://fwupd.org/"
+# armhf, ppc64le and s390x blocked by gnu-efi/fwupd-efi
+arch="all !armhf !ppc64le !s390x !riscv64"
+license="LGPL-2.1-or-later"
+depends="dbus"
+makedepends="
+	cairo-dev
+	efivar-dev
+	elfutils-dev
+	elogind-dev
+	eudev-dev
+	flashrom-dev
+	font-opensans
+	fontconfig-dev
+	freetype-dev
+	glib-dev
+	gnu-efi-dev
+	gnutls-dev
+	gnutls-utils
+	gobject-introspection-dev
+	gpgme-dev
+	help2man
+	json-glib-dev
+	libarchive-dev
+	libcbor-dev
+	libdrm-dev
+	libgcab-dev
+	libgudev-dev
+	libgusb-dev
+	libjcat-dev
+	libmbim-dev
+	libqmi-dev
+	libxmlb-dev
+	linux-headers
+	meson
+	modemmanager-dev
+	polkit-dev
+	protobuf-c-dev
+	py3-cairo
+	py3-gobject3
+	py3-jinja2
+	py3-markdown
+	py3-pillow
+	py3-setuptools
+	python3
+	tpm2-tss-dev
+	tpm2-tss-esys
+	vala
+	"
+checkdepends="
+	bubblewrap
+	umockdev
+	"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-openrc
+	$pkgname-fish-completion
+	"
+source="https://github.com/fwupd/fwupd/releases/download/$pkgver/fwupd-$pkgver.tar.xz
+	$pkgname.initd
+	"
+
+# libsmbios is a library for DELL devices which are x86/x86_64-only
+case "$CARCH" in
+	x86*)
+		makedepends="$makedepends libsmbios-dev"
+		;;
+	*) ;;
+esac
+
+case "$CARCH" in
+	x86*|aarch64)
+		# fwupd-efi needed for uefi-capsule
+		makedepends="$makedepends fwupd-efi-dev"
+		_uefi_capsule=enabled
+		;;
+	*)
+		_uefi_capsule=disabled
+		;;
+esac
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dconsolekit=enabled \
+		-Dfirmware-packager=true \
+		-Ddocs=disabled \
+		-Dhsi=enabled \
+		-Dlvfs=true \
+		-Dman=true \
+		-Dplugin_redfish=disabled \
+		-Dplugin_uefi_capsule=$_uefi_capsule \
+		-Dsystemd=disabled \
+		-Delogind=enabled \
+		-Dtests=true \
+		-Dudevdir=/lib/udev \
+		. output
+
+	meson compile -C output
+}
+
+check() {
+	# tests fail if usb is not available
+	[ -e /dev/bus/usb ] || return 0
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+
+	install -Dm755 "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+}
+
+sha512sums="
+240e057e33e861a84638866a43a7cae33bc3f12d48d5cf2ad3f8bdfb92824057472d1981ac2145d2024f31727f8413c555ce907dea28f4f7232e4604e24703ab  fwupd-1.9.13.tar.xz
+4add6954bb3581b371d6105addde819cd41834d33293fe7362dbab4e0dccf486e2bbc96d5822fcb729ca568739cc5572c8e30d3db220f4476befbdc85ba8457b  fwupd.initd
+"

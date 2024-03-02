@@ -1,0 +1,25 @@
+# Maintainer: Leonardo Arena <rnalrd@alpinelinux.org>
+pkgname=tree
+pkgver=2.1.1
+pkgrel=0
+pkgdesc="Recursive directory indented listing of files"
+url="https://oldmanprogrammer.net/source.php?dir=projects/tree"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="$depends_dev"
+subpackages="$pkgname-doc"
+source="https://gitlab.com/OldManProgrammer/unix-tree/-/archive/$pkgver/unix-tree-$pkgver.tar.gz"
+builddir="$srcdir/unix-tree-$pkgver"
+options="!check" # no tests
+
+build() {
+	make LDFLAGS="$LDFLAGS" CFLAGS="$CFLAGS"
+}
+
+package() {
+	make PREFIX="$pkgdir/usr" MANDIR="$pkgdir/usr/share/man" install
+}
+
+sha512sums="
+997d20c5508d3eba026e9d621a4da2b3b0bf111d272bb7d705a9a0819d430887061e234f0a00ac3102c43413ef716c1371ee0620b8460fbd523d4a3790940a29  unix-tree-2.1.1.tar.gz
+"

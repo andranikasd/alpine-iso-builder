@@ -1,0 +1,33 @@
+# Contributor: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
+# Maintainer: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
+pkgname=py3-qtgraph
+pkgver=0.13.3
+pkgrel=0
+pkgdesc="Scientific Graphics and GUI Library for Python"
+url="https://www.pyqtgraph.org/"
+# x86: segfaults in tests
+arch="noarch !x86"
+license="MIT"
+depends="python3 py3-qt5 py3-numpy py3-scipy py3-opengl"
+makedepends="py3-setuptools"
+checkdepends="py3-pytest xvfb-run"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pyqtgraph/pyqtgraph/archive/pyqtgraph-$pkgver.tar.gz"
+builddir="$srcdir/pyqtgraph-pyqtgraph-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	unset DISPLAY WAYLAND_DISPLAY
+	xvfb-run python3 test.py
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+a397fcf8fc2fcc5a212df9f4cd48dc07bc1ad9eb7a9b1283488eb52c236e054b01df02d04088a9d91679c4ae3ab7796cdf95cdbad06a6a585fbbcdb921f33617  py3-qtgraph-0.13.3.tar.gz
+"

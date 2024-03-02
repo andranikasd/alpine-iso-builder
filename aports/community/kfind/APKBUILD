@@ -1,0 +1,49 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kfind
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://www.kde.org/applications/utilities/kfind"
+pkgdesc="Find Files/Folders"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	karchive5-dev
+	kcoreaddons5-dev
+	kdoctools5-dev
+	kfilemetadata5-dev
+	ki18n5-dev
+	kio5-dev
+	ktextwidgets5-dev
+	kwidgetsaddons5-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/utilities/kfind.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kfind-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f5e23253c7c2c5d119bb62e31a6165713aa352c25b15d47f11e3c512fce64149e4ada6f51835fd96b5d576a7f42d647a8a1aa8eb9fdd503b6b5e623e4bac4d64  kfind-23.08.5.tar.xz
+"

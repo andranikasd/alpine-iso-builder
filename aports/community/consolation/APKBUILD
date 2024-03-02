@@ -1,0 +1,38 @@
+# Contributor: Danct12 <danct12@disroot.org>
+# Maintainer: Danct12 <danct12@disroot.org>
+pkgname=consolation
+pkgver=0.0.9
+pkgrel=0
+pkgdesc="Libinput-based console pointer support for copy-paste"
+url="https://salsa.debian.org/consolation-team/consolation"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="linux-headers libinput-dev eudev-dev libevdev-dev"
+subpackages="$pkgname-openrc $pkgname-doc"
+source="https://deb.debian.org/debian/pool/main/c/consolation/consolation_$pkgver.orig.tar.xz
+	consolation.initd
+	"
+
+build() {
+	./configure \
+		--host="$CHOST" \
+		--build="$CBUILD" \
+		--prefix=/usr \
+		--enable-dwtp
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir/" install
+	install -Dm755 "$srcdir/consolation.initd" \
+		"$pkgdir/etc/init.d/consolation"
+}
+
+sha512sums="
+9aef1adbf8080d5409d0c63b0489ccf3e23f738bbff73a5af95cc5e4d32773704db6085a1ae269734a73eb7a2aa6f5cc95090ddd9cd4805261d6d4b3996e4e54  consolation_0.0.9.orig.tar.xz
+7c95c7353e2eef4ff148e3a2abe4cb5ef944d618f30ced536b1e5552e63fde2f003a20dd67060e08c7fb881050f28bf9c8f55ad6c9e5f77f35a3bc24e6c827c9  consolation.initd
+"

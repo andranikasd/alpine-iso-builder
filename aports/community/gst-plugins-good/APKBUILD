@@ -1,0 +1,146 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gst-plugins-good
+pkgver=1.22.8
+pkgrel=1
+pkgdesc="GStreamer streaming media framework good plug-ins"
+url="https://gstreamer.freedesktop.org"
+arch="all"
+license="GPL-2.0-or-later LGPL-2.0-or-later"
+subpackages="$pkgname-lang $pkgname-gtk $pkgname-qt"
+replaces="gst-plugins-good1 gst-plugins-ugly"
+depends="libsoup3"
+makedepends="
+	cairo-dev
+	flac-dev
+	gdk-pixbuf-dev
+	glib-dev
+	gst-plugins-base-dev
+	gstreamer-dev
+	gtk+3.0-dev
+	jack-dev
+	lame-dev
+	libavc1394-dev
+	libdv-dev
+	libgudev-dev
+	libice-dev
+	libiec61883-dev
+	libjpeg-turbo-dev
+	libogg-dev
+	libpng-dev
+	libshout-dev
+	libsm-dev
+	libsoup3-dev
+	libvpx-dev
+	libxdamage-dev
+	libxext-dev
+	libxv-dev
+	linux-headers
+	meson
+	mpg123-dev
+	nasm
+	orc-compiler
+	orc-dev
+	pulseaudio-dev
+	qt5-qtdeclarative-dev
+	qt6-qtwayland-dev
+	qt5-qtx11extras-dev
+	qt6-qtdeclarative-dev
+	qt6-qttools-dev
+	qt6-qtwayland-dev
+	taglib-dev
+	v4l-utils-dev
+	wavpack-dev
+	zlib-dev
+	"
+ldpath="/usr/lib/gstreamer-1.0"
+source="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-$pkgver.tar.xz
+	flaky-test.patch
+	"
+
+case "$CARCH" in
+armhf|s390x|ppc64le|x86)
+	# really flaky tests
+	options="$options !check"
+	;;
+*)
+	;;
+esac
+
+# secfixes:
+#   1.22.4-r0:
+#     - CVE-2023-37327
+#   1.20.3-r0:
+#     - CVE-2022-1920
+#     - CVE-2022-1921
+#     - CVE-2022-1922
+#     - CVE-2022-1923
+#     - CVE-2022-1924
+#     - CVE-2022-1925
+#     - CVE-2022-2122 
+#   1.18.4-r0:
+#     - CVE-2021-3497
+#     - CVE-2021-3498
+#   1.10.4-r0:
+#     - CVE-2017-5840
+#     - CVE-2017-5841
+#     - CVE-2017-5845
+#     - CVE-2016-9634
+#     - CVE-2016-9635
+#     - CVE-2016-9636
+#     - CVE-2016-9808
+#     - CVE-2016-10198
+#     - CVE-2016-10199
+
+build() {
+	# MPG123_NO_LARGENAME: fix undefined reference to
+	# `mpg123_decode_frame_64' in function
+	# `gst_mpg123_audio_dec_handle_frame'
+
+	CFLAGS="$CFLAGS -O2 -DMPG123_NO_LARGENAME" \
+	CXXFLAGS="$CXXFLAGS -O2 -DMPG123_NO_LARGENAME" \
+	CPPFLAGS="$CPPFLAGS -O2 -DMPG123_NO_LARGENAME" \
+	abuild-meson \
+		-Db_lto=true \
+		-Dpackage-origin="https://alpinelinux.org" \
+		-Dpackage-name="GStreamer good plug-ins (Alpine Linux)" \
+		-Dtests="$(want_check && echo enabled || echo disabled)" \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test -t 2 --print-errorlogs --no-rebuild -C output
+}
+
+package() {
+	export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+_mv() {
+	mkdir -p "$subpkgdir"/"$ldpath"
+	mv "$1" "$subpkgdir"/"$ldpath"
+}
+
+qt() {
+	pkgdesc="Gstreamer Qt plug-in"
+	find "$pkgdir" -type f | while read -r i; do
+		if ldd $i 2>/dev/null | grep -q "libQt"; then
+			_mv "$i"
+		fi
+	done
+}
+
+gtk() {
+	pkgdesc="Gstreamer gtk-3 plug-in"
+	find "$pkgdir" -type f | while read -r i; do
+		if ldd $i 2>/dev/null | grep -q "libgtk-3"; then
+			_mv "$i"
+		fi
+	done
+}
+
+sha512sums="
+e07231a5656535ec4eb8cc9950c1d701b61c8c2499dd084eb6390db70160f4cbd1d65d8e2ac41182d4d0278329140b70bcc33696e8ac02aab4700402ff6a322b  gst-plugins-good-1.22.8.tar.xz
+b97e660011bc3e212dd436f883724b945112538d06bab97b3c9c5699d884dff2e0bcd8d547df6f179b32d138fa2191fd41827aa30312c39176f0beb93bea7b1b  flaky-test.patch
+"

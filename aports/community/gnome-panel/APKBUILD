@@ -1,0 +1,54 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gnome-panel
+pkgver=3.46.0
+pkgrel=3
+pkgdesc="Gnome Panel provides panels and default applets for the gnome-flashback desktop"
+url="https://wiki.gnome.org/Projects/GnomePanel"
+# gdm
+arch="all !armhf !s390x !riscv64"
+license="GPL-2.0-or-later"
+makedepends="
+	dconf-dev
+	elogind-dev
+	evolution-data-server-dev
+	gdm-dev
+	glib-dev
+	gnome-desktop-dev
+	gnome-desktop-dev
+	gnome-menus-dev
+	gtk+3.0-dev
+	gtk-doc
+	itstool
+	libgweather4-dev
+	libwnck3-dev
+	libxrandr-dev
+	libxres-dev
+	pango-dev
+	polkit-dev
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://download.gnome.org/sources/gnome-panel/${pkgver%.*}/gnome-panel-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+a49f3978bd9561973c41083006b831cf4fcb07408048106ef56dae7e0809fb3ec825c8b4a1c09e818255c7995c45a6d33aa4f47e61f778f4b1f29ccc7c9033f7  gnome-panel-3.46.0.tar.xz
+"

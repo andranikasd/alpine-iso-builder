@@ -1,0 +1,37 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-matplotlib-venn
+_pkgorig=matplotlib-venn
+pkgver=0.11.10
+pkgrel=0
+pkgdesc="Functions for plotting area-proportional two- and three-way Venn diagrams in matplotlib"
+url="https://github.com/konstantint/matplotlib-venn"
+arch="noarch"
+license="MIT"
+depends="python3 py3-matplotlib py3-scipy py3-numpy"
+checkdepends="py3-pytest-xdist"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/konstantint/$_pkgorig/archive/$pkgver/$_pkgorig-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+2716d19e9ce9e0da10ff74743f3cb256867bf4b193a240878a85f9bf833db29b8cc0b6ac78e0ee014478ba794805aebe588ca5372bf5ae5894275092555d76be  py3-matplotlib-venn-0.11.10.tar.gz
+"

@@ -1,0 +1,54 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=partitionmanager
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/applications/system/org.kde.partitionmanager"
+pkgdesc="A KDE utility that allows you to manage disks, partitions, and file systems"
+license="GPL-3.0-or-later"
+makedepends="
+	extra-cmake-modules
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kio5-dev
+	kjobwidgets5-dev
+	kpmcore-dev
+	kwidgetsaddons5-dev
+	kxmlgui5-dev
+	qt5-qtbase-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/system/partitionmanager.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/partitionmanager-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+5eb6ee5f021a40c597d7f21bc4ae63d05a94564caa32ee72e4a44eb1d21ae7d4628e8bbf5b6645dcf5be2ac3162e5acc712f2982a14ce60ec5acc87409252f1a  partitionmanager-23.08.5.tar.xz
+"

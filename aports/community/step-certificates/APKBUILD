@@ -1,0 +1,70 @@
+# Contributor: Adrian L Lange <alpine@p3lim.net>
+# Contributor: Charles Wimmer <charles@wimmer.net>
+# Contributor: Stuart Cardall <developer@it-offshore.co.uk>
+# Contributor: Dermot Bradley <dermot_bradley@yahoo.com>
+# Maintainer: Dermot Bradley <dermot_bradley@yahoo.com>
+pkgname=step-certificates
+pkgver=0.25.2
+pkgrel=1
+pkgdesc="Online certificate authority and related tools"
+url="https://smallstep.com/certificates/"
+arch="all !riscv64" # step-cli
+license="Apache-2.0"
+makedepends="
+	bash
+	go
+	go-bindata
+	libcap-utils
+	pcsc-lite-dev
+	"
+depends="step-cli"
+options="setcap !check" # No tests as fails for Yubikey
+install="$pkgname.pre-install"
+subpackages="
+	$pkgname-logrotate
+	$pkgname-openrc
+	"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/smallstep/certificates/releases/download/v$pkgver/step-ca_$pkgver.tar.gz
+	step-ca.confd
+	step-ca.initd
+	step-ca.logrotate
+	"
+builddir="$srcdir"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	make build
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	setcap cap_net_bind_service=+ep "$pkgdir"/usr/bin/step-ca
+
+	install -m 644 -D "$srcdir"/step-ca.confd "$pkgdir"/etc/conf.d/step-ca
+	install -m 755 -D "$srcdir"/step-ca.initd "$pkgdir"/etc/init.d/step-ca
+
+	install -m 644 -D "$srcdir"/step-ca.logrotate "$pkgdir"/etc/logrotate.d/step-ca
+}
+
+logrotate() {
+	pkgdesc="Online certificate authority and related tools (logrotate configuration)"
+	depends=""
+	install_if="$pkgname=$pkgver-r$pkgrel logrotate"
+
+	amove etc/logrotate.d/step-ca
+}
+
+sha512sums="
+17ff7bc1dd8585791e35c3c07b4fdf1ef74cee01ad34acf6b3f695a000402b47bec64aad5e71d3f8b350c92f37dcbd5189a8672febf5a6d53a470c6dcd66b48c  step-certificates-0.25.2.tar.gz
+d0e3781b591a049798891a14bf00cb34fb8341bc37b4bed5e0a52ce01386c5c60e29a58fb1cf495404afbd7b443597857bcdd87b68d2f4dd311fed4e038b8ac3  step-ca.confd
+96852aa1be8a2b245a8ada15507e06a7a400430267e77a2026b0067e3d65e3b976d729ffa94e85fb5abbfcb1fee57dd795470132f76c1bbb4a0eaffb78845d0c  step-ca.initd
+17740fbe3a72f1c9fe4f90dffb368ad4fe6b98a36512ca58614a4bfbc4b6895ecc6daa4a5a78abcd9b1840eb63ce90523d7fa77a2b42da0cf539bf36330c9f32  step-ca.logrotate
+"

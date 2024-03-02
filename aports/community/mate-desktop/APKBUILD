@@ -1,0 +1,50 @@
+# Contributor: Alan Lacerda <alacerda@alpinelinux.org>
+# Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
+pkgname=mate-desktop
+pkgver=1.26.1
+pkgrel=0
+pkgdesc="The MATE Desktop Environment"
+url="https://mate-desktop.org/"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later"
+depends="
+	mate-common
+	yelp-tools
+	"
+makedepends="
+	dconf-dev
+	gtk+3.0-dev
+	intltool
+	iso-codes-dev
+	itstool
+	librsvg
+	libxml2-utils
+	libxrandr-dev
+	startup-notification-dev
+	"
+subpackages="$pkgname-lang $pkgname-dev $pkgname-doc"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/mate-desktop-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--enable-static=no \
+		--sysconfdir=/etc \
+		--prefix=/usr
+	# https://bugzilla.gnome.org/show_bug.cgi?id=656231
+	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+e5261b420da8782795899b73203c6ec3c6a45f88f09e50082020743ccaa4535fd8c1767ab5d59f1d5c295fa2d4fc8ffd0b4df787ec503b9b3a7d757eba9e18ff  mate-desktop-1.26.1.tar.xz
+"

@@ -1,0 +1,55 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Krassy Boykinov <kboykinov@teamcentrixx.com>
+pkgname=py3-gst
+pkgver=1.22.8
+pkgrel=0
+pkgdesc="GStreamer Python3 bindings"
+url="https://gitlab.freedesktop.org/gstreamer/gstreamer"
+arch="all"
+license="LGPL-2.1-or-later"
+depends="py3-gobject3 gst-plugins-base"
+makedepends="
+	gst-plugins-base-dev
+	gstreamer-dev
+	meson
+	py3-gobject3-dev
+	python3-dev
+	"
+source="
+	https://gstreamer.freedesktop.org/src/gst-python/gst-python-$pkgver.tar.xz
+	suffix.patch
+	"
+builddir="$srcdir/gst-python-$pkgver"
+
+prepare() {
+	default_prepare
+
+	local pyso="$(readlink /usr/lib/libpython*.*.so)"
+	[ -n "$pyso" ]
+	msg "libpython: $pyso"
+	local suff="${pyso#libpython*.so.}"
+	sed -i "s|@SUFF@|$suff|" meson.build
+}
+
+build() {
+	CFLAGS="$CFLAGS -O2" \
+	CXXFLAGS="$CXXFLAGS -O2" \
+	abuild-meson \
+		-Db_lto=true \
+		-Dpython=/usr/bin/python3 \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs --no-rebuild -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+9fde4efd6499be9539e45d183ae46b40acdcd62dc70ef1f05910261ec24456fb4630fe746ec9eef2b2cde12b83619e1bd00f70c312dcd0ead428c3230f5eea53  gst-python-1.22.8.tar.xz
+62e54d028898ff15d51d3fa863f419a533a05bb510b6c391778d2fff5e245143771b38902deb512ac5a7a7d704d7fc9f4e84d22a4761eb85e535b67d0ab640f4  suffix.patch
+"

@@ -1,0 +1,85 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=messagelib
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="KDE PIM messaging library"
+# armhf blocked by extra-cmake-modules
+# ppc64le, s390x and riscv64 blocked by qt5-qtwebengine
+arch="all !armhf !ppc64le !s390x !riscv64"
+url="https://kontact.kde.org/"
+license="LGPL-2.0-only OR LGPL-3.0-only AND GPL-2.0-or-later"
+depends_dev="
+	akonadi-contacts-dev
+	akonadi-dev
+	akonadi-mime-dev
+	akonadi-search-dev
+	gpgme-dev
+	grantlee-dev
+	grantleetheme-dev
+	karchive5-dev
+	kcodecs5-dev
+	kcompletion5-dev
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcontacts5-dev
+	kdbusaddons5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kidentitymanagement-dev
+	kio5-dev
+	kitemviews5-dev
+	kjobwidgets5-dev
+	kldap-dev
+	kmailtransport-dev
+	kmbox-dev
+	kmime-dev
+	knewstuff5-dev
+	kpimtextedit-dev
+	kservice5-dev
+	ktextwidgets5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	kxmlgui5-dev
+	libgravatar-dev
+	libkdepim-dev
+	libkleo-dev
+	pimcommon-dev
+	qca-dev
+	qt5-qtbase-dev
+	qt5-qtwebengine-dev
+	sonnet5-dev
+	syntax-highlighting5-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/pim/messagelib.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/messagelib-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+options="!check" # Requires OpenGL and running dbus server
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	xvfb-run ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+e06eff48ad43264b79e5a8fc63a1b3aa021d44ab8aa9bcaa095e4650b001bc26bcf9b3edab95905655fd53f75e83ac8fd47b5e8e1828c535da804007f89ef39b  messagelib-23.08.5.tar.xz
+"

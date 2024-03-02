@@ -1,0 +1,23 @@
+# Maintainer: Willow Barraco <contact@willowbarraco.fr>
+pkgname=xprintidle
+pkgver=0.2.5
+pkgrel=1
+pkgdesc="Query X server for user's idle time and print it in stdout"
+url="https://github.com/g0hl1n/xprintidle"
+arch="all"
+license="GPL-2.0-only"
+makedepends="meson libx11-dev libxext-dev libxscrnsaver-dev"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/g0hl1n/xprintidle/archive/refs/tags/$pkgver.tar.gz"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+sha512sums="
+758fbb1e0e0f9eaf6ae22cc3fbacaf3eb854130af3688bd95c88c690284cf47256a56d1468ffffaa81c3432cd579aca138a47c8a04be1e7be52e8f2ef328fd7a  xprintidle-0.2.5.tar.gz
+"

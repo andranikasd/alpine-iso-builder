@@ -1,0 +1,46 @@
+# Maintainer: Hoang Nguyen <folliekazetani@protonmail.com>
+pkgname=nickel
+pkgver=1.4.1
+pkgrel=0
+pkgdesc="Generic configuration language for less"
+url="https://nickel-lang.org/"
+# s390x: nix crate fails to build
+arch="all !s390x"
+license="MIT"
+makedepends="cargo"
+checkdepends="python3"
+subpackages="$pkgname-doc $pkgname-language-server:_langserver"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/tweag/nickel/archive/refs/tags/$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo build --frozen --release --workspace \
+		--bin nickel --bin nls
+}
+
+check() {
+	cargo test --frozen --workspace
+}
+
+package() {
+	install -Dm755 -t "$pkgdir"/usr/bin/ \
+		target/release/nickel \
+		target/release/nls
+
+	install -Dm644 doc/manual/*.md -t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+_langserver() {
+	pkgdesc="LSP server for Nickel configuration language"
+	amove usr/bin/nls
+}
+
+sha512sums="
+4c0be76eb8e87a0c0f3487466c31729affbfd75b06e42e0254342b0308ddbea9ee690804435a3fdd98a804d325713d4f30cfece83f6fb14d6fcf171eb1a3b536  nickel-1.4.1.tar.gz
+"

@@ -1,0 +1,54 @@
+# Contributor: Jake Buchholz Göktürk <tomalok@gmail.com>
+# Maintainer: Jake Buchholz Göktürk <tomalok@gmail.com>
+pkgname=docker-cli-compose
+pkgver=2.24.6
+pkgrel=0
+pkgdesc="Docker CLI plugin for extended build capabilities"
+url="https://docs.docker.com/compose/cli-command"
+arch="all"
+license="Apache-2.0"
+depends="docker-cli"
+makedepends="go"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/docker/compose/archive/v$pkgver.tar.gz"
+
+provides="docker-compose=$pkgver-r$pkgrel"
+
+# secfixes:
+#   2.15.1-r0:
+#     - CVE-2022-27664
+#     - CVE-2022-32149
+#   2.12.1-r0:
+#     - CVE-2022-39253
+
+_plugin_installdir="/usr/libexec/docker/cli-plugins"
+
+builddir="$srcdir"/compose-"$pkgver"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	PKG=github.com/docker/compose/v2
+	local ldflags="-X '$PKG/internal.Version=v$pkgver'"
+	go build -ldflags="$ldflags" -o docker-compose ./cmd
+}
+
+check() {
+	# e2e tests are excluded because they depend on live dockerd/kubernetes/ecs
+	local pkgs="$(go list ./... | grep -Ev '/(watch|e2e)(/|$)')"
+	go test -short -skip '^TestPs$' $pkgs
+	./docker-compose version
+}
+
+package() {
+	install -Dm755 docker-compose -t "$pkgdir$_plugin_installdir"/
+
+	mkdir -p "$pkgdir"/usr/bin
+	ln -sfv ../libexec/docker/cli-plugins/docker-compose "$pkgdir"/usr/bin/docker-compose
+}
+
+sha512sums="
+fad353d63f5f5598288f7863fc7f4b9969e1060e81c645e8ccd489e8a71da0f07812c6ee22100a22a1f3ef2b5b5b9827f4593792742a4eaedbd568d854da5836  docker-cli-compose-2.24.6.tar.gz
+"

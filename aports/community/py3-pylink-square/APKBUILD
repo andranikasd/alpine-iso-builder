@@ -1,0 +1,44 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-pylink-square
+pkgver=1.2.0
+pkgrel=0
+pkgdesc="Python interface for SEGGER J-Link"
+url="https://github.com/Square/pylink"
+arch="noarch"
+license="Apache-2.0"
+depends="
+	py3-psutil
+	py3-six
+	"
+makedepends="
+	py3-gpep517
+	py3-installer
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-mock"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/p/pylink-square/pylink-square-$pkgver.tar.gz"
+builddir="$srcdir/pylink-square-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m unittest discover -k 'not test_cp15_register_write_success and not test_jlink_restarted and not test_set_log_file_success'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+eb9164e7bf409a595f17edfc5352f4d361e96cf4f315d42874401918e3ec869fc5a63cf38c9f7fde1448dc967d8aec4e2f0ac1eeb05f276e4def4bbbf7ab821b  pylink-square-1.2.0.tar.gz
+"

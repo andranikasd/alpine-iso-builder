@@ -1,0 +1,39 @@
+# Maintainer: Hoang Nguyen <folliekazetani@protonmail.com>
+pkgname=litecli
+pkgver=1.10.0
+pkgrel=0
+pkgdesc="CLI for SQLite Databases with auto-completion and syntax highlighting"
+url="https://litecli.com/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	python3
+	py3-cli_helpers
+	py3-click
+	py3-configobj
+	py3-prompt_toolkit
+	py3-pygments
+	py3-sqlparse
+	"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-mock py3-pytest"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/dbcli/litecli/archive/refs/tags/v$pkgver.tar.gz"
+
+build() {
+	gpep517 build-wheel --wheel-dir .dist --output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+aa497fe050f4e1135f2c63f4c0cbab736400158c546a0391f3eca956b38132349ad2eb46505beb52651f74bc5ff1a2ba9b0254e7a6a86d79e461fdd0508fb412  litecli-1.10.0.tar.gz
+"

@@ -1,0 +1,86 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=konsole
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by qt5-qtdeclarative
+arch="all !armhf"
+url="https://kde.org/applications/system/konsole"
+pkgdesc="KDE's terminal emulator"
+license="GPL-2.0-only AND LGPL-2.1-or-later AND Unicode-DFS-2016"
+depends="ncurses-terminfo-base"
+makedepends="
+	extra-cmake-modules
+	kbookmarks5-dev
+	kcompletion5-dev
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kdoctools5-dev
+	kglobalaccel5-dev
+	kguiaddons5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kinit5-dev
+	kio5-dev
+	knewstuff5-dev
+	knotifications5-dev
+	knotifyconfig5-dev
+	kparts5-dev
+	kpty5-dev
+	kservice5-dev
+	ktextwidgets5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	kxmlgui5-dev
+	qt5-qtbase-dev
+	qt5-qtmultimedia-dev
+	samurai
+	"
+checkdepends="mesa-dri-gallium xvfb-run"
+_repo_url="https://invent.kde.org/utilities/konsole.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/konsole-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DENABLE_PLUGIN_SSHMANAGER=ON
+	cmake --build build
+}
+
+check() {
+	cd build
+
+	# DBusTest requires running DBus
+	local skipped_tests="("
+	local tests="
+		DBus
+		History
+		"
+	case "$CARCH" in
+		armv7)
+			tests="$tests Part"
+			;;
+	esac
+	for test in $tests; do
+		skipped_tests="$skipped_tests|$test"
+	done
+	skipped_tests="$skipped_tests)Test"
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "$skipped_tests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+dd227f0446b623839f984cfa2f00b94e16c929f35b4714e791a11baf90907ac87ed469f50980a07e6528fbcc1654192d2504676b73d7856b6389077a4ef01f88  konsole-23.08.5.tar.xz
+"

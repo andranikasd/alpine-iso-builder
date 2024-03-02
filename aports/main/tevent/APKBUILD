@@ -1,0 +1,47 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=tevent
+pkgver=0.15.0
+pkgrel=0
+pkgdesc="The tevent library"
+url="https://tevent.samba.org/"
+arch="all"
+license="LGPL-3.0-or-later"
+makedepends="libtirpc-dev python3-dev talloc-dev cmocka-dev"
+replaces="samba"
+subpackages="$pkgname-dev py3-$pkgname:_py3"
+source="https://samba.org/ftp/tevent/tevent-$pkgver.tar.gz
+	"
+
+build() {
+	CFLAGS="$CFLAGS -flto=auto" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--disable-rpath \
+		--bundled-libraries=NONE \
+		--without-gettext
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+_py3() {
+	pkgdesc="Python 3 binding for the tevent library"
+
+	amove usr/lib/python3*
+}
+
+sha512sums="
+470cc4489255a4f122ba1d680669589ba375d4081ff46631dd56f5104202d175bfb13356820eb9108a6b768b3837b2f5d26cc7b0acc3071c4787fb070df3cbab  tevent-0.15.0.tar.gz
+"

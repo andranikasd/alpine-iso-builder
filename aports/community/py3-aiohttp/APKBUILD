@@ -1,0 +1,74 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-aiohttp
+_pkgname=aiohttp
+pkgver=3.8.6
+pkgrel=0
+pkgdesc="HTTP client/server for asyncio"
+url="https://pypi.org/project/aiohttp"
+arch="all"
+license="Apache-2.0"
+depends="
+	py3-aiosignal
+	py3-async-timeout
+	py3-attrs
+	py3-brotli
+	py3-charset-normalizer
+	py3-idna-ssl
+	py3-multidict
+	py3-typing-extensions
+	py3-yarl
+	python3
+	"
+makedepends="
+	python3-dev
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="
+	py3-pytest
+	py3-pytest-cov
+	py3-pytest-mock
+	py3-async_generator
+	py3-freezegun
+	py3-re-assert
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+case "$CARCH" in
+s390x)
+	# fails due to speed and the event loop closes
+	options="$options !check"
+	;;
+esac
+
+prepare() {
+	default_prepare
+
+	# requires https://github.com/abhinavsingh/proxy.py
+	rm -f tests/test_proxy_functional.py
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	PYTHONPATH="$(echo build/lib.*)" \
+	pytest -W ignore::DeprecationWarning -v \
+		-k 'not test_no_warnings and not test_request_tracing_url_params'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+43f1dd6670d90aefee7f0f30411b13c643ea684815b493cc4437e5f1981f4fdf4b718a40543d7c3c8c70d8b27470b8f3bf1609e46146362e0490ce0990a057f5  py3-aiohttp-3.8.6.tar.gz
+"

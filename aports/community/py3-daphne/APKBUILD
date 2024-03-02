@@ -1,0 +1,47 @@
+# Contributor: Alex Denes <caskd@redxen.eu>
+# Maintainer: Alex Denes <caskd@redxen.eu>
+_pkgname=daphne
+pkgname="py3-$_pkgname"
+pkgver=4.0.0
+pkgrel=1
+pkgdesc="HTTP, HTTP2 and WebSocket protocol server for ASGI and ASGI-HTTP"
+url="https://github.com/django/daphne"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	py3-twisted
+	py3-autobahn
+	py3-asgiref
+"
+checkdepends="
+	py3-hypothesis
+	py3-cryptography
+	py3-pytest
+	py3-pytest-asyncio
+	py3-pytest-runner
+"
+makedepends="py3-setuptools_scm"
+subpackages="$pkgname-pyc"
+source="
+	https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz
+	0001-pytest-runner-extra.patch
+"
+options="!check" # tests attempt to build checkdepends
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py test
+}
+
+package() {
+	python3 setup.py install --root "$pkgdir"
+}
+
+sha512sums="
+1c7f707c3368fcc5c30fbb930effeb0ba1823727692514add4e6438082c9d02300a9031b56d432c1359f8f8299b0af2b925f3f9f32b4c365700f79052606676f  daphne-4.0.0.tar.gz
+1b754db1ca81768d1026db567fcd0ca4b6695389144a70d20ebca8a7615bd13d271529e522b3e8fa897a36827428765a5952470b2420f42f98d00400eeaa7c34  0001-pytest-runner-extra.patch
+"

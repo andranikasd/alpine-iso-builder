@@ -1,0 +1,49 @@
+# Contributor: prspkt <prspkt@protonmail.com>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-importlib-metadata
+pkgver=7.0.1
+pkgrel=0
+pkgdesc="Read metadata from Python packages"
+url="https://github.com/python/importlib_metadata"
+arch="noarch"
+license="Apache-2.0"
+depends="
+	py3-zipp
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="
+	py3-pyfakefs
+	py3-pytest
+	python3-tests
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/i/importlib_metadata/importlib_metadata-$pkgver.tar.gz"
+#options="!check" # Tests fail to find module "test"
+builddir="$srcdir/importlib_metadata-$pkgver"
+
+export SETUPTOOLS_SCM_PRETEND_VERSION="$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	pytest tests
+}
+
+package() {
+	python3 -m installer \
+		-d "$pkgdir" \
+		.dist/importlib_metadata-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+73cdd72e0e39c34beb357bafd0ece2ebdf7def4c9c34f434f4be6da53c70206e5bc9ec3e6ddf0282e1511ddf14a9a562b09cab822483733802bed19e23716023  importlib_metadata-7.0.1.tar.gz
+"

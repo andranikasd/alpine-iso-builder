@@ -1,0 +1,135 @@
+# Contributor: Valery Kartel <valery.kartel@gmail.com>
+# Maintainer:
+pkgname=aws-cli
+pkgver=2.15.14
+pkgrel=0
+pkgdesc="Universal Command Line Interface for Amazon Web Services (v2)"
+url="https://github.com/aws/aws-cli"
+# s390x: py3-awscrt doesn't support big-endian
+# arm*, ppc64le: py3-awscrt
+# x86: fails check, so most likely not supported on 32-bit anymore
+arch="all !x86 !armhf !armv7 !ppc64le !s390x"
+license="Apache-2.0"
+depends="
+	py3-awscrt
+	py3-certifi
+	py3-cryptography
+	py3-dateutil
+	py3-distro
+	py3-colorama
+	py3-docutils
+	py3-jmespath
+	py3-urllib3
+	py3-prompt_toolkit
+	py3-ruamel.yaml<0.17.29
+	python3
+	"
+makedepends="
+	python3-dev
+	py3-gpep517
+	py3-flit-core
+	"
+checkdepends="
+	procps
+	py3-jsonschema
+	py3-mock
+	py3-pytest
+	py3-pytest-mock
+	py3-pytest-xdist
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-pyc
+	$pkgname-zsh-completion:zshcomp
+	$pkgname-bash-completion:bashcomp
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/aws/aws-cli/archive/$pkgver.tar.gz
+	fix-env.patch
+	tmpfile-index.patch
+	"
+
+provides="aws-cli-v2=$pkgver-r$pkgrel"
+replaces="aws-cli-v2"
+
+case "$CARCH" in
+x86*)
+	;;
+*)
+	# save ourselves some time and run tests only on the above
+	options="$options !check"
+	;;
+esac
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	export AWS_SECRET_ACCESS_KEY=fake_key
+	export AWS_ACCESS_KEY_ID=fake_id
+
+	# each core takes like 2gb, so be a little conservative
+	local cores
+	cores="$(nproc)"
+	cores="$((cores / 2))"
+
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	timeout 1800 \
+	.testenv/bin/python3 -m pytest tests \
+		-p no:warnings \
+		-n "$cores" \
+		--ignore=tests/backends \
+		--ignore=tests/integration \
+		--ignore=tests/functional/eks \
+		--ignore=tests/functional/botocore/test_credentials.py \
+		--deselect=tests/functional/autocomplete/test_main.py::test_smoke_test_completer \
+		--deselect=tests/functional/botocore/test_credentials.py::SSOSessionTest::test_token_chosen_from_provider \
+		--deselect=tests/functional/eks/test_kubeconfig.py::TestKubeconfigLoader::test_load_empty \
+		--deselect=tests/functional/eks/test_kubeconfig.py::TestKubeconfigLoader::test_load_noexist \
+		--deselect=tests/functional/autoprompt/test_prompttoolkit.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+	rm "$pkgdir"/usr/bin/aws.cmd
+}
+
+bashcomp() {
+	pkgdesc="$pkgdesc (bash completions)"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions
+	mv "$pkgdir"/usr/bin/aws_bash_completer \
+		"$subpkgdir"/usr/share/bash-completion/completions
+}
+
+zshcomp() {
+	pkgdesc="$pkgdesc (zsh completions)"
+	install_if="$pkgname=$pkgver-r$pkgrel zsh"
+	mkdir -p "$subpkgdir"/usr/share/zsh/site-functions
+	mv "$pkgdir"/usr/bin/aws_zsh_completer.sh \
+		"$subpkgdir"/usr/share/zsh/site-functions
+}
+
+doc() {
+	default_doc
+
+	local pyver="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+
+	amove usr/lib/python3*/site-packages/awscli/topics
+	amove usr/lib/python3*/site-packages/awscli/examples
+
+	mkdir -p "$pkgdir"/usr/lib/python$pyver/site-packages/awscli/examples
+	# move back top-level so just "aws help" works
+	mv "$subpkgdir"/usr/lib/python$pyver/site-packages/awscli/examples/global_options.rst \
+		"$pkgdir"/usr/lib/python$pyver/site-packages/awscli/examples/
+}
+
+sha512sums="
+f2d3f7cfa75ad97ea24a53c25ffd7c8e50704bcb2af065ff0c78ccd256a4cc2217646228c9f7ad78701bcd02cc18a900bb8face43ae68f51bbbccf06850f928b  aws-cli-2.15.14.tar.gz
+850b4ca6e09f96cba8968d2d7a3b60bd5206d7c4c257ba927b576336a992796b51263506cdd100314604ec7ad493a26326bf059ccd7f96772ad9326aa68ee41e  fix-env.patch
+ecfad03dafbdc8cdc73f41a432f0acb53ce3636f58a8b3d0cfcef06617f24ee8588e0648ee7290148bcfc8a3007d00b865899d473a6653d970a55be63760551f  tmpfile-index.patch
+"

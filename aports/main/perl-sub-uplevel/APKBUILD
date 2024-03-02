@@ -1,0 +1,34 @@
+# Contributor: Mika Havela <mika.havela@gmail.com>
+# Maintainer: Mika Havela <mika.havela@gmail.com>
+pkgname=perl-sub-uplevel
+_pkgreal=Sub-Uplevel
+pkgver=0.2800
+pkgrel=5
+pkgdesc="Perl - Apparently run a function in a higher stack frame"
+url="https://metacpan.org/dist/Sub-Uplevel"
+arch="noarch"
+license="Artistic-1.0-Perl OR GPL-1.0-or-later"
+depends="perl"
+subpackages="$pkgname-doc"
+source="https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Sub-Uplevel-$pkgver.tar.gz"
+
+builddir="$srcdir/$_pkgreal-$pkgver"
+
+build() {
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	# creates file collision among perl modules
+	find "$pkgdir" -name perllocal.pod -delete
+}
+
+sha512sums="
+655bab9441bc81e4002db2e715b5c1f771ee35a03bc643a44d4a279aca55431fe17e64332919311a51db2dc02c16b5f97c5751595e61ad0ab96cd0a10ac2d230  Sub-Uplevel-0.2800.tar.gz
+"

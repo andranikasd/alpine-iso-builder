@@ -1,0 +1,31 @@
+# Contributor: Patrycja Rosa <alpine@ptrcnull.me>
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=govc
+pkgver=0.35.0
+pkgrel=0
+pkgdesc="vSphere CLI built on top of govmomi"
+url="https://github.com/vmware/govmomi/blob/main/govc/README.md"
+arch="all"
+license="Apache-2.0"
+makedepends="go bash coreutils"
+source="https://github.com/vmware/govmomi/archive/v$pkgver/govc-$pkgver.tar.gz"
+builddir="$srcdir/govmomi-$pkgver/govc"
+# !check: no tests provided
+# net: fetch dependencies
+options="!check net"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -o "$builddir"/govc .
+}
+
+package() {
+	install -Dm755 "$builddir"/govc "$pkgdir"/usr/bin/govc
+}
+
+sha512sums="
+061b3263cf611ce514c8e22110d1c80a0d6130e2dc30c52749a78057f36efb108c02854c9974266bd0f78c8cf6cdf9a1d982c5a152732d0c7c8c4f811d4c31fd  govc-0.35.0.tar.gz
+"

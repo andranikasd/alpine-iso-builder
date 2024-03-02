@@ -1,0 +1,50 @@
+# Maintainer: team/gnome <david@ixit.cz>
+# Contributor: David Heidelberg <david@ixit.cz>
+pkgname=gnome-console
+pkgver=45.0
+pkgrel=1
+pkgdesc="User-friendly terminal for GNOME"
+url="https://gitlab.gnome.org/GNOME/console"
+# s390x blocked by mozjs91 -> nautilus-dev
+arch="all !s390x"
+license="GPL-3.0-only"
+depends="
+	dbus
+	gsettings-desktop-schemas
+	"
+makedepends="
+	desktop-file-utils
+	glib-dev
+	gsettings-desktop-schemas-dev
+	gtk4.0-dev
+	libadwaita-dev
+	libgtop-dev
+	meson
+	pcre2-dev
+	sassc
+	vte3-dev
+	"
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/gnome-console/${pkgver%.*}/gnome-console-$pkgver.tar.xz"
+replaces="kgx"
+provides="kgx=$pkgver-r$pkgrel"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dtests=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+940f02b8e1b02a680d9c25de59f655243a033883b9e21a183bd40ebe09c1803d6fbbfb45223e9a4ae20401d65e80a2bf0ba28bc7971fe84889176be64062b8d0  gnome-console-45.0.tar.xz
+"

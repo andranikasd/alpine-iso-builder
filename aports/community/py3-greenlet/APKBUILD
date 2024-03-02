@@ -1,0 +1,39 @@
+# Contributor: Elizabeth Jennifer Myers <elizabeth@sporksirc.net>
+# Maintainer:
+pkgname=py3-greenlet
+pkgver=2.0.2
+pkgrel=3
+pkgdesc="Lightweight in-process concurrent programming"
+url="https://pypi.org/project/greenlet"
+arch="all"
+license="MIT"
+makedepends="py3-setuptools python3-dev py3-gpep517 py3-wheel"
+checkdepends="py3-objgraph py3-psutil"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/g/greenlet/greenlet-$pkgver.tar.gz"
+builddir="$srcdir/greenlet-$pkgver"
+
+replaces="py-greenlet" # Backwards compatibility
+provides="py-greenlet=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m unittest discover -v greenlet.tests
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+	rm -r "$pkgdir"/usr/lib/python3*/site-packages/greenlet/tests/
+}
+
+sha512sums="
+03d0b2764c52524c97930a7bd856a432360a96ddbe3d1f2352ec49750994e6811fd28378f83b96cac91520234d0a6e9e56232ff688c71ff57f6340d3d182635b  greenlet-2.0.2.tar.gz
+"

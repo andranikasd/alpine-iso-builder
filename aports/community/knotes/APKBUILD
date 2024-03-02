@@ -1,0 +1,80 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=knotes
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+# ppc64le, s390x and riscv64 blocked by kdepim-runtime
+arch="all !armhf !ppc64le !s390x !riscv64"
+url="https://kontact.kde.org/"
+pkgdesc="Popup notes"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+depends="kdepim-runtime"
+makedepends="
+	akonadi-dev
+	akonadi-notes-dev
+	akonadi-search-dev
+	extra-cmake-modules
+	grantlee-dev
+	grantleetheme-dev
+	kcalutils-dev
+	kcmutils5-dev
+	kcompletion5-dev
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kdnssd5-dev
+	kdoctools5-dev
+	kglobalaccel5-dev
+	kiconthemes5-dev
+	kitemmodels5-dev
+	kitemviews5-dev
+	kmime-dev
+	knewstuff5-dev
+	knotifications5-dev
+	knotifications5-dev
+	knotifyconfig5-dev
+	kontactinterface-dev
+	kparts5-dev
+	kpimtextedit-dev
+	ktextwidgets5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	kxmlgui5-dev
+	libkdepim-dev
+	libxslt-dev
+	pimcommon-dev
+	qt5-qtbase-dev
+	qt5-qtx11extras-dev
+	samurai
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/pim/knotes.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/knotes-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	# knotesgrantleeprinttest is broken
+	xvfb-run ctest --test-dir build --output-on-failure -E "knotesgrantleeprinttest"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+797cfb4a702ac6473b982c74d0c8c5ab36df3cacd546a7701f0ac38156043b5db0983ed29fb3a3ffd11a494526dd71361eec53aee0512dd85bed5204ad3a73fb  knotes-23.08.5.tar.xz
+"

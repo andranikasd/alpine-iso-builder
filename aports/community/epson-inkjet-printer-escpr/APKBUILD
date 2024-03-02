@@ -1,0 +1,36 @@
+# Contributor: Justin Berthault <justin.berthault@zaclys.net>
+# Maintainer:
+pkgname=epson-inkjet-printer-escpr
+pkgver=1.7.21
+pkgrel=2
+pkgdesc="Epson Inkjet Printer Driver (ESC/P-R) for Linux"
+url="https://download.ebz.epson.net/dsc/search/01/search/?OSC=LX"
+arch="all"
+license="GPL-2.0-or-later"
+depends="cups-filters"
+makedepends="cups-dev"
+source="$pkgname-$pkgver.tar.gz::https://download3.ebz.epson.net/dsc/f/03/00/13/77/93/e85dc2dc266e96fdc242bd95758bd88d1a51963e/epson-inkjet-printer-escpr-1.7.21-1lsb3.2.tar.gz"
+options="!check" # no test suite provided
+
+prepare() {
+	default_prepare
+
+	update_config_guess
+}
+
+build() {
+	./configure \
+		--disable-static \
+		--prefix=/usr \
+		--with-cupsfilterdir=/usr/lib/cups/filter \
+		--with-cupsppddir=/usr/share/ppd
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+de3212d1dfcf9dfcffd6af920a9eb40266563820b7ef9ce2b9a6ccea51f5199871731db5617af7fd2bc6b5942b399d4228350f19f89d90443774155b47d122ac  epson-inkjet-printer-escpr-1.7.21.tar.gz
+"

@@ -1,0 +1,39 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libical
+pkgver=3.0.17
+pkgrel=1
+pkgdesc="Reference implementation of the iCalendar format"
+url="https://libical.github.io/libical/"
+arch="all"
+license="LGPL-2.1-only OR MPL-2.0"
+depends_dev="libxml2-dev gobject-introspection-dev"
+makedepends="perl cmake vala glib-dev icu-dev samurai $depends_dev"
+checkdepends="tzdata py3-gobject3"
+subpackages="$pkgname-dev"
+source="https://github.com/libical/libical/releases/download/v$pkgver/libical-$pkgver.tar.gz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DSHARED_ONLY=true \
+		-DENABLE_GTK_DOC=false \
+		-DGOBJECT_INTROSPECTION=true \
+		-DICAL_GLIB_VAPI=true
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E '(icalrecurtest|icalrecurtest_r)'
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+11fbb4aba7503a3264b0efa30ad56aa923d31ec193bdb0b87b92bc88db9019fa670c8c9ee7998caa3a870e706446a58ead475f31bd703f0d2cb7aabf0f6a3aa7  libical-3.0.17.tar.gz
+"

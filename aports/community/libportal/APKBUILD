@@ -1,0 +1,78 @@
+# Contributor: TBK <alpine@jjtc.eu>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Pablo Correa Gomez <ablocorrea@hotmail.com>
+# Maintainer: Pablo Correa Gomez <ablocorrea@hotmail.com>
+pkgname=libportal
+pkgver=0.7.1
+pkgrel=0
+pkgdesc="GIO-style async APIs for most Flatpak portals"
+url="https://github.com/flatpak/libportal"
+arch="all"
+license="LGPL-3.0-or-later"
+makedepends="
+	meson
+	glib-dev
+	gtk-doc
+	gobject-introspection-dev
+	vala
+	gtk+3.0-dev
+	gtk4.0-dev
+	qt5-qtbase-dev
+	qt5-qttools-dev
+	qt5-qtx11extras-dev
+	"
+checkdepends="xvfb-run"
+subpackages="
+	$pkgname-dev
+	$pkgname-gtk3:_gtk3
+	$pkgname-gtk4:_gtk4
+	$pkgname-qt5:_qt5
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/flatpak/libportal/archive/$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		-Dbackend-gtk3=enabled \
+		-Dbackend-gtk4=enabled \
+		-Dbackend-qt5=enabled \
+		-Ddocs=false \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run -s '-nolisten local' -a meson test -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+_gtk3() {
+	pkgdesc="$pkgdesc (GTK+3.0 backend)"
+	# for gobject instrospection
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	amove usr/lib/libportal-gtk3*
+	amove usr/lib/girepository-1.0/XdpGtk3*
+}
+
+_gtk4() {
+	pkgdesc="$pkgdesc (GTK4.0 backend)"
+	# for gobject instrospection
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	amove usr/lib/libportal-gtk4*
+	amove usr/lib/girepository-1.0/XdpGtk4*
+}
+
+_qt5() {
+	pkgdesc="$pkgdesc (Qt5 backend)"
+	depends=""
+
+	amove usr/lib/libportal-qt5*
+}
+
+sha512sums="
+6caebc9f587a2bf943cc578f744e4c7abd5e6457c394c8d9266e0933fde700e6ecae5d187c07a5481709a5524035e20226a3536ab0aa3ef34dd4364194aa6fab  libportal-0.7.1.tar.gz
+"

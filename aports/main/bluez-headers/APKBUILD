@@ -1,0 +1,35 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=bluez-headers
+pkgver=5.72
+pkgrel=1
+pkgdesc="Bluez development headers"
+url="https://www.bluez.org/"
+arch="noarch"
+license="GPL-2.0-or-later"
+depends="!bluez-dev"
+source="https://www.kernel.org/pub/linux/bluetooth/bluez-$pkgver.tar.xz"
+builddir="$srcdir/bluez-$pkgver"
+options="!check" # just headers
+
+package() {
+	local headers="
+		bluetooth
+		bnep
+		cmtp
+		hci
+		hci_lib
+		hidp
+		l2cap
+		rfcomm
+		sco
+		sdp
+		sdp_lib
+		"
+	for header in $headers; do
+		install -Dm644 ./lib/$header.h -t "$pkgdir"/usr/include/bluetooth
+	done
+}
+
+sha512sums="
+1c6560f60ac0654d7c25ed8ab2f0f3a3a9ca8688ee28e1c476ffc7ae38737e739d27bbb88789c86b03fc600a8a68496d90a7b395ec393dd2bbf69be62357991a  bluez-5.72.tar.xz
+"

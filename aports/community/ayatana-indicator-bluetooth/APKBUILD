@@ -1,0 +1,45 @@
+# Contributor: Luca Weiss <luca@z3ntu.xyz>
+# Maintainer: Luca Weiss <luca@z3ntu.xyz>
+pkgname=ayatana-indicator-bluetooth
+pkgver=23.10.0
+pkgrel=0
+pkgdesc="Ayatana System Indicator for Bluetooth Management"
+url="https://github.com/AyatanaIndicators/ayatana-indicator-bluetooth"
+arch="all"
+license="GPL-3.0-only"
+makedepends="
+	cmake
+	cmake-extras
+	intltool
+	libayatana-common-dev
+	vala
+	"
+subpackages="$pkgname-lang"
+source="https://github.com/AyatanaIndicators/ayatana-indicator-bluetooth/archive/$pkgver/ayatana-indicator-bluetooth-$pkgver.tar.gz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DENABLE_TESTS=ON \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+1dc21ac52b2e4b10a2eee7f28912e365fe307d0db4e23f2459d25b8b054fcce0a240df89ff989a0a3acbc37ed4536fc505ff745cca86e7b43c6ef205c17bf264  ayatana-indicator-bluetooth-23.10.0.tar.gz
+"

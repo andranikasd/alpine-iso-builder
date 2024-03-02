@@ -1,0 +1,45 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-pydicom
+pkgver=2.4.4
+pkgrel=0
+pkgdesc="Read, modify and write DICOM files with python"
+url="https://github.com/pydicom/pydicom"
+arch="noarch"
+license="MIT AND BSD-3-Clause"
+depends="python3 py3-numpy"
+makedepends="
+	py3-gpep517
+	py3-flit-core
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://github.com/pydicom/pydicom/archive/v$pkgver/pydicom-$pkgver.tar.gz"
+builddir="$srcdir/pydicom-$pkgver"
+options="!check" # do not test for now | collection is very time consuming
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto -W ignore::DeprecationWarning
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -r "$pkgdir"/usr/lib/python3.*/site-packages/pydicom/tests
+
+	rm -r "$pkgdir"/usr/lib/python3.*/site-packages/pydicom/data/test_files
+}
+
+sha512sums="
+566f3bedabc56606f087601038b5477a76c407809b4b74c61af7e0cc9e0994025f0d6294903ad89e8f4c0302d777ba4a28d5be63337046136c9aef5abe104a0c  pydicom-2.4.4.tar.gz
+"

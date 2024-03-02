@@ -1,0 +1,44 @@
+# Contributor: Sodface <sod@sodface.com>
+# Maintainer: Sodface <sod@sodface.com>
+pkgname=odio-edit
+pkgver=24.1.1
+pkgrel=0
+pkgdesc="Lightweight audio wave editor"
+url="https://tari.in/www/software/odio-edit/"
+arch="all"
+license="GPL-3.0-or-later"
+subpackages="$pkgname-lang"
+depends="
+	dconf
+	gst-libav
+	gst-plugins-bad
+	gst-plugins-good
+	gst-plugins-ugly
+	"
+makedepends="
+	cmake
+	cmake-extras
+	gettext-dev
+	gst-plugins-base-dev
+	gtk+3.0-dev
+	intltool
+	libodiosacd-dev
+	samurai
+	"
+options="!check" # no test suite
+source="$pkgname-$pkgver.tar.gz::https://github.com/tari01/odio-edit/archive/refs/tags/$pkgver.tar.gz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+6775d524d3bd5f91142ce3b9cd8dd906591fd06ce44ddfa6aab4313301ba95d239b50147a1dd5c238b805daf9a67dbecef08193d541a365ab91145d8663e1a8b  odio-edit-24.1.1.tar.gz
+"

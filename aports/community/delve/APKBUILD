@@ -1,0 +1,41 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=delve
+pkgver=1.22.1
+pkgrel=0
+pkgdesc="Debugger for the Go programming language"
+url="https://github.com/go-delve/delve"
+arch="x86 x86_64 aarch64"
+license="MIT"
+makedepends="go"
+options="net chmod-clean"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/go-delve/delve/archive/refs/tags/v$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	mkdir bin
+	go build -v -trimpath -o bin ./cmd/dlv/...
+}
+
+check() {
+	# TestGeneratedDoc and TestBuild require a proper $GOPATH setup.
+	go test -run '!(^(TestGeneratedDoc|TestBuild)$)' ./cmd/dlv/...
+}
+
+package() {
+	install -Dm755 bin/* -t "$pkgdir"/usr/bin/
+
+	# Install additional documentation files.
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+	cp -r Documentation/* "$pkgdir"/usr/share/doc/$pkgname
+
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+73b6e7f5c88ffe3c3197a33106c2d10349bb622f10ec54e3dd0b045ed5717a341d48c5415f6b56b3a927afa6d994ff30dced802f82ed14d149f202f46c7a6b44  delve-1.22.1.tar.gz
+"

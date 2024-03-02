@@ -1,0 +1,72 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-distributed
+pkgver=2023.12.0
+pkgrel=0
+pkgdesc="A library for distributed computation"
+url="https://distributed.dask.org/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	py3-click
+	py3-cloudpickle
+	py3-dask
+	py3-jinja2
+	py3-locket
+	py3-msgpack
+	py3-psutil
+	py3-sortedcontainers
+	py3-tblib
+	py3-toolz
+	py3-tornado
+	py3-urllib3
+	py3-yaml
+	py3-zict
+	"
+makedepends="
+	linux-headers
+	py3-gpep517
+	py3-python-versioneer
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	yaml-dev
+	"
+checkdepends="
+	py3-arrow
+	py3-h5py
+	py3-jsonschema
+	py3-lz4
+	py3-paramiko
+	py3-pytest
+	py3-pytest-asyncio
+	py3-requests
+	py3-scipy
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/d/distributed/distributed-$pkgver.tar.gz"
+options="!check" # Failure with newer pytest than upstream uses
+builddir="$srcdir/distributed-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest \
+		--ignore distributed/comm/tests/test_comms.py \
+		--ignore distributed/tests/test_core.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+032126dfbe35c9e05d204c57bd984356716a7f09b01c51cc3e411f4e3fab4ba61c9a96bac7c64bad2e9af10e3da196a3d84f9a6944e31ff4721d953f033d73a1  distributed-2023.12.0.tar.gz
+"

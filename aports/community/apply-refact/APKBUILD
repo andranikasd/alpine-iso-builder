@@ -1,0 +1,60 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=apply-refact
+pkgver=0.13.0.0
+pkgrel=0
+pkgdesc="Refactor Haskell source files"
+url="https://github.com/mpickering/apply-refact"
+arch="x86_64 aarch64" # limited by ghc
+license="BSD-3-Clause"
+depends="ghc cabal"
+makedepends="ncurses-dev"
+subpackages="$pkgname-doc"
+options="net"
+source="https://github.com/mpickering/apply-refact/archive/$pkgver/apply-refact-$pkgver.tar.gz
+	cabal.project.freeze"
+
+# Directory were cabal files are stored.
+export CABAL_DIR="$srcdir/dist"
+
+# Needed to fix build on aarch64.
+export PATH="$PATH:/usr/lib/llvm14/bin"
+
+cabal_update() {
+	cd $builddir
+	cabal v2-update
+	(
+		cd "$builddir"
+		cabal v2-freeze --shadow-installed-packages
+		mv cabal.project.freeze "$startdir/"
+	)
+}
+
+prepare() {
+	default_prepare
+	ln -sf "$srcdir/cabal.project.freeze" \
+		"$builddir/cabal.project.freeze"
+}
+
+build() {
+	cabal v2-update
+	cabal v2-build apply-refact:exes \
+		--jobs=${JOBS:-1} \
+		--prefix=/usr \
+		--docdir=/usr/share/doc/$pkgname \
+		--sysconfdir=/etc
+}
+
+package() {
+	# See https://github.com/haskell/cabal/issues/6919#issuecomment-761563498
+	cabal list-bin apply-refact:exes | xargs install -Dm755 -t "$pkgdir"/usr/bin
+
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+	install -Dm644 README.md CHANGELOG \
+		"$pkgdir"/usr/share/doc/$pkgname
+}
+
+sha512sums="
+ff492f7d5070bcef7b57ac0dba8c947d1deb40a116b9d311fbc2a0c17b5abaac864048f058b33b918d90e97f5f3587847112b36052bced22deef1644458fc91d  apply-refact-0.13.0.0.tar.gz
+cc33f359765d19b458d34c74d05b16f9942e394bc7e8ee6e41eadc0098db0bd4595c6facfd24cde1cad6b2febd31e25657134b38bcf8d3785df9a61af1c2878a  cabal.project.freeze
+"

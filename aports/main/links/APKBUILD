@@ -1,0 +1,36 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=links
+pkgver=2.29
+pkgrel=1
+pkgdesc="Web browser running in both graphics and text mode"
+url="http://links.twibright.com/"
+arch="all"
+options="!check"  # No test suite.
+license="GPL-2.0-or-later WITH OpenSSL-Exception"
+subpackages="$pkgname-doc"
+makedepends="bzip2-dev openssl-dev>3 zlib-dev libevent-dev zstd-dev"
+source="http://links.twibright.com/download/links-$pkgver.tar.bz2
+	configure.patch
+	"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--disable-javascript \
+		--disable-graphics \
+		--without-x \
+		--disable-nls
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+5ea8b2fd0eb74d9dc2b45614aef6ee878fe686dff9bcee75ac6ea01f6a7331670f7709233d31986fc64ad86ce549616a4471057837b6caf15af6d1c5c503ac75  links-2.29.tar.bz2
+b56fcfb6165b3a3340672b25b83826ae32ab5a36673ac90207a40afa5e1e4e5fe21cd958bfb9600035dd84a9b8af1b68ad5be97d794840796d4d2deb992ffa4c  configure.patch
+"

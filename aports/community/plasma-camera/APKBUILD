@@ -1,0 +1,52 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=plasma-camera
+pkgver=1.0_git20230430
+pkgrel=1
+_commit="a31c77fdf8878cdb848a394d86572c5d672e3c50"
+pkgdesc="Camera application for Plasma Mobile"
+# armhf blocked by qt5-qtdeclarative
+arch="all !armhf"
+url="https://invent.kde.org/plasma-mobile/plasma-camera"
+license="GPL-3.0-or-later AND BSD-3-Clause"
+depends="
+	gst-plugins-bad
+	gst-plugins-good
+	kirigami2
+	qt5-qtmultimedia
+	"
+makedepends="
+	extra-cmake-modules
+	kcoreaddons5-dev
+	ki18n5-dev
+	kirigami2-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtquickcontrols2-dev
+	qt5-qtsvg-dev
+	samurai
+	"
+checkdepends="appstream"
+source="https://invent.kde.org/plasma-mobile/plasma-camera/-/archive/$_commit/plasma-camera-$_commit.tar.gz"
+builddir="$srcdir/$pkgname-$_commit"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+6ed77f3740619974be39297ae39b93e6e99c9ef98d224c0367b88b87ec5ca048f7fc6dbebac7b2c3901018ae25a5dcadf5e50aad822463da434dea590bc34b8b  plasma-camera-a31c77fdf8878cdb848a394d86572c5d672e3c50.tar.gz
+"

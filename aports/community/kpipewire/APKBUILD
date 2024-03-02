@@ -1,0 +1,60 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+pkgname=kpipewire
+pkgver=5.27.10
+pkgrel=0
+pkgdesc="Components relating to pipewire use in Plasma"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/plasma-desktop/"
+license="BSD-3-Clause AND CC0-1.0 AND LGPL-2.1-only AND LGPL-3.0-only AND LicenseRef-KDE-Accepted-LGPL"
+depends="pipewire"
+depends_dev="
+	ffmpeg-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	kwayland5-dev
+	libdrm-dev
+	libepoxy-dev
+	pipewire-dev
+	plasma-wayland-protocols
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtwayland-dev
+	wayland-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+
+case "$pkgver" in
+	*.90*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/plasma/kpipewire.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/kpipewire-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+2fc75b975a983cf68168914288e331055c1a3c261d31a1e37dee28da56f9bb73484435c99485ee854f7d387fd44540427a23276375bf09f9ee27fe0ff3dfa2df  kpipewire-5.27.10.tar.xz
+"

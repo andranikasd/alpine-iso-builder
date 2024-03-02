@@ -1,0 +1,20 @@
+# Contributor: Adam Saponara <as@php.net>
+# Maintainer:
+pkgname=waf
+pkgver=2.0.26
+pkgrel=0
+pkgdesc="The meta build system"
+url="https://waf.io/"
+arch="noarch"
+license="BSD-3-Clause"
+options="!check" # no tests available
+depends="python3"
+source="https://waf.io/waf-$pkgver"
+
+package() {
+	install -Dm755 "$srcdir"/waf-$pkgver "$pkgdir"/usr/bin/waf
+}
+
+sha512sums="
+e89bf6ce68add1d7c968b5fa271cd31b8ebaaed4dbb0578935d6f695389ecb20742fc50bc02ac4ac242c73654d2e1b1c54c2ea9a7079377f2f9285c25409afba  waf-2.0.26
+"

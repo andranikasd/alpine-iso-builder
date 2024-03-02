@@ -1,0 +1,57 @@
+# Contributor: Newbyte <newbyte@disroot.org>
+# Maintainer: JuniorJPDJ <alpine@juniorjpdj.pl>
+pkgname=py3-watchfiles
+pkgver=0.19.0
+pkgrel=1
+pkgdesc="Simple, modern file watching and code reload in Python"
+url="https://github.com/samuelcolvin/watchfiles"
+arch="all"
+license="MIT"
+depends="py3-anyio"
+makedepends="
+	cargo
+	maturin
+	py3-gpep517
+	py3-maturin
+	"
+checkdepends="py3-pytest py3-pytest-asyncio py3-pytest-mock py3-pytest-toolbox py3-pytest-timeout py3-dirty-equals"
+subpackages="$pkgname-pyc"
+source="$pkgname-v$pkgver.tar.gz::https://github.com/samuelcolvin/watchfiles/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/watchfiles-$pkgver"
+options="net" # cargo fetch
+
+prepare() {
+	default_prepare
+
+	# set correct version in Cargo.toml
+	VERSION="$pkgver" .github/set_version.py
+	# update version in Cargo.lock
+	cargo update -p watchfiles_rust_notify
+	cargo fetch --locked
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--config-json '{"build-args": "--frozen"}' \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+
+	cd .testenv
+	# Fails on slow systems or when system is under heavy load.
+	# See upstream issue #84
+	bin/python3 -m pytest --import-mode=importlib -k 'not test_awatch_log' ..
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+0de8dd6600ca866007a3a5dd1e792d219f91ca0333898844b4de184aebdd3314b2ccce143cf2a58c1c458053d7ba7d3076f808ae1c754b9306fd5528a8f53924  py3-watchfiles-v0.19.0.tar.gz
+"

@@ -1,0 +1,37 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=sport-activities-features-gui
+pkgver=0.2.3
+pkgrel=1
+pkgdesc="GUI for sport-activities-features package"
+url="https://github.com/firefly-cpp/sport-activities-features-gui"
+arch="noarch"
+license="MIT"
+depends="py3-sport-activities-features py3-qtawesome py3-qt6"
+makedepends="py3-poetry-core py3-gpep517"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://github.com/firefly-cpp/sport-activities-features-gui/archive/$pkgver/sport-activities-features-gui-$pkgver.tar.gz"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+# no tests provided by the upstream; use smoke tests
+check() {
+	PYTHONPATH=build/lib python3 -c "from sport_activities_features_gui import *"
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	install -Dm644 AppData/io.github.firefly-cpp.sport_activities_features_gui.desktop "$pkgdir"/usr/share/applications/sport_activities_features_gui.desktop
+	install -Dm644 AppData/sport-activities-features-gui.png "$pkgdir"/usr/share/icons/hicolor/256x256/apps/sport-activities-features-gui.png
+}
+
+sha512sums="
+3ef8d412bb9234f619fd43bc0dbad65b69f9428c32605058fbbd86bb6e6e796e8983146b315771512a47c138fa789d093c3e550247ec52ca98c2a2501b9c04ad  sport-activities-features-gui-0.2.3.tar.gz
+"

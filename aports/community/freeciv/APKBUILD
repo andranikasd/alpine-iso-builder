@@ -1,0 +1,196 @@
+# Contributor: Thomas Kienlen <kommander@laposte.net>
+# Contributor: Maxim Karasev <begs@disroot.org>
+# Maintainer: Thomas Kienlen <kommander@laposte.net>
+pkgname=freeciv
+pkgver=3.0.10
+pkgrel=0
+pkgdesc="Free and Open Source empire-building strategy game (meta package)"
+url="http://www.freeciv.org"
+arch="all"
+license="GPL-2.0-or-later"
+depends="
+	$pkgname-server
+	$pkgname-client-gtk3
+	"
+_common_makedepends="
+	bash
+	curl-dev
+	gettext-dev
+	gzip
+	readline-dev
+	sdl2_mixer-dev
+	"
+_gtk3_client_makedepends="
+	at-spi2-core-dev
+	gdk-pixbuf-dev
+	glib-dev
+	gtk+3.0-dev
+	pango-dev
+	"
+_qt_client_makedepends="
+	qt5-qtbase-dev
+	"
+_sdl2_client_makedepends="
+	sdl2-dev
+	sdl2_gfx-dev
+	sdl2_image-dev
+	sdl2_ttf-dev
+	"
+_server_makedepends="
+	sqlite-dev
+	"
+makedepends="
+	$_common_makedepends
+	$_gtk3_client_makedepends
+	$_qt_client_makedepends
+	$_sdl2_client_makedepends
+	$_server_makedepends
+	"
+source="https://downloads.sourceforge.net/sourceforge/freeciv/freeciv-$pkgver.tar.xz"
+subpackages="
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-data::noarch
+	$pkgname-server
+	$pkgname-common-client:common_client:noarch
+	$pkgname-client-gtk3:client_gtk3
+	$pkgname-client-qt:client_qt
+	$pkgname-client-sdl2:client_sdl2
+	lib$pkgname-static:lib_static
+	"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--enable-client=gtk3.22,qt,sdl2 \
+		--enable-debug=no \
+		--enable-fcmp=gtk3,qt,cli \
+		--enable-fcdb=sqlite3 \
+		--enable-ipv6=yes \
+		--with-readline \
+		--build=$CBUILD --host=$CHOST
+
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+# subpackages
+
+doc() {
+	pkgdesc="Free and Open Source empire-building strategy game (documentation)"
+
+	default_doc
+}
+
+data() {
+	pkgdesc="Free and Open Source empire-building strategy game (data files for client and server)"
+	depends=""
+
+	amove usr/share/freeciv
+}
+
+lib_static() {
+	pkgdesc="Free and Open Source empire-building strategy game (static libs for ai modules)"
+	depends=""
+
+	amove usr/lib/libfreeciv-srv.a
+	amove usr/lib/libfreeciv.a
+}
+
+common_client() {
+	pkgdesc="Free and Open Source empire-building strategy game (common files for every clients)"
+	depends=""
+
+	amove usr/share/icons/hicolor/128x128/apps/freeciv-client.png
+	amove usr/share/icons/hicolor/16x16/apps/freeciv-client.png
+	amove usr/share/icons/hicolor/32x32/apps/freeciv-client.png
+	amove usr/share/icons/hicolor/48x48/apps/freeciv-client.png
+	amove usr/share/icons/hicolor/64x64/apps/freeciv-client.png
+	amove usr/share/icons/hicolor/128x128/apps/freeciv-modpack.png
+	amove usr/share/icons/hicolor/16x16/apps/freeciv-modpack.png
+	amove usr/share/icons/hicolor/32x32/apps/freeciv-modpack.png
+	amove usr/share/icons/hicolor/48x48/apps/freeciv-modpack.png
+	amove usr/share/icons/hicolor/64x64/apps/freeciv-modpack.png
+
+	amove usr/share/pixmaps/freeciv-client.png
+}
+
+client_gtk3() {
+	pkgdesc="Free and Open Source empire-building strategy game (gtk3.22 client)"
+	depends="$pkgname-data $pkgname-common-client $pkgname-server"
+	provides="$pkgname-client"
+	provider_priority="1"
+
+	amove usr/bin/freeciv-gtk3.22
+	amove usr/bin/freeciv-manual
+	amove usr/bin/freeciv-mp-gtk3
+	amove usr/share/applications/org.freeciv.gtk322.desktop
+	amove usr/share/applications/org.freeciv.mp.gtk3.desktop
+	amove usr/share/metainfo/org.freeciv.gtk322.appdata.xml
+	amove usr/share/metainfo/org.freeciv.mp.gtk3.appdata.xml
+}
+
+client_qt() {
+	pkgdesc="Free and Open Source empire-building strategy game (qt client)"
+	depends="$pkgname-data $pkgname-common-client $pkgname-server"
+	provides="$pkgname-client"
+	provider_priority="0"
+
+	amove usr/bin/freeciv-qt
+	amove usr/bin/freeciv-mp-qt
+	amove usr/bin/freeciv-ruledit
+	amove usr/bin/freeciv-ruleup
+	amove usr/share/applications/org.freeciv.mp.qt.desktop
+	amove usr/share/applications/org.freeciv.qt.desktop
+	amove usr/share/applications/org.freeciv.ruledit.desktop
+	amove usr/share/metainfo/org.freeciv.mp.qt.appdata.xml
+	amove usr/share/metainfo/org.freeciv.qt.appdata.xml
+	amove usr/share/metainfo/org.freeciv.ruledit.appdata.xml
+	amove usr/share/pixmaps/freeciv-modpack.png
+	amove usr/share/pixmaps/freeciv-ruledit.png
+	amove usr/share/icons/hicolor/128x128/apps/freeciv-ruledit.png
+	amove usr/share/icons/hicolor/16x16/apps/freeciv-ruledit.png
+	amove usr/share/icons/hicolor/32x32/apps/freeciv-ruledit.png
+	amove usr/share/icons/hicolor/48x48/apps/freeciv-ruledit.png
+	amove usr/share/icons/hicolor/64x64/apps/freeciv-ruledit.png
+}
+
+client_sdl2() {
+	pkgdesc="Free and Open Source empire-building strategy game (sdl2 client)"
+	depends="$pkgname-data $pkgname-common-client $pkgname-server"
+	provides="$pkgname-client"
+	provider_priority="0"
+
+	amove usr/bin/freeciv-sdl2
+	amove usr/share/applications/org.freeciv.sdl2.desktop
+	amove usr/share/metainfo/org.freeciv.sdl2.appdata.xml
+}
+
+server() {
+	pkgdesc="Free and Open Source empire-building strategy game (server)"
+	depends="$pkgname-data"
+
+	amove etc/freeciv
+
+	amove usr/bin/freeciv-server
+	amove usr/bin/freeciv-mp-cli
+	amove usr/share/applications/org.freeciv.server.desktop
+	amove usr/share/metainfo/org.freeciv.server.appdata.xml
+	amove usr/share/icons/hicolor/128x128/apps/freeciv-server.png
+	amove usr/share/icons/hicolor/16x16/apps/freeciv-server.png
+	amove usr/share/icons/hicolor/32x32/apps/freeciv-server.png
+	amove usr/share/icons/hicolor/48x48/apps/freeciv-server.png
+	amove usr/share/icons/hicolor/64x64/apps/freeciv-server.png
+}
+
+sha512sums="
+4082e94deeda8d9b90f04137d6e7dfd39ff7232225a910f47519a464db553891e42289c1d7738f9ee0d9a16db143669bf8c4c5ce9492a4455ccd99906c956192  freeciv-3.0.10.tar.xz
+"

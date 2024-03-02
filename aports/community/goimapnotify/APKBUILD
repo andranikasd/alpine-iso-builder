@@ -1,0 +1,47 @@
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Contributor: Thomas Böhler <witcher@wiredspace.de>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=goimapnotify
+pkgver=2.3.11
+pkgrel=0
+pkgdesc="execute scripts on IMAP mailbox changes using IDLE, golang version"
+url="https://gitlab.com/shackra/goimapnotify"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="go"
+options="net"
+source="https://gitlab.com/shackra/goimapnotify/-/archive/$pkgver/goimapnotify-$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	export CGO_CPPFLAGS="$CPPFLAGS"
+	export CGO_CFLAGS="$CFLAGS"
+	export CGO_CXXFLAGS="$CXXFLAGS"
+	export CGO_LDFLAGS="$LDFLAGS"
+	export GOFLAGS="$GOFLAGS -trimpath -mod=readonly -modcacherw"
+
+	# Fix build on riscv64
+	go mod edit -replace \
+		golang.org/x/sys=golang.org/x/sys@v0.0.0-20210630005230-0f9fa26af87c
+	go mod download golang.org/x/sys
+
+	go build -ldflags "-linkmode=external \"-extldflags=$LDFLAGS\""
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 goimapnotify "$pkgdir"/usr/bin/goimapnotify
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/"$pkgname"/LICENSE
+	install -Dm644 README.md "$pkgdir"/usr/share/doc/"$pkgname"/README.md
+	install -Dm644 CHANGELOG.rst "$pkgdir"/usr/share/doc/"$pkgname"/CHANGELOG.rst
+}
+
+sha512sums="
+77473c62581636167e42b1b443f4819b610ed2a8423e4f39b329bf77231ccb44ff135ef79b6305d41b11b715c8c18b49d4d03a2538e4919b77b5aba22e31beb3  goimapnotify-2.3.11.tar.gz
+"

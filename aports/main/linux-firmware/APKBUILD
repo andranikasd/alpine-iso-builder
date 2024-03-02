@@ -1,0 +1,200 @@
+# Contributor: Oliver Smith <ollieparanoid@postmarketos.org>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=linux-firmware
+pkgver=20240115
+pkgrel=0
+pkgdesc="firmware files for linux"
+url="https://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary"
+arch="all"
+license="custom"
+makedepends="libarchive-tools coreutils rdfind"
+provides="linux-firmware-any"
+provider_priority=2
+options="!strip !check !archcheck !spdx"
+
+_rpi_bt=d9d4741caba7314d6500f588b1eaa5ab387a4ff5
+_rpi_brcm=3db4164cfd89e6d9afb7ebc87607b792651512df
+
+source="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-$pkgver.tar.gz
+	bluez-firmware-$_rpi_bt.tar.gz::https://github.com/RPi-Distro/bluez-firmware/archive/$_rpi_bt.tar.gz
+	brcm-firmware-$_rpi_brcm.tar.gz::https://github.com/RPi-Distro/firmware-nonfree/archive/$_rpi_brcm.tar.gz
+	$pkgname-ucode-amd17h-zenbleed-microcode_amd_fam17h.bin::https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/amd-ucode/microcode_amd_fam17h.bin?id=59fbffa9ec8e4b0b31d2d13e715cf6580ad0e99c
+	$pkgname-ucode-amd19h-zenbleed-microcode_amd_fam19h.bin::https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/amd-ucode/microcode_amd_fam19h.bin?id=59fbffa9ec8e4b0b31d2d13e715cf6580ad0e99c
+	"
+
+# Put /lib/firmware/* folders in subpackages
+_folders="3com acenic adaptec advansys airoha amd amd-ucode amdgpu amdtee
+	amlogic amphion ar3k ath10k ath11k ath12k ath6k ath9k_htc atmel atusb av7110
+	bnx2 bnx2x brcm cadence cavium cirrus cis cnm cpia2 cxgb3 cxgb4 cypress dabusb
+	dpaa2 dsp56k e100 edgeport emi26 emi62 ene-ub6250 ess go7007 i915 imx
+	inside-secure intel isci ixp4xx kaweth keyspan keyspan_pda korg libertas
+	liquidio matrox mediatek mellanox meson microchip moxa mrvl mwl8k mwlwifi
+	myricom netronome nvidia nxp ositech powervr qca qcom qed qlogic r128 radeon
+	rockchip rsi rtl8192e rtl_bt rtl_nic rtlwifi rtw88 rtw89 sb16 slicoss sun sxg
+	synaptics tehuti ti ti-connectivity ti-keystone tigon ttusb-budget ueagle-atm
+	vicam vxge wfx yam yamaha"
+
+subpackages="$pkgname-other::noarch $pkgname-none::noarch"
+depends="linux-firmware-other=$pkgver-r$pkgrel"
+for i in $_folders; do
+	subpackages="$pkgname-$i:_folder:noarch $subpackages"
+	depends="$pkgname-$i=$pkgver-r$pkgrel $depends"
+done
+subpackages="amd-ucode::noarch $subpackages"
+
+# Add S5P MFC subpackage separately (it doesn't have its own folder)
+subpackages="$pkgname-s5p-mfc:s5p_mfc:noarch $subpackages"
+depends="$pkgname-s5p-mfc=$pkgver-r$pkgrel $depends"
+
+prepare() {
+	default_prepare
+
+	cp "$srcdir"/$pkgname-ucode-amd17h-zenbleed-microcode_amd_fam17h.bin amd-ucode/microcode_amd_fam17h.bin
+	cp "$srcdir"/$pkgname-ucode-amd19h-zenbleed-microcode_amd_fam19h.bin amd-ucode/microcode_amd_fam19h.bin
+}
+
+package() {
+	## install upstream linux-firmare files
+	make DESTDIR="$pkgdir" FIRMWAREDIR="/lib/firmware" install
+
+	rm -f "$pkgdir/usr/lib/firmware/{Makefile,README,configure,GPL-3}"
+
+	find "$pkgdir" \( -name '*.S' -or -name '*.asm' -or \
+		-name '*.c' -or -name '*.h' -or -name '*.pl' -or \
+		-name 'Makefile' \) -exec rm -- {} \;
+
+	## add original Pi Foundation bluetooth firmware files (supplement to upstream)
+	install -Dm 644 "$srcdir"/bluez-firmware-$_rpi_bt/debian/firmware/broadcom/*.hcd \
+		-t "$pkgdir"/lib/firmware/brcm
+	install -Dm 644 "$srcdir"/bluez-firmware-$_rpi_bt/debian/firmware/synaptics/*.hcd \
+		-t "$pkgdir"/lib/firmware/synaptics
+	# add symlinks from bluez-firmware.links
+	while read -r link_args; do
+		link_args="${link_args/ \/lib/ lib}"
+		link_args="${link_args/\/lib\/firmware\/brcm\//}"
+		( cd "$pkgdir" && ln -sfv ${link_args/\/lib\/firmware\/synaptics\//..\/synaptics\/} )
+	done < "$srcdir/bluez-firmware-$_rpi_bt/debian/bluez-firmware.links"
+
+
+	## add original Pi Foundation brcm wifi firmware files
+	# we can use either the -standard or -minimal 43455 file so use standard by default
+	ln -sfv cyfmac43455-sdio-standard.bin "$srcdir"/firmware-nonfree-$_rpi_brcm/debian/config/brcm80211/cypress/cyfmac43455-sdio.bin
+
+	# install deref's symlinks and copies a whole file, which makes rpi use duplicated
+	# variants specifically from downstream firmware (does not alter base upstream files)
+	install -Dm644 \
+		"$srcdir"/firmware-nonfree-$_rpi_brcm/debian/config/brcm80211/brcm/brcmfmac*raspberrypi* \
+		-t "$pkgdir"/lib/firmware/brcm
+
+	# but 43436/43436s/43456 is not in linux-firmware, so copy it normally
+	cp -a \
+		"$srcdir"/firmware-nonfree-$_rpi_brcm/debian/config/brcm80211/brcm/brcmfmac43456* \
+		"$srcdir"/firmware-nonfree-$_rpi_brcm/debian/config/brcm80211/brcm/brcmfmac43436* \
+		"$pkgdir"/lib/firmware/brcm
+
+	## symlinks for Visionfive1 riscv64 boards, till it fixed upstream
+	ln -sfv ../cypress/cyfmac43430-sdio.bin "$pkgdir"/lib/firmware/brcm/brcmfmac43430-sdio.starfive,visionfive-v1.bin
+
+	dangling=$(cd "$pkgdir" && find . -type l ! -exec test -e {} \; -print)
+	if [ -n "$dangling" ]; then
+		error "dangling symlinks:"
+		echo "$dangling" >&2
+		return 1
+	fi
+}
+
+_folder() {
+	local folder=${subpkgname##linux-firmware-}
+	pkgdesc="firmware files for linux ($folder folder)"
+	depends=""
+	provides="linux-firmware-any"
+	provider_priority=1
+
+	local linkedbins= bin=
+	cd "$pkgdir"
+	# Move things that symlink into the target folder
+	# this fixes the -other deps, because
+	# - there are top-level files that are in -other (non-folder)
+	# - but, they are actually symlinks into .e.g -mediatek
+	# so, -other now depends on -mediatek due to symlink resolution
+	# this moves the symlinks along with the thing they symlink to.
+	linkedbins="$(find lib/firmware -maxdepth 1 -type l -exec sh -c "readlink \$1 | grep -qi $folder && echo \$1" - {} \;)"
+
+	if [ -n "$linkedbins" ]; then
+		for bin in $linkedbins; do
+			amove "$bin"
+		done
+	fi
+
+	# Move /lib/firmware/$folder (case insensitive)
+	amove "$(find lib/firmware -iname "$folder" -type d)"
+}
+
+other() {
+	# Requires subfolders to be split in subpackages
+	local leftover=""
+	local i
+	for i in "$pkgdir"/lib/firmware/*; do
+		[ -d "$i" ] && leftover="$leftover $(basename $i)"
+	done
+	if [ "$leftover" != "" ]; then
+		local fixed
+		error "Not all subfolders have been moved to subpackages!"
+		error "Fix this by adjusting _folders as follows:"
+		fixed="$(echo $_folders$leftover | tr " " "\n" | tr '[:upper:]' '[:lower:]' | sort)"
+		echo "_folders=\"$(printf "%s" "$fixed" | tr "\n" " ")\"" | fold -s
+		return 1
+	fi
+
+	# Move /lib/firmware (which doesn't have subfolders now)
+	pkgdesc="firmware files for linux (uncategorized)"
+	depends=""
+	provides="linux-firmware-any"
+	provider_priority=1
+
+	amove /lib
+}
+
+none() {
+	# dummy package with no firmware
+	pkgdesc="Empty linux firwmare package for those who does not need any firmware"
+	provides="linux-firmware-any"
+	provider_priority=1
+	depends=
+	mkdir -p "$subpkgdir"
+}
+
+ucode() {
+	pkgdesc="Microcode update files for AMD CPUs"
+	provider_priority=
+	provides=
+	depends=
+
+	# build ported from Arch Linux's PKGBUILD
+	mkdir -p "$subpkgdir"/boot
+	mkdir -p "$builddir"/kernel/x86/microcode
+	cat "$pkgdir"/lib/firmware/amd-ucode/microcode_amd*.bin > "$builddir"/kernel/x86/microcode/AuthenticAMD.bin
+	[ -n "$SOURCE_DATE_EPOCH" ] && touch -d @$SOURCE_DATE_EPOCH "$builddir"/kernel/x86/microcode/AuthenticAMD.bin
+	cd "$builddir" && echo kernel/x86/microcode/AuthenticAMD.bin |
+	  bsdtar --uid 0 --gid 0 -cnf - -T - |
+	  bsdtar --null -cf - --format=newc @- > "$subpkgdir"/boot/amd-ucode.img
+}
+
+s5p_mfc() {
+	# This needs its own function as the files are not in a directory,
+	# but rather loose in the main directory.
+	pkgdesc="firmware files for linux (S5P MFC firmware)"
+	provides="linux-firmware-any"
+	provider_priority=1
+	depends=
+
+	amove /lib/firmware/s5p-mfc*.fw
+}
+
+sha512sums="
+0a57cc19b8a98a399857008520a89c46f93a64c3ea20f53ecb84a49c2c127d408ffbc641a81eb440545d4dcfd38175006aa0404e0dddd80e4bace4cc118f5fcd  linux-firmware-20240115.tar.gz
+5f5a7b88e1c517200c534fa51a831f40b898286145c41610c8ea2292d04230337b66c2ed32c1767fd77b309d6be68ea7d5387e1adec1b0b23ff5bca8db6fd4a7  bluez-firmware-d9d4741caba7314d6500f588b1eaa5ab387a4ff5.tar.gz
+3cae750f82f5a8c3e69dc3e0d5e5efc3fbb5cd91736e8f26eb057fa96ab21111304cb73a038ad35af1199837dcc8f47dc3c63eef95716b57923fca91455845d7  brcm-firmware-3db4164cfd89e6d9afb7ebc87607b792651512df.tar.gz
+1e122c69184c2b8b6aa71ad7dc961816cd74070622386af11880333190d5cd13dbac11fe2afe92535b0048e207ab25f5d465b1fc97095e24b3e54ccf6f1ea922  linux-firmware-ucode-amd17h-zenbleed-microcode_amd_fam17h.bin
+75bc2c681606c37fc363c54f318a01d3f25a0265c1690b68e4b294f4dc17bb803a2619dd0d41ac72cb7e58fdc4423ad85979b4c9a1039c1c01c1e86ce140d7b8  linux-firmware-ucode-amd19h-zenbleed-microcode_amd_fam19h.bin
+"

@@ -1,0 +1,44 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=lxqt-admin
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="LXQt system administration tool"
+url="https://github.com/lxqt/lxqt-admin"
+# armhf: blocked by liblxqt and kwindowsystem
+arch="all !armhf"
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake
+	kwindowsystem5-dev
+	liblxqt-dev
+	lxqt-build-tools
+	polkit-qt-dev
+	qt5-qttools-dev
+	samurai
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-lang"
+source="https://github.com/lxqt/lxqt-admin/releases/download/$pkgver/lxqt-admin-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/lxqt/translations/$pkgname-time
+	amove usr/share/lxqt/translations/$pkgname-user
+}
+
+sha512sums="
+f6292006f308cd435243577c5f6cf7e7ebb6cb3ed069b26a3e8cf295e299e482255f1d39801db1e5f94cf780ec6621c8100e2ab5a2c2d5599551f1c7a2c19610  lxqt-admin-1.4.0.tar.xz
+"

@@ -1,0 +1,41 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=qterminal
+pkgver=1.4.0
+pkgrel=0
+pkgdesc="Lightweight Qt-based terminal emulator"
+url="https://github.com/lxqt/qterminal"
+arch="all"
+license="LGPL-2.0-or-later"
+makedepends="
+	cmake samurai lxqt-build-tools qt5-qttools-dev
+	qt5-qtx11extras-dev qtermwidget-dev
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-lang"
+source="https://github.com/lxqt/qterminal/releases/download/$pkgver/qterminal-$pkgver.tar.xz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/$pkgname/translations
+}
+
+sha512sums="
+95c7fffa0a7a91dae338168748e1a9061eb7d393a083a70c59e3324f78ae8200e1e3bb07aa131564b208068e62fc744cc75e96694d70443559c7205ec9f91121  qterminal-1.4.0.tar.xz
+"

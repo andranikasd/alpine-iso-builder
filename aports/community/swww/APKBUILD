@@ -1,0 +1,50 @@
+# Maintainer: Hoang Nguyen <folliekazetani@protonmail.com>
+pkgname=swww
+pkgver=0.8.2
+pkgrel=0
+pkgdesc="Efficient animated wallpaper daemon for Wayland compositors"
+url="https://github.com/LGFae/swww"
+arch="all !s390x" # Build failed
+license="GPL-3.0-or-later"
+makedepends="scdoc cargo libxkbcommon-dev wayland-dev cargo-auditable"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/LGFae/swww/archive/refs/tags/v$pkgver.tar.gz"
+options="!check" # Requires the binary to be available in PATH
+
+prepare() {
+	default_prepare
+
+	# Busybox's basename applet doesn't implement --suffix argument
+	sed -i 's/--suffix/-s/' doc/gen.sh
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+	sh ./doc/gen.sh
+}
+
+package() {
+	for binary in swww swww-daemon; do
+		install -Dm755 target/release/$binary -t "$pkgdir"/usr/bin/
+	done
+
+	install -Dm644 doc/generated/*.1 -t "$pkgdir"/usr/share/man/man1/
+
+	install -Dm644 completions/swww.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/swww
+	install -Dm644 completions/swww.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/swww.fish
+	install -Dm644 completions/_swww \
+		"$pkgdir"/usr/share/zsh/site-functions/_swww
+}
+
+sha512sums="
+6d42ef4ed3d8178e52d545b985d26f0b0cabffc89ee25758da4272aa52f12a2399db57642efbee3d6058a7eef635feeec048495343859e1d6570a3119f18e67c  swww-0.8.2.tar.gz
+"

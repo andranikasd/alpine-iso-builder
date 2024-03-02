@@ -1,0 +1,80 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Contributor: Rasmus Thomsen <oss@cogitir.dev>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=gitlab-runner
+pkgver=16.9.0
+pkgrel=0
+# first 8 chars of the git hash of the release, see
+# https://gitlab.com/gitlab-org/gitlab-runner/-/tags
+# PLEASE update this, since they're used to determine what version of
+# https://hub.docker.com/r/gitlab/gitlab-runner-helper/tags to use
+_gitrev=656c1943
+pkgdesc="GitLab runner for CI/CD jobs"
+url="https://docs.gitlab.com/runner/"
+arch="all"
+license="MIT"
+makedepends="go"
+install="$pkgname.pre-install $pkgname.pre-upgrade"
+pkgusers="gitlab-runner"
+pkggroups="gitlab-runner"
+subpackages="$pkgname-helper $pkgname-openrc"
+source="https://gitlab.com/gitlab-org/gitlab-runner/-/archive/v$pkgver/gitlab-runner-v$pkgver.tar.gz
+	syslog-log-format.patch
+	use-logrus-syslog-hook.patch
+	$pkgname.initd
+	$pkgname.confd
+	$pkgname.logrotate
+	"
+builddir="$srcdir/$pkgname-v$pkgver"
+# check: need to be run in a git repo
+# net: required for pulling dependencies
+options="!check net"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+# secfixes:
+#   15.10.0-r0:
+#     - CVE-2022-1996
+
+build() {
+	local ldflags="
+		-X gitlab.com/gitlab-org/$pkgname/common.NAME=$pkgname
+		-X gitlab.com/gitlab-org/$pkgname/common.VERSION=$pkgver
+		-X gitlab.com/gitlab-org/$pkgname/common.REVISION=$_gitrev
+		-X gitlab.com/gitlab-org/$pkgname/common.BUILT=$(date -u +%Y-%m-%dT%H:%M:%S%z)
+		-X gitlab.com/gitlab-org/$pkgname/common.BRANCH=master
+		"
+	# required for github.com/docker/docker
+	export GO111MODULE=auto
+	go build -ldflags "$ldflags" -o bin/gitlab-runner
+	go build -ldflags "$ldflags" -o bin/gitlab-runner-helper \
+		./apps/gitlab-runner-helper
+}
+
+package() {
+	install -Dm755 bin/gitlab-runner -t "$pkgdir"/usr/bin/
+
+	install -Dm755 "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+	install -Dm644 "$srcdir"/$pkgname.confd "$pkgdir"/etc/conf.d/$pkgname
+	install -Dm644 "$srcdir"/$pkgname.logrotate "$pkgdir"/etc/logrotate.d/$pkgname
+
+	install -d -m750 -o "$pkgusers" -g "$pkggroups" "$pkgdir"/etc/$pkgname
+	install -d -m700 -o "$pkgusers" -g "$pkggroups" "$pkgdir"/var/lib/$pkgname
+}
+
+helper() {
+	pkgdesc="$pkgdesc (helper)"
+
+	install -Dm755 "$builddir"/bin/gitlab-runner-helper -t "$subpkgdir"/usr/bin/
+}
+
+sha512sums="
+0effb66413d6afff4a59ea7bc0f27652188706971c0dc88c9beee5637a523c29768dcaf4ce813d7f1a65ef3d91034804903532294506b2a01731b1c84eeccee7  gitlab-runner-v16.9.0.tar.gz
+c2e2d36714d1f8fc49ed2de6b411a879183b40356af366e9e89e0ee246d0b5400ebbfc598f747e30dec813c8d89399d80a1e8218890baed525136a734e1ca626  syslog-log-format.patch
+30726c362476b9f93b44c44435cd04e8210f04b25f878302c7edeca387094a616af7aa20ece6eb6dcf329a2702ef2079dcc002779deef09d78ecb447253f87bf  use-logrus-syslog-hook.patch
+8cdcea1e07b30b720d0e18a12f06fff69f2a7804d0038b2bfd6a880a5c99eb4b2b06dd8ccd21edc501a2205d89decb176b725211a03253068fa45b6861e75f11  gitlab-runner.initd
+45c3727a4b2544c59db50b3a93d917bbce14441453ebd0b81c981568ccc71338e564213f7bed449f0712fbcfb96ce6e51ac5759d5bde82e3986265e26d9db315  gitlab-runner.confd
+2ddd42622b72135a95ac1c09061b61e73c4f89d4f0a86d1a3c902760d4a5f2c749a04f2d81568c973c83b1aae60ada71360a6bf74a31f8e5d9b10b90af4cdcfe  gitlab-runner.logrotate
+"

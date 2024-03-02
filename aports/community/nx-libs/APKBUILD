@@ -1,0 +1,61 @@
+# Contributor: Jean-Charles de Longueville <jch@hellea.eu>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=nx-libs
+pkgver=3.5.99.27
+pkgrel=0
+pkgdesc="NoMachine libraries (redistributed by x2go)"
+url="http://x2go.org"
+# riscv64 is not supported
+arch="all !riscv64"
+license="GPL-2.0-or-later"
+depends="font-cursor-misc font-misc-misc"
+makedepends="libx11-dev zlib-dev libjpeg-turbo-dev
+	libpng-dev libfontenc-dev linux-headers
+	libxml2-dev xkbcomp-dev imake
+	bash automake autoconf libtool
+	libxext-dev libxdamage-dev libxrandr-dev
+	libxtst-dev pixman-dev gccmakedep
+	libxfont2-dev libxpm-dev libxcomposite-dev
+	libxinerama-dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://github.com/ArcticaProject/nx-libs/archive/$pkgver/nx-libs-$pkgver.tar.gz
+	xf86bigfont.patch"
+
+prepare() {
+	# Every Makefile has /usr/local as PREFIX, so replace that
+	sed -i -e 's,/usr/local,/usr,' nx-X11/config/cf/site.def
+	default_prepare
+}
+
+build() {
+	make -j1 \
+		PREFIX=/usr \
+		USRLIBDIR=/usr/lib \
+		SHLIBDIR=/usr/lib \
+		CONFIGURE="./configure --prefix=/usr --libdir=/usr/lib --includedir=/usr/include"
+}
+
+package() {
+	make -j1 \
+		PREFIX=/usr \
+		DESTDIR="$pkgdir" \
+		NXLIBDIR=/usr/lib/nx \
+		SHLIBDIR=/usr/lib \
+		CONFIGURE="./configure --prefix=/usr --libdir=/usr/lib --includedir=/usr/include" \
+		install
+
+	# remove extras, GL, and other unneeded headers
+	rm -rf "$pkgdir"/usr/include/GL
+	rm -rf "$pkgdir"/usr/include/nx-X11
+	rm -rf "$pkgdir"/usr/include/nx-X11/extensions/XK*.h
+	rm -rf "$pkgdir"/usr/include/nx-X11/extensions/*Xv*.h
+	rm -rf "$pkgdir"/usr/include/nx-X11/extensions/Xres*.h
+	rm -rf "$pkgdir"/usr/include/nx-X11/extensions/XIproto.h
+	rm -rf "$pkgdir"/usr/include/nx-X11/extensions/XI.h
+	rm -rf "$pkgdir"/usr/include/nx-X11/Xtrans
+}
+
+sha512sums="
+bfba1eea6f4debe90fa020276079027c3716daaff91bded72297ecab2a8c9f56d07630ca8bc9084c319d2c674304ad80131190ec1272c161c05221d6f19089d0  nx-libs-3.5.99.27.tar.gz
+904aadbf0200cb8d96e5512bcbccf7da21af553f292ce4af56df035fa33e7e4b98fcf385a281a316d0c533bc2917cc7fde523b8212c8de7f4e825d776a43c576  xf86bigfont.patch
+"

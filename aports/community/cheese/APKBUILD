@@ -1,0 +1,55 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer:
+pkgname=cheese
+pkgver=44.1
+pkgrel=1
+pkgdesc="Take photos and videos with your webcam"
+url="https://wiki.gnome.org/Apps/Cheese"
+# s390x blocked by gnome-desktop
+arch="all !s390x"
+license="GPL-2.0-or-later"
+options="!check" # no testsuite
+depends="gsettings-desktop-schemas"
+makedepends="
+	clutter-dev
+	clutter-gst-dev
+	clutter-gtk-dev
+	docbook-xml
+	docbook-xsl
+	gdk-pixbuf-dev
+	glib-dev
+	gnome-desktop-dev
+	gobject-introspection-dev
+	gst-plugins-bad-dev
+	gstreamer-dev
+	gtk+3.0-dev
+	gtk-doc
+	itstool
+	libcanberra-dev
+	libx11-dev
+	libxslt
+	meson
+	vala
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-libs"
+source="https://download.gnome.org/sources/cheese/${pkgver%.*}/cheese-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+106f02c0bd6e21039e3d1cdbcb8111c8d76638666b3a3ee65bc81295deaf50acf49023f3f7bf2ca244a9b7f4ac95d04fbc5864c1ded8698c52665c23c3640dc1  cheese-44.1.tar.xz
+"

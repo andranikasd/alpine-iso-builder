@@ -1,0 +1,43 @@
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=ccls
+pkgver=0.20230717
+pkgrel=0
+pkgdesc="C/C++/Objective-C language server"
+url="https://github.com/MaskRay/ccls"
+arch="all"
+license="Apache-2.0"
+makedepends="
+	clang-dev
+	clang-static
+	cmake
+	libxml2-dev
+	llvm-dev
+	llvm-gtest
+	llvm-static
+	rapidjson-dev
+	samurai
+	zlib-dev
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/MaskRay/ccls/archive/$pkgver.tar.gz"
+options="!check"  # no tests
+
+build() {
+	CC=clang \
+	CXX=clang++ \
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_C_COMPILER=clang \
+		-DCMAKE_CXX_COMPILER=clang++ \
+		-DCLANG_LINK_CLANG_DYLIB=on \
+		-DLLVM_LINK_LLVM_DYLIB=on
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f0fe31877151b76cabc17aa2ef8d3d87038805fbe43ca807e2e0824e90d952b1f5767f151788480aedf58e2ff569b72978fceeaca6b741b00c643d73f6afb445  ccls-0.20230717.tar.gz
+"

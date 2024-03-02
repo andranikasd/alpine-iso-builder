@@ -1,0 +1,27 @@
+--- a/completion/bash/task.bash
++++ b/completion/bash/task.bash
+@@ -52,4 +52,4 @@
+   __ltrim_colon_completions "$cur"
+ }
+ 
+-complete -F _task task
++complete -F _task go-task
+--- a/completion/fish/task.fish
++++ b/completion/fish/task.fish
+@@ -1,4 +1,4 @@
+-set GO_TASK_PROGNAME task
++set GO_TASK_PROGNAME go-task
+ 
+ function __task_get_tasks --description "Prints all available tasks with their description"
+   # Read the list of tasks (and potential errors)
+--- a/completion/zsh/_task
++++ b/completion/zsh/_task
+@@ -11,7 +11,7 @@
+     local -i enabled=0
+     local taskfile item task desc
+ 
+-    cmd=(task)
++    cmd=(go-task)
+     taskfile="${(v)opt_args[(i)-t|--taskfile]}"
+ 
+     if [[ -n "$taskfile" && -f "$taskfile" ]]; then

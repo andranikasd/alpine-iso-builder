@@ -1,0 +1,64 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-impacket
+_pkgname=impacket
+pkgver=0.11.0
+pkgrel=0
+pkgdesc="Collection of Python3 classes providing access to network packets"
+url="https://github.com/SecureAuthCorp/impacket"
+arch="noarch"
+license="Apache-2.0"
+depends="
+	py3-asn1
+	py3-chardet
+	py3-flask
+	py3-future
+	py3-ldap3
+	py3-openssl
+	py3-pycryptodomex
+	py3-six
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz
+	version.patch
+	"
+builddir="$srcdir"/$_pkgname-$pkgver
+
+replaces="py-impacket" # Backwards compatibility
+provides="py-impacket=$pkgver-r$pkgrel" # Backwards compatibility
+
+# secfixes:
+#   0.9.23-r0:
+#     - CVE-2021-31800
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -m 'not remote'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -r "$pkgdir"/usr/share/doc # LICENSE and README.md
+	# "examples" but imported for cli apps
+	# rm -r "$pkgdir"/usr/lib/python*/site-packages/impacket/examples
+}
+
+sha512sums="
+8bd7baf3c9c4ca826d9bd472bc1842e4fc1b0a9eae643f247606b05f4b375416550b9e4445414ec51e6524422666ce0c869ee63a2aef59451b827feaccb0db7b  impacket-0.11.0.tar.gz
+adf35684d0e6498c6b39edc5a19ee84065d4bd306c5a76565b650ace25fa754e0e505e15aee7a84ac872a29c6bf9c59ea8651a27d0b8cd0dbcb5694f44430c9a  version.patch
+"

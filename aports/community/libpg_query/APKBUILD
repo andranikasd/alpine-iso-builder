@@ -1,0 +1,52 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=libpg_query
+# Keep in mind the aport ruby-pg_query when bumping.
+pkgver=16.5.0.0
+_pkgver=${pkgver/./-}
+pkgrel=0
+pkgdesc="C library for accessing the PostgreSQL parser outside of the server"
+url="https://github.com/pganalyze/libpg_query"
+# armhf,armv7,x86: fails to build
+# riscv64: broken, "unknown type name 'slock_t'"
+arch="all !armhf !armv7 !riscv64 !x86"
+license="BSD-3-Clause"
+makedepends="protobuf-c-dev xxhash-dev"
+subpackages="$pkgname-dbg $pkgname-dev"
+source="https://github.com/pganalyze/libpg_query/archive/$_pkgver/$pkgname-$_pkgver.tar.gz
+	dont-override-opt-level.patch
+	verbose-build.patch
+	unbundle-vendor-deps.patch
+	"
+builddir="$srcdir/$pkgname-$_pkgver"
+
+prepare() {
+	default_prepare
+
+	# Remove vendored libraries.
+	rm -Rf vendor
+}
+
+build() {
+	make build build_shared
+}
+
+check() {
+	case "$CARCH" in
+		# XXX: Ignore errors on 32bit arches,
+		#  see https://github.com/pganalyze/libpg_query/issues/158
+		armhf | armv7 | x86) make test || true;;
+		*) make test;;
+	esac
+}
+
+package() {
+	make install DESTDIR="$pkgdir" prefix=/usr
+}
+
+sha512sums="
+2498d419e870fdd959c721c0ebb9a93714cfd0763bab88bd5b0b3b8ade8590bb1caafaa9d946cdf28b61e7e6dd0d69c711d7ec08a3f31007afab26040d1de079  libpg_query-16-5.0.0.tar.gz
+a3ddc483b23cd25c24c05668f721aa4bb0e862524512078ca4b851c4e7442e4ae3a20dcf20ab8e81fe112eaf35c4866011ad75368172304050c5607967eab2ed  dont-override-opt-level.patch
+ccb32f6b2ba62248a995a2022f6a676b5c664adfd1c7073e706876dd58842dfff770b98b8a811734f0852f215f7d67401111900b5ce2421e2cce2b9c5c329fec  verbose-build.patch
+2bf691b9d1c82579ea8ba97a79c0bcc6777e41c058c8df5ba848c0eeb5c5e5fa0cddf7cdc24d54e0313112f8105c58e8b0b74bbaf50bafb8009d308320ae2888  unbundle-vendor-deps.patch
+"

@@ -1,0 +1,61 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+pkgname=kdeclarative5
+pkgver=5.115.0
+pkgrel=0
+pkgdesc="Provides integration of QML and KDE Frameworks"
+# armhf blocked by qt5-qtdeclarative
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="
+	kconfig5-dev
+	kglobalaccel5-dev
+	kguiaddons5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kio5-dev
+	kpackage5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	libepoxy-dev
+	qt5-qtdeclarative-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	qt5-qttools-dev
+	samurai
+	"
+checkdepends="xvfb-run"
+_repo_url="https://invent.kde.org/frameworks/kdeclarative.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kdeclarative-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+builddir="$srcdir/kdeclarative-$pkgver"
+
+replaces="kdeclarative<=5.110.0-r0"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	cmake --build build
+}
+
+check() {
+	# quickviewsharedengine requires OpenGL
+	xvfb-run ctest --test-dir build --output-on-failure -E "quickviewsharedengine"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+e744d970605de5c0f32485ae471f52950c4af72a7e0e3fc3011b2320f7c951ea3e1a1a80f84916ba0fd1d4019c009b66967af70f06e5aa9ea758189c221310ce  kdeclarative-5.115.0.tar.xz
+"

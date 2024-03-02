@@ -1,0 +1,36 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Contributor:
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=swaybg
+pkgver=1.2.0
+pkgrel=0
+pkgdesc="Wallpaper daemon for Wayland"
+url="https://swaywm.org/"
+license="MIT"
+arch="all"
+makedepends="
+	cairo-dev
+	gdk-pixbuf-dev
+	libxkbcommon-dev
+	meson
+	ninja
+	scdoc
+	wayland-dev
+	wayland-protocols
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/swaywm/swaybg/archive/v$pkgver/swaybg-$pkgver.tar.gz"
+options="!check" # no test suite
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+e0c0d78a1887e8a6ff396305ea717be22ec316cd17ef7e2f61a0fe25f976ff12bb5fd48bf8dc7d99d7c9bf6948b4a00d99bf9ac68021080ae9c393ca84e86e0a  swaybg-1.2.0.tar.gz
+"

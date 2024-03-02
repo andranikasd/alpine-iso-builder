@@ -1,0 +1,73 @@
+# Contributor: rubicon <rubicon@mailo.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=picolisp
+pkgver=23.12
+pkgrel=0
+pkgdesc="Fast, lightweight Lisp interpreter and application server framework"
+url="https://picolisp.com/"
+# x86, armv7, armhf: 64-bits only
+# riscv64: ftbfs
+# s390x: check fails with "ht:Pack -- Undefined"
+arch="all !x86 !armv7 !armhf !riscv64 !s390x"
+license="MIT"
+depends_doc="w3m"
+_llvmver=17
+makedepends="
+	clang$_llvmver
+	libffi-dev
+	llvm$_llvmver-dev
+	openssl-dev
+	readline-dev
+	"
+subpackages="$pkgname-doc $pkgname-bash-completion"
+source="$pkgname-$pkgver.tar.gz::https://software-lab.de/picoLisp-$pkgver.tgz
+	fix-shebang-lines.patch
+	"
+builddir="$srcdir/pil21"
+
+build() {
+	make -C src
+}
+
+check() {
+	./pil test/lib.l -bye +
+}
+
+package() {
+	mkdir -vp "$pkgdir"/usr/bin "$pkgdir"/usr/share
+	ln -sv	../lib/$pkgname/bin/picolisp \
+		../lib/$pkgname/bin/pil \
+		"$pkgdir"/usr/bin/
+	ln -sv	../lib/$pkgname \
+		"$pkgdir"/usr/share/$pkgname
+
+	# add bash completion
+	mkdir -vp "$pkgdir"/usr/share/bash-completion/completions
+	mv -v	lib/bash_completion \
+		"$pkgdir"/usr/share/bash-completion/completions/pil
+
+	# move documentation
+	mkdir -vp "$pkgdir"/usr/share/doc
+	chmod -f 644 doc/*.html loc/*
+	mv -v doc "$pkgdir"/usr/share/doc/$pkgname
+	mv -v COPYING INSTALL README "$pkgdir"/usr/share/doc/$pkgname/
+	rm -vf man/man1/pil.1
+	ln -sv picolisp.1 man/man1/pil.1
+	mv -v man "$pkgdir"/usr/share/
+
+	mkdir -vp "$pkgdir"/usr/lib
+	rm -vf pil vip
+	mv -v "$builddir" "$pkgdir"/usr/lib/$pkgname
+}
+
+doc() {
+	default_doc
+
+	mkdir -vp "$subpkgdir"/usr/lib/$pkgname
+	ln -sv ../../share/doc/$pkgname "$subpkgdir"/usr/lib/$pkgname/doc
+}
+
+sha512sums="
+f86f088bedccf1b23fb844bcad460a7199b4bb50d296fd19604fb9d279deacf38ea5c052ac3f0fff45874b1d2e8b351704ad66802e86c20443b90cb22fc46d2d  picolisp-23.12.tar.gz
+dd05ba8b0a6bb6dd5d2a0c676240e01a37adfb1413520b934cf6adc50eccbeff01189dc50514d46802385b8c2842afd61b8364947e71d15bfc4f7f030cfb448e  fix-shebang-lines.patch
+"

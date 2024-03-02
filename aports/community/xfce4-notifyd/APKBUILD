@@ -1,0 +1,47 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xfce4-notifyd
+pkgver=0.9.4
+pkgrel=0
+pkgdesc="Notification daemon for the xfce desktop"
+url="https://docs.xfce.org/apps/notifyd/"
+arch="all"
+license="GPL-2.0-or-later"
+depends="hicolor-icon-theme"
+makedepends="
+	dbus-glib-dev
+	gtk+3.0-dev
+	libnotify-dev
+	libsexy-dev
+	libxfce4ui-dev
+	libxfce4util
+	sqlite-dev
+	xfce4-panel-dev
+	xfce4-dev-tools
+	xfconf-dev
+	"
+subpackages="$pkgname-lang $pkgname-doc"
+source="https://archive.xfce.org/src/apps/xfce4-notifyd/${pkgver%.*}/xfce4-notifyd-$pkgver.tar.bz2"
+# tests are somewhat interactive and build manual programs
+options="!check"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--libexecdir=/usr/lib/xfce4 \
+		--localstatedir=/var \
+		--disable-static
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	rm -rf "$pkgdir"/usr/lib/systemd
+}
+
+sha512sums="
+d3339ec3555f27e624e643b52ce4de2a0834d38f675b286976abcb4e143cbbb32665b1f36fbff23791c152e1f0616b752a7f049045fc32829c27c0a87d82df94  xfce4-notifyd-0.9.4.tar.bz2
+"

@@ -1,0 +1,71 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+# Maintainer:
+pkgname=aws-crt-cpp
+pkgver=0.26.1
+pkgrel=0
+pkgdesc="C++ wrapper around the aws-c-* libraries. Provides Cross-Platform Transport Protocols and SSL/TLS implementations for C++"
+url="https://github.com/awslabs/aws-crt-cpp"
+# s390x: aws-c-common
+# arm*, ppc64le: aws-c-io
+arch="all !armhf !armv7 !ppc64le !s390x"
+license="Apache-2.0"
+depends_dev="
+	$pkgname=$pkgver-r$pkgrel
+	aws-c-auth-dev
+	aws-c-cal-dev
+	aws-c-common-dev
+	aws-c-compression-dev
+	aws-c-event-stream-dev
+	aws-c-http-dev
+	aws-c-io-dev
+	aws-c-mqtt-dev
+	aws-c-s3-dev
+	aws-c-sdkutils-dev
+	aws-checksums-dev
+	s2n-tls-dev
+	"
+makedepends="
+	$depends_dev
+	cmake
+	samurai
+	"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/awslabs/aws-crt-cpp/archive/refs/tags/v$pkgver.tar.gz"
+options="net"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	CFLAGS="$CFLAGS -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja\
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=/usr/lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DBUILD_DEPS=False \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure -j${JOBS:-2}
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	# just test binaries
+	# shellcheck disable=2115
+	rm -rf "$pkgdir"/usr/bin/
+}
+
+dev() {
+	default_dev
+	amove usr/lib/aws-crt-cpp
+}
+
+sha512sums="
+f48c955fb1e9feef2a963572ed1bdc49e52f5ea6b3150d2f49f1c6d94e58ecd016ff020bf8ee272e5c192f0e214dbf8e47aad5f4fa722d4d207c170b029b3c80  aws-crt-cpp-0.26.1.tar.gz
+"

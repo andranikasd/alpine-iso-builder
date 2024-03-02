@@ -1,0 +1,37 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: team/gnome <ablocorrea@hotmail.com>
+pkgname=gnome-shell-extensions
+pkgver=45.2
+pkgrel=0
+pkgdesc="collection of extensions for GNOME Shell"
+url="https://apps.gnome.org/Extensions"
+arch="noarch"
+license="GPL-2.0-or-later"
+makedepends="
+	gettext-dev
+	glib-dev
+	meson
+	sassc
+	"
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/gnome-shell-extensions/${pkgver%.*}/gnome-shell-extensions-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Dextension_set=all \
+		-Dclassic_mode=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+eda1f59f88374c67ae82bb0739dbb4e628e61018701d764d89e559f14823a4a0887a967f40b0a5c3824d4054721bb387c130430f6ac1ab81c5ab585972e3909f  gnome-shell-extensions-45.2.tar.xz
+"

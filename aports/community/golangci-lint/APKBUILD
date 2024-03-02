@@ -1,0 +1,55 @@
+# Maintainer: Hoang Nguyen <folliekazetani@protonmail.com>
+pkgname=golangci-lint
+pkgver=1.56.2
+pkgrel=0
+pkgdesc="Fast linters runner for Go"
+url="https://golangci-lint.run/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="go"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-zsh-completion
+	$pkgname-fish-completion
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/golangci/golangci-lint/archive/refs/tags/v$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	local _goldflags="
+	-X main.version=$pkgver
+	-X main.commit=AlpineLinux
+	-X main.date=$(date -u "+%Y-%m-%dT%TZ" ${SOURCE_DATE_EPOCH:+-d @$SOURCE_DATE_EPOCH})
+	"
+	go build -v -ldflags "$_goldflags" ./cmd/golangci-lint
+
+	for shell in bash fish zsh; do
+		./golangci-lint completion $shell > golangci-lint.$shell
+	done
+}
+
+check() {
+	# bidichk linter test has a problem parsing the unicode character
+	# govet_fieldalignment, maligned fail on 32-bit platforms
+	# shellcheck disable=2046
+	GOLANGCI_LINT_INSTALLED=true GL_TEST_RUN=1 \
+		go test -skip '^TestSourcesFromTestdata/(bidichk|govet_fieldalignment|maligned)\.go$' ./...
+}
+
+package() {
+	install -Dm755 golangci-lint -t "$pkgdir"/usr/bin
+
+	install -Dm644 golangci-lint.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/golangci-lint
+	install -Dm644 golangci-lint.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_golangci-lint
+	install -Dm644 golangci-lint.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/golangci-lint.fish
+}
+
+sha512sums="
+ab768d58f0888cbda2728c90ac9063f4f15b4fd0e13eefc23a0af4994801860ce9ed9585903678f0e917381f56d8db3941af59c32b287b5e0e58177bff29f4d1  golangci-lint-1.56.2.tar.gz
+"

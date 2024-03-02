@@ -1,0 +1,42 @@
+# Contributor: Kaarle Ritvanen <kunkku@alpinelinux.org>
+# Maintainer: Kaarle Ritvanen <kunkku@alpinelinux.org>
+pkgname=py3-django-oscar
+pkgver=3.2.2
+pkgrel=0
+pkgdesc="Domain-driven e-commerce for Django"
+url="http://oscarcommerce.com/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="py3-babel py3-django py3-django-extra-views py3-django-haystack
+	py3-django-phonenumber-field py3-django-sorl-thumbnail
+	py3-django-tables2 py3-django-treebeard py3-django-widget-tweaks
+	py3-factory-boy py3-pillow py3-purl"
+makedepends="gettext py3-setuptools"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/d/django-oscar/django-oscar-$pkgver.tar.gz
+"
+builddir="$srcdir/django-oscar-$pkgver"
+
+replaces="py-django-oscar" # Backwards compatibility
+provides="py-django-oscar=$pkgver-r$pkgrel" # Backwards compatibility
+
+prepare() {
+	default_prepare
+	django-admin compilemessages
+}
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py check
+}
+
+package() {
+	python3 setup.py install --root "$pkgdir"
+}
+
+sha512sums="
+2577f771efc3534a0c35ee4999c17c68941fcb5dfd6001b28b9d5dbcb5151bdb0c22f614bf9e83983f5d9b7df1bf7927e178dbff9db07c0584a98fca5050e5b1  django-oscar-3.2.2.tar.gz
+"

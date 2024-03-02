@@ -1,0 +1,31 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=alpine-conf
+pkgver=3.17.2
+pkgrel=0
+pkgdesc="Alpine configuration management scripts"
+url="https://git.alpinelinux.org/alpine-conf/about"
+arch="all"
+license="MIT"
+depends="openrc>=0.24.1-r6 busybox>=1.26.1-r3"
+checkdepends="kyua"
+source="https://gitlab.alpinelinux.org/alpine/alpine-conf/-/archive/$pkgver/alpine-conf-$pkgver.tar.gz
+	"
+
+build() {
+	make VERSION=$pkgver-r$pkgrel
+}
+
+package() {
+	make install PREFIX= DESTDIR="$pkgdir"
+	for i in commit exclude include status update; do
+		ln -s lbu "$pkgdir"/sbin/lbu_$i
+	done
+}
+
+check() {
+	make check
+}
+
+sha512sums="
+4459ba5004a9c4272e606af9f4c21119d3c8ab8f55543c79a7b3469f0574232cf286cbb5887f338f1371d013236522f630bdf3f096c62fb886ce226d4065f386  alpine-conf-3.17.2.tar.gz
+"

@@ -1,0 +1,94 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=librsvg
+pkgver=2.57.1
+pkgrel=0
+pkgdesc="SAX-based renderer for SVG files into a GdkPixbuf"
+url="https://wiki.gnome.org/Projects/LibRsvg"
+arch="all"
+license="LGPL-2.1-or-later"
+depends_dev="rsvg-convert=$pkgver-r$pkgrel"
+makedepends="
+	bzip2-dev
+	cairo-dev
+	cargo
+	font-dejavu
+	gi-docgen
+	glib-dev
+	gobject-introspection-dev
+	gtk+3.0-dev
+	libgsf-dev
+	py3-docutils
+	rust
+	vala
+	"
+install="$pkgname.post-upgrade"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-doc
+	rsvg-convert:_convert
+	rsvg-convert-doc:_convert_doc:noarch
+	"
+source="https://download.gnome.org/sources/librsvg/${pkgver%.*}/librsvg-$pkgver.tar.xz"
+# tests are very dependent on versions of pango/cairo/freetype
+options="!check net"
+
+# secfixes:
+#   2.56.3-r0:
+#     - CVE-2023-38633
+#   2.50.4-r0:
+#     - RUSTSEC-2020-0146
+#   2.46.2-r0:
+#     - CVE-2019-20446
+
+export RUSTFLAGS="$RUSTFLAGS -C debuginfo=1"
+
+prepare() {
+	default_prepare
+	git init -q
+
+	# XXX: Hack to prevent rebuild on install.
+	sed -Ei \
+		-e 's/^(install-binSCRIPTS:) \$\(bin_SCRIPTS\)/\1/' \
+		-e 's/^(install-am:) all-am/\1/' \
+		Makefile.in
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--libexecdir=/usr/lib/$pkgname \
+		--disable-static \
+		--enable-vala
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+_convert() {
+	pkgdesc="CLI utility to convert SVG files to PNG format"
+
+	amove usr/bin/rsvg-convert
+}
+
+_convert_doc() {
+	pkgdesc="CLI utility to convert SVG files to PNG format (documentation)"
+	depends=""
+	install_if="docs ${subpkgname%-doc}=$pkgver-r$pkgrel"
+
+	pkgdir="$pkgdir-doc" amove usr/share/man/man1/rsvg-convert.*
+}
+
+sha512sums="
+e9a11cf93275c42446d9e5fd26603419be19b3c02f1dabab0ce97f1e98b8245c39bd1fbff7b6ab2b30640d16a5ecdfd381c17e289c20828eea5d4d086e8d56c6  librsvg-2.57.1.tar.xz
+"

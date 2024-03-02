@@ -1,0 +1,46 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=folks
+pkgver=0.15.7
+pkgrel=0
+pkgdesc="GObject Library to aggregate people into metacontacts"
+url="https://wiki.gnome.org/Projects/Folks"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	evolution-data-server-dev
+	gobject-introspection-dev
+	gtk-doc
+	libgee-dev
+	meson
+	py3-dbusmock
+	py3-setuptools
+	python3
+	readline-dev
+	telepathy-glib-dev
+	tracker-dev
+	vala
+	"
+options="!check" # Can only be run against installed instance
+subpackages="$pkgname-devhelp $pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://download.gnome.org/sources/folks/${pkgver%.*}/folks-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Ddocs=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+52657b45678aa2418a44b0c8d332ac207eff18b02ca5c0d1491bdf8bae6552f30f2b6435804adc2a5fa66997f2cea09bdfe399dfaf52f3d8b7a5bde11b137c35  folks-0.15.7.tar.xz
+"

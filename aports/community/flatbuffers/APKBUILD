@@ -1,0 +1,75 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=flatbuffers
+pkgver=23.5.26
+pkgrel=0
+pkgdesc="Memory Efficient Serialization Library"
+url="https://google.github.io/flatbuffers/"
+# armhf: blocked by bus error in tests
+# s390x: segfaults in tests
+# x86: fails trivial tests
+arch="all !x86 !armhf !s390x"
+license="Apache-2.0"
+depends_dev="flatc=$pkgver-r$pkgrel"
+makedepends="
+	cmake
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	samurai
+	"
+subpackages="$pkgname-dev flatc py3-$pkgname-pyc py3-$pkgname:py3"
+source="flatbuffers-$pkgver.tar.gz::https://github.com/google/flatbuffers/archive/v$pkgver.tar.gz
+	locale-headers.patch
+	"
+
+# Bus error in armv7 as well but it has downstream users
+case "$CARCH" in
+	armv7) options="!check"
+esac
+
+# secfixes:
+#   0:
+#     - CVE-2020-35864
+
+build() {
+	cmake -B . -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DFLATBUFFERS_BUILD_SHAREDLIB=ON \
+		-DFLATBUFFERS_BUILD_FLATLIB=OFF
+	cmake --build .
+
+	cd python
+	gpep517 build-wheel \
+		--wheel-dir ../build/dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install .
+
+	python3 -m installer -d "$pkgdir" \
+		build/dist/*.whl
+}
+
+flatc() {
+	pkgdesc="$pkgdesc (compiler)"
+
+	amove usr/bin
+}
+
+py3() {
+	pkgdesc="$pkgdesc (python bindings)"
+	amove usr/lib/python3*
+}
+
+sha512sums="
+cd0a5efad8016e1217d01a181d6b02e546f5693c6412361bfeaee820d5dfe5e2a424cee1963270e851c1a4f936ae8a0032a51c5bb16ee19313e0ecc77dc4ba31  flatbuffers-23.5.26.tar.gz
+a5460ec027f2884f5801e01d3ef7f831be3ecd92fc9586ab33764467e3de79855f87c4b639806ad6884ec8eac41d6d6f6204644c84ddbcea9fba3798943b1e57  locale-headers.patch
+"

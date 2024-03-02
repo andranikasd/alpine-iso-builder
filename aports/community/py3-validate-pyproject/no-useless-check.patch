@@ -1,0 +1,10 @@
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -19,6 +19,6 @@
+ ignore_missing_imports = true
+ 
+ [tool.pytest.ini_options]
+-addopts = ["--cov", "validate_pyproject", "--cov-report", "term-missing", "--verbose", "--strict-markers"]
++addopts = ["--verbose", "--strict-markers"]
+ norecursedirs = ["dist", "build", ".tox"]
+ testpaths = ["tests"]

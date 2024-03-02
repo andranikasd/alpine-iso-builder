@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=mlite
+pkgver=0.4.0
+pkgrel=0
+pkgdesc="Useful classes originating from MeeGo Touch"
+url="https://github.com/sailfishos/mlite"
+arch="all"
+license="LGPL-2.1-only"
+depends_dev="dconf-dev"
+makedepends="$depends_dev
+	qt5-qtbase-dev
+	qt5-qttools-dev
+	"
+subpackages="$pkgname-dev"
+source="https://github.com/sailfishos/mlite/archive/$pkgver/mlite-$pkgver.tar.gz"
+
+build() {
+	qmake-qt5
+	make
+}
+
+package() {
+	INSTALL_ROOT="$pkgdir" make install
+
+	# Remove installed tests
+	rm -r "$pkgdir/opt"
+}
+sha512sums="
+c271081e219bacf53224c583b53e38a2ca32174e91b4485b529a21dfe179f7306c2aed0a65091cbd8b60d1fe2971d59fd264dbc8bec32461525eb01d39ab25ee  mlite-0.4.0.tar.gz
+"

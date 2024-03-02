@@ -1,0 +1,50 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libedit
+pkgver=20230828.3.1
+_ver=${pkgver/./-}
+pkgrel=4
+pkgdesc="BSD line editing library"
+url="https://www.thrysoee.dk/editline"
+arch="all"
+license="BSD-3-Clause"
+depends_dev="bsd-compat-headers ncurses-dev"
+makedepends_host="$depends_dev"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+source="https://www.thrysoee.dk/editline/libedit-$_ver.tar.gz"
+builddir="$srcdir"/libedit-$_ver
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	# Prevent conflict with editline-doc and readline-doc
+	mv "$pkgdir"/usr/share/man/man3/editline.3 \
+		"$pkgdir"/usr/share/man/man3/libedit.3
+
+	# update symlinks
+	find "$pkgdir"/usr/share/man/man3/ -type l | while IFS= read -r path; do
+		[ "$(readlink "$path")" != 'editline.3.gz' ] && continue
+		echo ln -s -f -T -- 'libedit.3.gz' "$path"
+	done
+
+	rm "$pkgdir"/usr/share/man/man3/history.3*
+}
+
+sha512sums="
+c7232376ef1bc128ed79f950a5f1f207f874011218682d7e6186f76443927df5483b46c4daa8cf02e327079259aee1a56e2b791aa682491eb802d90ff8940cca  libedit-20230828-3.1.tar.gz
+"

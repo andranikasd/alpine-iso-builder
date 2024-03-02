@@ -1,0 +1,35 @@
+# Contributor: A. Wilcox <awilfox@adelielinux.org>
+# Maintainer:
+pkgname=libpipeline
+pkgver=1.5.7
+pkgrel=0
+pkgdesc="C pipeline manipulation library"
+url="http://libpipeline.nongnu.org/"
+arch="all"
+license="GPL-3.0-or-later"
+checkdepends="check-dev"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://download.savannah.nongnu.org/releases/libpipeline/libpipeline-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+check() {
+	make check
+}
+
+sha512sums="
+bb3be954f5d826cef805f85d65759fb197c31adf80d92360c7d0caa486e0d4877510681390ca01c028b6e805f968f14e8bf4b3eca02e429529031787e7f14d84  libpipeline-1.5.7.tar.gz
+"

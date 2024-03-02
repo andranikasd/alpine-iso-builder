@@ -1,0 +1,41 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=nuspell
+pkgver=5.1.4
+pkgrel=1
+pkgdesc="Free and open source C++ spell checking library"
+url="https://nuspell.github.io/"
+arch="all"
+license="LGPL-3.0-or-later"
+makedepends="cmake icu-dev ronn samurai"
+checkdepends="catch2 icu-data-full"
+subpackages="$pkgname-dev $pkgname-libs $pkgname-doc"
+source="https://github.com/nuspell/nuspell/archive/v$pkgver/nuspell-$pkgver.tar.gz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		$CMAKE_CROSSOPTS
+	cmake --build build
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f4119b3fe5944be8f5bc35ccff8d7a93b0f4fa9f129bc97a7b96879a11b5b35bd714b41dd209267417e94c5fed45fd3a74b349f94424f4b90bde07d9694d1d7d  nuspell-5.1.4.tar.gz
+"

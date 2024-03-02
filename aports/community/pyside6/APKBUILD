@@ -1,0 +1,116 @@
+# Contributor: Luca Weiss <luca@z3ntu.xyz>
+# Maintainer:
+pkgname=pyside6
+pkgver=6.6.0
+pkgrel=0
+_llvmver=17
+pkgdesc="Enables the use of Qt6 APIs in Python applications"
+url="https://doc.qt.io/qtforpython-6/"
+arch="all"
+license="LGPL-3.0-only AND GPL-2.0-only"
+makedepends="
+	bash
+	clang$_llvmver-dev
+	clang$_llvmver-extra-tools
+	clang$_llvmver-static
+	cmake
+	llvm$_llvmver-dev
+	llvm$_llvmver-gtest
+	llvm$_llvmver-static
+	py3-numpy-dev
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	qt6-qtbase-dev
+	qt6-qtcharts-dev
+	qt6-qtconnectivity-dev
+	qt6-qtdatavis3d-dev
+	qt6-qtdeclarative-dev
+	qt6-qthttpserver-dev
+	qt6-qtmultimedia-dev
+	qt6-qtnetworkauth-dev
+	qt6-qtpositioning-dev
+	qt6-qtquick3d-dev
+	qt6-qtremoteobjects-dev
+	qt6-qtscxml-dev
+	qt6-qtsensors-dev
+	qt6-qtserialport-dev
+	qt6-qtspeech-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	qt6-qtwebchannel-dev
+	qt6-qtwebsockets-dev
+	samurai
+	"
+subpackages="
+	py3-pyside6:pyside
+	py3-shiboken6:pyshiboken
+	$pkgname-dev
+	"
+source="$pkgver-$pkgname.tar.xz::https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-$pkgver-src/pyside-setup-everywhere-src-$pkgver.tar.xz
+	sane-directory.patch
+	"
+builddir="$srcdir/pyside-setup-everywhere-src-${pkgver%.*}"
+options="!check" # Tests fail
+
+case "$CARCH" in
+x86)
+	;;
+*)
+	makedepends="$makedepends qt6-qt3d-dev"
+	;;
+esac
+
+build() {
+	export LLVM_INSTALL_DIR=/usr/lib/llvm$_llvmver
+	export SETUPTOOLS_USE_DISTUTILS=stdlib
+	CFLAGS="$CFLAGS $(pkg-config --cflags python3-embed) -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -I/usr/lib/llvm$_llvmver/include -flto=auto" \
+	cmake -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_SKIP_RPATH=ON \
+		-DBUILD_SHARED_LIBS=True \
+		-DSHIBOKEN_PYTHON_LIBRARIES="$(pkg-config --libs python3-embed)" \
+		-DPYTHON_EXECUTABLE=/usr/bin/python3 \
+		-DBUILD_TESTS=OFF
+
+	PYTHONPATH="$PWD/build/sources" \
+	cmake --build build
+}
+
+package() {
+	export SETUPTOOLS_USE_DISTUTILS=stdlib
+	DESTDIR="$pkgdir" cmake --install build/sources/pyside6
+	DESTDIR="$pkgdir" cmake --install build/sources/shiboken6
+
+	# Install egg info
+	export PATH="/usr/lib/qt6/bin:$PATH"
+	local pythonpath="$(python3 -c "from sysconfig import get_path; print(get_path('platlib'))")"
+	python3 setup.py egg_info --build-type=pyside6
+	python3 setup.py egg_info --build-type=shiboken6
+	python3 setup.py egg_info --build-type=shiboken6-generator
+	cp -r PySide6.egg-info "$pkgdir/$pythonpath"
+	cp -r shiboken6*.egg-info "$pkgdir/$pythonpath"
+}
+
+pyshiboken() {
+	pkgdesc="qt shiboken6 python module"
+
+	amove usr/bin # shiboken6 build tool
+	amove usr/lib/libshiboken6* # python object
+	amove usr/lib/python3.*/site-packages/shiboken6*
+}
+
+pyside() {
+	pkgdesc="qt pyside6 python module"
+
+	amove usr/lib/libpyside6* # python object
+	amove usr/lib/python3.*/site-packages/PySide6*
+	amove usr/share/PySide6
+}
+
+sha512sums="
+58463e9b08ee6264d05293d25aa6e41b091016489abf513fc8303e5cccde26af1a24bf9520a94fad4fdc679bf367eb8c6b3d84a21c6c175dd1382cd1ca32b8ae  6.6.0-pyside6.tar.xz
+8e1edc46e18d2f1643b4bfb3aa3fc7d3af6255d8da6a5a87e212545262b826908d47f31c0fd23966b70765d91cedd63c5d7aa365c06f8916db621be44d212970  sane-directory.patch
+"

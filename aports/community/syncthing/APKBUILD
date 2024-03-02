@@ -1,0 +1,96 @@
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=syncthing
+pkgver=1.27.3
+pkgrel=0
+pkgdesc="Open Source Continuous File Synchronization"
+url="https://syncthing.net/"
+arch="all"
+license="MPL-2.0"
+pkgusers="$pkgname"
+pkggroups="$pkgname"
+makedepends="go"
+install="$pkgname.pre-install"
+subpackages="$pkgname-doc $pkgname-utils $pkgname-openrc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/syncthing/syncthing/archive/v$pkgver.tar.gz
+	only-test-with-race-when-provided.patch
+	$pkgname.initd
+	"
+options="chmod-clean"
+
+# secfixes:
+#   1.15.1-r0:
+#     - CVE-2021-21404
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+case "$CARCH" in
+# arm: oom on tests
+# s390x: tests time out
+arm*|s390x) options="$options !check" ;;
+esac
+
+build() {
+	# Build syncthing + server utils
+	local cmd
+	for cmd in syncthing stdiscosrv strelaypoolsrv strelaysrv; do
+		echo "Compiling $cmd"
+		go run build.go -no-upgrade -version=v$pkgver install $cmd
+	done
+}
+
+check() {
+	# shellcheck disable=2046
+	# very flake
+	go test $(go list ./lib/... ./cmd/... | grep -Ev '(lib/model)')
+}
+
+package() {
+	install -d -o $pkgname -g $pkgname "$pkgdir"/var/lib/$pkgname
+	install -D -m755 "$builddir"/bin/$pkgname "$pkgdir"/usr/bin/$pkgname
+	install -D -m755 "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
+
+	# Desktop files so people in Desktop Environments can put them on Autostart
+	install -Dm0644 etc/linux-desktop/*.desktop -t "$pkgdir"/usr/share/applications
+
+	local i
+	for i in 32 64 128 256 512; do
+		install -Dm644 "$builddir"/assets/logo-"$i".png \
+			"$pkgdir"/usr/share/icons/hicolor/"$i"x"$i"/apps/$pkgname.png
+	done
+	install -Dm644 "$builddir"/assets/logo-only.svg \
+		"$pkgdir"/usr/share/icons/hicolor/scalable/apps/$pkgname.svg
+
+	# man pages
+	cd "$builddir/man"
+	local file
+	for file in *.1; do
+		install -Dm644 "$file" "$pkgdir"/usr/share/man/man1/"$file"
+	done
+	for file in *.5; do
+		install -Dm644 "$file" "$pkgdir"/usr/share/man/man5/"$file"
+	done
+	for file in *.7; do
+		install -Dm644 "$file" "$pkgdir"/usr/share/man/man7/"$file"
+	done
+}
+
+utils() {
+	cd "$builddir/bin"
+	pkgdesc="Syncthing server utilities"
+	for i in *; do
+		if ! [ "$i" = "$pkgname" ]; then
+			install -Dm 755 "$builddir"/bin/"$i" "$subpkgdir"/usr/bin/"$i"
+		fi
+	done
+}
+
+sha512sums="
+b23b20aca03324b296fedbaf6d968b14ae8d91c55d97b7d849ada747aafbfc5e844b1a555e0b647873e7dcfc3e52ef39e1cf32c7bc59708e46bd9f3a779e99c9  syncthing-1.27.3.tar.gz
+81bcb6b2e0956624b596201d1de24a3b6fcb10d08761f2c426081350b611295a7f4d47775d175f2ee5dbbb289b98bc022389fc9992f0d31bcdbfde855ceafaf8  only-test-with-race-when-provided.patch
+466ab936d6ea52dfecd12c4795d9cf0a5a5c8f8a1910d8687ecaacdd03398c391589f43114244524127bedf0d87f5017ebde531b72308d4c38e44ff0630b348c  syncthing.initd
+"

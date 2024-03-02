@@ -1,0 +1,30 @@
+# Contributor: 6543 <6543@obermui.de>
+# Maintainer: 6543 <6543@obermui.de>
+pkgname=nodeinfo
+pkgver=0.3.1
+pkgrel=1
+pkgdesc="A command line tool to query nodeinfo based on a given domain"
+url="https://codeberg.org/thefederationinfo/nodeinfo-go"
+license="MIT"
+arch="all"
+makedepends="go"
+source="$pkgname-$pkgver.tar.gz::https://codeberg.org/thefederationinfo/nodeinfo-go/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname"
+options="chmod-clean !check"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	cd $pkgname-go/cli
+	go build -tags extension -o $pkgname .
+}
+
+package() {
+	install -Dm755 $builddir-go/cli/$pkgname "$pkgdir"/usr/bin/$pkgname
+}
+
+sha512sums="
+eef41264f749a6127401e568398e75baa44a734b8dbf4895ba73ed9e5286020d32f59a4bf6352155bcd9053a40e51c2fa8220690c23b63bce4fa01f5b8a86f48  nodeinfo-0.3.1.tar.gz
+"

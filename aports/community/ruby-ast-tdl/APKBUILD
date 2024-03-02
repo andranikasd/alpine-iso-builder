@@ -1,0 +1,41 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=ruby-ast-tdl
+_gemname=${pkgname#ruby-}
+pkgver=0.2.2
+pkgrel=2
+pkgdesc="Training Description Language for Artificial Sport Trainer"
+url="https://github.com/firefly-cpp/ast-tdl"
+arch="noarch"
+license="MIT"
+depends="ruby ruby-enum"
+checkdepends="ruby-minitest"
+source="$pkgname-$pkgver.tar.gz::https://github.com/firefly-cpp/$_gemname/archive/$pkgver/$_gemname-$pkgver.tar.gz"
+builddir="$srcdir/$_gemname-$pkgver"
+
+build() {
+	gem build $_gemname.gemspec
+}
+
+check() {
+	ruby test/test_ast_tdl.rb
+}
+
+package() {
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
+
+	gem install --local \
+		--install-dir "$gemdir" \
+		--ignore-dependencies \
+		--no-document \
+		--verbose \
+		$_gemname
+
+	# Remove unnecessary files.
+	cd "$gemdir"
+	rm -r cache/ build_info/ doc/
+}
+
+sha512sums="
+798adc6e4634ec34adb5b1ec7c630a52f1287d620887eef00ebd18c36f69605d8cfa67186a548028cdee0fa124dd3c464829f298ced75d0e35892d93184fc99b  ruby-ast-tdl-0.2.2.tar.gz
+"

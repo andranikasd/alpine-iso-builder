@@ -1,0 +1,74 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Celeste <cielesti@protonmail.com>
+# Contributor: Andrei Jiroh Eugenio Halili <ajhalili2006@gmail.com>
+# Maintainer: Andrei Jiroh Eugenio Halili <ajhalili2006@gmail.com>
+pkgname=github-cli
+pkgver=2.44.1
+pkgrel=0
+pkgdesc="CLI for dealing with GitHub"
+options="net" # Need to fetch modules
+url="https://cli.github.com"
+arch="all"
+license="MIT"
+depends="git"
+makedepends="go"
+checkdepends="openssh-keygen openssh-client"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/cli/cli/archive/v$pkgver/github-cli-$pkgver.tar.gz
+	TestHTTPClientSanitizeJSONControlCharactersC0.patch
+	no-ignore-goflags.patch
+	"
+builddir="$srcdir/cli-$pkgver"
+
+case $CARCH in
+	ppc64le) export CGO_ENABLED=0 ;;
+	*) ;;
+esac
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+prepare() {
+	default_prepare
+
+	# TODO: These tests invoke the TTY and our container *really* does not like that
+	# Copied from https://github.com/archlinux/svntogit-community/blob/packages/github-cli/trunk/PKGBUILD
+	rm pkg/cmd/auth/login/login_test.go
+}
+
+build() {
+	CGO_CPPFLAGS="$CPPFLAGS" \
+	CGO_CFLAGS="$CFLAGS" \
+	CGO_CXXFLAGS="$CXXFLAGS" \
+	CGO_LDFLAGS="$LDFLAGS" \
+	\
+	make GH_VERSION="v$pkgver" bin/gh manpages
+	bin/gh completion -s bash | install -Dm0644 /dev/stdin \
+		share/bash-completion/completions/gh
+	bin/gh completion -s zsh | install -Dm0644 /dev/stdin \
+		share/zsh/site-functions/_gh
+}
+
+check() {
+	export TZ=Europe/London
+	# skip tests that fail in official CI
+	export GITHUB_ACTIONS=true
+	go test ./...
+}
+
+package() {
+	install -Dm755 bin/gh "$pkgdir"/usr/bin/gh
+
+	mkdir -p "$pkgdir"/usr
+	cp -r share "$pkgdir"/usr
+}
+
+sha512sums="
+a40ae60007b816eabb4c8aad6522dd7bb230d88fbbd067fc2a23a777d4cf9e510bccbaa35425e747a0730f7dddf46e285e13ee4c683929cb78cade722563a724  github-cli-2.44.1.tar.gz
+51f81bb3a90e3b38e3580ad856f9248a3407b161eb57730b1ae049b014c7247af2d38f162553437934e8b357303a8b2b92dad5a62854f3145d57ff898d733c5f  TestHTTPClientSanitizeJSONControlCharactersC0.patch
+57be81e57c0bb5c36e07b6ff2aab661f1a9cd0bbab3ef159c24d59098451858c44fce09d2f5eb86380044568a6acc46ed65b56a87f5a3dc4057d5579e8f420aa  no-ignore-goflags.patch
+"

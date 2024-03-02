@@ -1,0 +1,40 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-rarfile
+_pyname=rarfile
+pkgver=4.1
+pkgrel=0
+pkgdesc="RAR archive reader"
+url="https://github.com/markokr/rarfile"
+arch="noarch"
+license="ISC"
+depends="python3"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest unrar libarchive-tools"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/r/rarfile/rarfile-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+options="!check" # tests depend on non-free unrar package
+
+replaces="py-rarfile" # Backwards compatibility
+provides="py-rarfile=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	# unar is not packaged in Alpine
+	pytest -k "not test_unar_tool"
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+ca3ac26e02b8d7770c43fe70a06cf42b2183a34846d59c79d3478651e9d7ffc022fe7336be44b8df8fa6f0789bae055c1d057c21d87af78acccc43a927fd02e2  rarfile-4.1.tar.gz
+"

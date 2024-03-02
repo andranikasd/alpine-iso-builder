@@ -1,0 +1,27 @@
+# Maintainer: Dekedro <dekedro@tankers.xyz>
+pkgname=hydroxide
+pkgver=0.2.28
+pkgrel=2
+pkgdesc="Third-party, open-source ProtonMail CardDAV, IMAP and SMTP bridge"
+url="https://github.com/emersion/hydroxide"
+license="MIT"
+arch="all !riscv64" # failure to build github.com/boltdb/bolt
+makedepends="go"
+options="net !check" # no tests
+source="https://github.com/emersion/hydroxide/releases/download/v$pkgver/hydroxide-$pkgver.tar.gz"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build ./cmd/hydroxide
+}
+
+package() {
+	install -Dm755 hydroxide  -t "$pkgdir"/usr/bin/
+}
+
+sha512sums="
+55472d5f081eb2827cd37ebb02e66c5831cfde7f375c1800142cb888837bb05ae07da873ddca33b4b83a0ed2adb4587d90d43e05c1478e2696de9b7871e213f0  hydroxide-0.2.28.tar.gz
+"

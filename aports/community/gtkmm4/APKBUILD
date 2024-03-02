@@ -1,0 +1,50 @@
+# Contributor: Leonardo Arena <rnalrd@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=gtkmm4
+pkgver=4.10.0
+pkgrel=3
+pkgdesc="C++ wrappers for GTK 4"
+url="https://www.gtkmm.org/"
+arch="all"
+license="LGPL-2.1-or-later"
+makedepends="
+	atkmm2.36-dev
+	cairomm1.16-dev
+	doxygen
+	gdk-pixbuf-dev
+	glibmm2.68-dev
+	graphviz
+	gtk4.0-dev
+	m4
+	meson
+	pangomm2.48-dev
+	perl
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-devhelp $pkgname-dev $pkgname-doc"
+source="https://download.gnome.org/sources/gtkmm/${pkgver%.*}/gtkmm-$pkgver.tar.xz
+	setlocale-sigsegv.patch
+	"
+builddir="$srcdir/gtkmm-$pkgver"
+
+build() {
+	abuild-meson \
+		-Dbuild-demos=false \
+		-Dbuild-tests=true \
+		-Dbuild-documentation=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run -a meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+ee40cce37c34814884ffc06e614013d23fa31cac51ea9d98ea5689a08acc2ff58bb2ca80ba822d6fe3c0f3bdcb9ce2596ede3c05c69a702b524c4e38afc3d9ab  gtkmm-4.10.0.tar.xz
+9ae42182f1b7a8bd21b3e1aaaa830222402a685d4b98c12f2480e724afaa98828e5cade8e8fd79a976c5a110f0ebe19f9703f92dc097a4e9b467b6ec773119bd  setlocale-sigsegv.patch
+"

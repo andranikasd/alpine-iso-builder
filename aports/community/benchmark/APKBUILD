@@ -1,0 +1,44 @@
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=benchmark
+pkgver=1.8.3
+pkgrel=0
+pkgdesc="microbenchmark support library"
+url="https://github.com/google/benchmark"
+arch="all"
+license="Apache-2.0"
+makedepends="cmake doxygen gtest-dev samurai"
+subpackages="$pkgname-dev $pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/google/benchmark/archive/v$pkgver.tar.gz"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build \
+		-G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DBENCHMARK_ENABLE_ASSEMBLY_TESTS=OFF \
+		-DBENCHMARK_ENABLE_DOXYGEN=ON \
+		-DBENCHMARK_ENABLE_LTO=ON \
+		-DBENCHMARK_ENABLE_WERROR=OFF \
+		-DBENCHMARK_USE_BUNDLED_GTEST=OFF \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+check() {
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+4e12114251c79a426873cfba6e27270b69fc980cef9a68e9cb3170f8e2e203f77dee19ab1e65cad51cd67e60991d3bbfdd52553f22522ce5e6c611b5aa07602c  benchmark-1.8.3.tar.gz
+"

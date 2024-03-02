@@ -1,0 +1,51 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=py3-pygithub
+_pkgname=PyGithub
+pkgver=1.59.1
+pkgrel=0
+pkgdesc="Typed interactions with the GitHub API v3"
+url="https://github.com/PyGithub/PyGithub"
+arch="noarch"
+license="LGPL-3.0-or-later"
+depends="
+	py3-cryptography
+	py3-deprecated
+	py3-jwt
+	py3-pynacl
+	py3-requests
+	python3
+	"
+checkdepends="
+	py3-cryptography
+	py3-httpretty
+	py3-pytest
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools_scm
+	py3-wheel
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/PyGithub/PyGithub/archive/v$pkgver/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/PyGithub-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+b3f30274174cf866ac9b4422f05aa34669bb12611b1f5f307873d4c539de18a20410d5d913f9692d4fc04b6d1b932c42b3375462d1520d26d8db4d20253ecbed  PyGithub-1.59.1.tar.gz
+"

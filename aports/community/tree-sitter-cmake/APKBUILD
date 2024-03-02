@@ -1,0 +1,25 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=tree-sitter-cmake
+pkgver=0.4.1
+pkgrel=1
+pkgdesc="CMake grammar for tree-sitter"
+url="https://github.com/uyha/tree-sitter-cmake"
+arch="all"
+license="MIT"
+makedepends="tree-sitter-dev"
+install_if="tree-sitter-grammars"
+source="https://github.com/uyha/tree-sitter-cmake/archive/v$pkgver/tree-sitter-cmake-$pkgver.tar.gz"
+options="!check"  # no tests for shared lib
+
+build() {
+	abuild-tree-sitter build
+}
+
+package() {
+	DESTDIR="$pkgdir" abuild-tree-sitter install
+}
+
+sha512sums="
+25318e305aa42bfaa6fd09fb515988a31a00247f535e4d881573226d862d72a74eb30dfdfb3bd2b985a9be96cdf6da6a8a9b945d9c256870755015ae573edd9c  tree-sitter-cmake-0.4.1.tar.gz
+"

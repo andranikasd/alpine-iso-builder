@@ -1,0 +1,51 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=maui
+pkgname=clip
+pkgver=3.0.2
+pkgrel=0
+pkgdesc="Video player and video collection manager"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://invent.kde.org/maui/clip"
+license="GPL-3.0-or-later"
+depends="qt5-qtbase-sqlite"
+makedepends="
+	extra-cmake-modules
+	ffmpeg-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	mauikit-dev
+	mauikit-filebrowsing-dev
+	mpv-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qt5-qtmultimedia-dev
+	qt5-qtxmlpatterns-dev
+	samurai
+	taglib-dev
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/maui/clip.git"
+source="https://download.kde.org/stable/maui/clip/$pkgver/clip-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+00e8a1bff92b1d1e930d74be584fb4181debc29bdb30ef63780d44ef13bc460672b0a177fe21ece6fa9effe8c8259f9e23174080b1617ca9cc808c4cd595f4b4  clip-3.0.2.tar.xz
+"

@@ -1,0 +1,45 @@
+# Contributor: Simon Frankenberger <simon-alpine@fraho.eu>
+# Maintainer: Simon Frankenberger <simon-alpine@fraho.eu>
+pkgname=java-libsignal-client
+pkgver=0.40.0
+pkgrel=0
+pkgdesc="libsignal-client contains platform-agnostic APIs useful for Signal client apps"
+url="https://github.com/signalapp/libsignal"
+# java >= 11 not available on 32 bit archs
+# s390x: build error in boringssl ("Unknown target CPU")
+# ppc64le: build error in boringssl ("Unknown target CPU")
+# riscv64: build error in boringssl ("Unknown target CPU")
+arch="all !armhf !armv7 !x86 !ppc64le !s390x !riscv64"
+license="AGPL-3.0-or-later"
+depends="java-jre-headless"
+makedepends="bash cargo clang-dev cmake openjdk11-jdk protoc rust zip"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/signalapp/libsignal/archive/v$pkgver.tar.gz
+	"
+install="$pkgname.post-install $pkgname.post-upgrade"
+builddir="$srcdir/libsignal-$pkgver"
+# tests succeed, but gradle aborts with exit value 134. have to further investigate later
+options="!check"
+
+build() {
+	cd "$builddir"/java
+	./gradlew --no-daemon -PskipAndroid :client:jar
+}
+
+check() {
+	cd "$builddir"/java
+	./gradlew --no-daemon -PskipAndroid :client:test
+}
+
+package() {
+	install -D -m644 "$builddir"/java/client/build/libs/libsignal-client-$pkgver.jar \
+		-t "$pkgdir"/usr/share/java/libsignal-client
+	install -D -m755 "$builddir"/target/release/libsignal_jni.so \
+		-t "$pkgdir"/usr/lib
+	zip -d "$pkgdir"/usr/share/java/libsignal-client/libsignal-client-$pkgver.jar \
+		libsignal_jni.so
+}
+
+sha512sums="
+91568cdf3373c1502fc9ee93cb0a30e33c81b5bc0d563cd5aff1fa29d2233e5872cfac076a1028eea00bd34553701a2d4b8092de49def2ec6477f8e41b61bc82  java-libsignal-client-0.40.0.tar.gz
+"

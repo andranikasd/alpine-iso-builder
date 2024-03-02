@@ -1,0 +1,53 @@
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=py3-orjson
+pkgver=3.9.15
+pkgrel=0
+pkgdesc="Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
+url="https://github.com/ijl/orjson"
+arch="all"
+license="Apache-2.0 AND MIT"
+makedepends="
+	cargo
+	py3-gpep517
+	py3-maturin
+	python3-dev
+	"
+checkdepends="
+	py3-dateutil
+	py3-numpy
+	py3-pytest
+	py3-tz
+	tzdata
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ijl/orjson/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/orjson-$pkgver"
+options="net"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --locked
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--config-json '{"build-args": "--frozen"}' \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+9ee548ae24b684a185b8b81fefd12edbefce8967af5e65f4cc925ef5b470d5ee2f80a289f3964583c2f4b44c7f86991b406ac53c67347af9c99b4a28e5bf22bf  py3-orjson-3.9.15.tar.gz
+"

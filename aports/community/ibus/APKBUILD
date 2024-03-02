@@ -1,0 +1,100 @@
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=ibus
+pkgver=1.5.29
+pkgrel=1
+pkgdesc="Next Generation Input Bus for Linux"
+url="https://github.com/ibus/ibus/wiki"
+arch="all"
+license="LGPL-2.1-or-later"
+depends="
+	dconf hicolor-icon-theme iso-codes dbus py3-gobject3
+"
+makedepends="
+	bash dconf-dev gtk+2.0-dev gtk+3.0-dev gtk4.0-dev
+	libnotify-dev iso-codes-dev gobject-introspection-dev vala qt5-qtbase
+	wayland-dev wayland-protocols
+	dbus-x11 unicode-character-database cldr-emoji-annotation
+	libdbusmenu-glib-dev libdbusmenu-gtk3-dev
+"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-pyc
+	$pkgname-emoji
+	$pkgname-gtk2
+	$pkgname-gtk3
+	$pkgname-gtk4
+	$pkgname-bash-completion
+	"
+source="https://github.com/ibus/ibus/releases/download/$pkgver/ibus-$pkgver-rc2.tar.gz"
+install="$pkgname.post-install"
+#https://github.com/ibus/ibus/issues/2584
+builddir="$srcdir/$pkgname-$pkgver-rc2"
+
+prepare() {
+	default_prepare
+
+	# disable-gtk-doc doesn't prevent install of what exists
+	rm -r docs/reference/ibus/html/
+}
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--libexecdir=/usr/lib/ibus \
+		--sysconfdir=/etc \
+		--enable-dconf \
+		--enable-wayland \
+		--enable-gtk4 \
+		--disable-memconf \
+		--enable-ui \
+		--disable-gtk-doc \
+		--disable-systemd-services \
+		--enable-emoji-dict \
+		--with-ucd-dir=/usr/share/unicode/
+	make
+}
+
+check() {
+	./bus/ibus-daemon --version
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+emoji() {
+	pkgdesc="$pkgdesc (emojis)"
+	depends="$pkgname unicode-character-database cldr-emoji-annotation"
+
+	mkdir -p "$subpkgdir"/usr/share/ibus
+	mv "$pkgdir"/usr/share/ibus/dicts "$subpkgdir"/usr/share/ibus
+}
+
+gtk2() {
+	install_if="$pkgname=$pkgver-r$pkgrel gtk+2.0"
+
+	amove usr/lib/gtk-2.0/2.10.0
+}
+
+gtk3() {
+	install_if="$pkgname=$pkgver-r$pkgrel gtk+3.0"
+
+	amove usr/lib/gtk-3.0/3.0.0
+}
+
+gtk4() {
+	install_if="$pkgname=$pkgver-r$pkgrel gtk4.0"
+
+	amove usr/lib/gtk-4.0/4.0.0
+}
+
+pyc() {
+	default_pyc
+	amove usr/share/ibus/setup/__pycache__
+}
+
+sha512sums="
+47dd39c9615783b6c157a25e8a2506dc2e1f440d56aa649ee8cb95a390cb4efab9c95e72ac84b5d042c25e350599b4d352ddc66f1385af6660d4a7a296e44ca7  ibus-1.5.29-rc2.tar.gz
+"

@@ -1,0 +1,20 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+# Maintainer: Holger Jaekel <holger.jaekel@gmx.de>
+pkgname=proj-data
+pkgver=1.16
+pkgrel=0
+pkgdesc="Resource files for Cartographic Projections and Coordinate Transformations Library PROJ"
+url="https://proj.org/"
+arch="noarch"
+license="custom"
+options="!check"  # this is a resource files package
+source="https://download.osgeo.org/proj/proj-data-$pkgver.zip"
+
+package() {
+	mkdir -p "$pkgdir"/usr/share/proj
+	unzip -o "$srcdir/proj-data-$pkgver.zip" -d "$pkgdir"/usr/share/proj
+}
+
+sha512sums="
+ae7ed0e4179d71caa25921000918d3c2b22c737e87573ae76bdb385f83c6a5a07f8856f91ec9ab03dbb49dff0993b4056c6fb524f74340e98553d52d6728131f  proj-data-1.16.zip
+"

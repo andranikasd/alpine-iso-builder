@@ -1,0 +1,46 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=libkipi
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="KDE Image Plugin Interface library"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://www.digikam.org/"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later"
+depends_dev="
+	kconfig5-dev
+	kservice5-dev
+	kxmlgui5-dev
+	qt5-qtbase-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	libjpeg-turbo-dev
+	libkexiv2-dev
+	samurai
+	tiff-dev
+	"
+_repo_url="https://invent.kde.org/graphics/libkipi.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/libkipi-$pkgver.tar.xz"
+subpackages="$pkgname-dev"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+55608d8f9a085e256838a77a2338fd3dd2216dbc57d48585b21786a4464d0103ff75cd2bf16e3aaab117ef5bf0f2009f806d5744a432dba8a9452740147df1cc  libkipi-23.08.5.tar.xz
+"

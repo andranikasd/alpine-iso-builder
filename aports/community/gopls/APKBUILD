@@ -1,0 +1,34 @@
+# Contributor: David Florness <david@florness.com>
+# Maintainer: David Florness <david@florness.com>
+pkgname=gopls
+pkgver=0.14.2
+pkgrel=0
+pkgdesc="Language server for Go programming language"
+url="https://github.com/golang/tools/blob/master/gopls"
+license="BSD-3-Clause"
+arch="all"
+options="chmod-clean"
+makedepends="go"
+source="$pkgname-$pkgver.tar.gz::https://github.com/golang/tools/archive/gopls/v$pkgver.tar.gz"
+builddir="$srcdir/tools-$pkgname-v$pkgver/$pkgname"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -trimpath -o dist/gopls
+}
+
+check() {
+	cd test
+	go test
+}
+
+package() {
+	install -Dm755 dist/gopls "$pkgdir"/usr/bin/gopls
+}
+
+sha512sums="
+a7b5010d268421c2d9288ea44bf2bf3554d55f7960e0e1c1e9351cf56c105a2c9df7df40cc7eb6b7b6d401c261ac1799074c68108b9876669c1460051050fcad  gopls-0.14.2.tar.gz
+"

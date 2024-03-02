@@ -1,0 +1,38 @@
+# Maintainer:
+pkgname=py3-gast
+pkgver=0.5.4
+pkgrel=2
+pkgdesc="Python AST that abstracts the underlying Python version"
+url="https://github.com/serge-sans-paille/gast"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/serge-sans-paille/gast/archive/refs/tags/$pkgver.tar.gz"
+builddir="$srcdir/gast-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m unittest discover
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+91b5c452bc2bf3961d5dcfd127ba0a7bdc25582ad16fa88cfa83bee34e5a433ebfd114ccaa1bb9d260f41399157a9fcececba199e7a75a65b96d317228446ad4  py3-gast-0.5.4.tar.gz
+"

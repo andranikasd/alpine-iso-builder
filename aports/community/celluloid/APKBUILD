@@ -1,0 +1,39 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=celluloid
+pkgver=0.26
+pkgrel=1
+pkgdesc="A simple GTK+ frontend for mpv (formerly gnome-mpv)"
+url="https://celluloid-player.github.io/"
+arch="all"
+license="GPL-3.0-or-later"
+depends="gsettings-desktop-schemas"
+makedepends="
+	appstream-glib-dev
+	desktop-file-utils
+	glib-dev
+	gtk+3.0-dev
+	libadwaita-dev
+	libepoxy-dev
+	meson
+	mpv-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://github.com/celluloid-player/celluloid/releases/download/v$pkgver/celluloid-$pkgver.tar.xz"
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+bcbb970b8ce512d4d7e64833a309a2e32631b262989ee7f9e1ec4b7f0015387b3978c8cbc0206a5aa86bd9e74fae3b7d38776e71be8c16996444d234bc37d42f  celluloid-0.26.tar.xz
+"

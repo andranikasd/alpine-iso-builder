@@ -1,0 +1,56 @@
+# Contributor: Díaz Urbaneja Diego <sodomon2@gmail.com>
+# Maintainer: Díaz Urbaneja Diego <sodomon2@gmail.com>
+pkgname=ppsspp
+pkgver=1.16.6
+pkgrel=0
+pkgdesc="PPSSPP - a fast and portable PSP emulator"
+url="https://www.ppsspp.org/"
+arch="aarch64 x86 x86_64 ppc64le" # other arches fail to build
+license="GPL-2.0-only"
+makedepends="
+	cmake
+	ffmpeg4-dev
+	glew-dev
+	libzip-dev
+	mesa-dev
+	miniupnpc-dev
+	python3
+	qt5-qtbase-dev
+	qt5-qtmultimedia-dev
+	samurai
+	sdl2-dev
+	snappy-dev
+	zlib-dev
+	zstd-dev
+	"
+source="https://github.com/hrydgard/ppsspp/releases/download/v$pkgver/ppsspp-$pkgver.tar.xz
+	gcc13.patch
+	"
+options="!check" # make check not implemented
+
+build() {
+	cmake -B build-qt -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DUSE_DISCORD=OFF \
+		-DUSE_SYSTEM_FFMPEG=ON \
+		-DUSE_SYSTEM_LIBPNG=ON \
+		-DUSE_SYSTEM_LIBSDL2=ON \
+		-DUSE_SYSTEM_LIBZIP=ON \
+		-DUSE_SYSTEM_MINIUPNPC=ON \
+		-DUSE_SYSTEM_SNAPPY=ON \
+		-DUSE_SYSTEM_ZSTD=ON \
+		-DUSING_QT_UI=ON \
+		-DUSING_GLES2=ON \
+		-DUSING_EGL=ON
+	cmake --build build-qt
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build-qt
+}
+
+sha512sums="
+a60e724fc6f297f49d4fca922d8acaf79174332adf4c18a32e1f6b7def86f48b1267df89850f41f8143137e0ac51a19a4c7b69f9065e9e83a91775f6d86f3bf3  ppsspp-1.16.6.tar.xz
+fa4b8cb0439c287d09c486058651bb50ff4b4bb1faeac255fa289ad87077c3fd8f9408744752d4b5313166ced5cc707628334df107c12f848dff1d0c5a30e672  gcc13.patch
+"

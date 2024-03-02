@@ -1,0 +1,46 @@
+# Contributor: Leonardo Arena <rnalrd@alpinelinux.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-graphviz
+pkgver=0.20.1
+pkgrel=2
+pkgdesc="Simple interface for Graphviz"
+url="https://github.com/xflr6/graphviz"
+arch="noarch"
+license="MIT"
+depends="
+	graphviz
+	python3
+	"
+makedepends="py3-setuptools"
+checkdepends="
+	font-cantarell
+	py3-pytest-cov
+	py3-pytest-mock
+	py3-pytest
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/xflr6/graphviz/archive/$pkgver/graphviz-$pkgver.tar.gz"
+builddir="$srcdir/graphviz-$pkgver"
+
+replaces="py-graphviz" # for backwards compatibility
+provides="py-graphviz=$pkgver-r$pkgrel" # for backwards compatibility
+
+build() {
+	python3 setup.py --quiet build
+}
+
+check() {
+	# test_pipe requires graphviz built with triangulation library
+	# jupyter_integration requires graphviz built with jpeg support / libgd
+	pytest \
+		--deselect tests/backend/test_piping.py::test_pipe \
+		--deselect graphviz/jupyter_integration.py::graphviz.jupyter_integration.JupyterIntegration._repr_mimebundle_
+}
+
+package() {
+	python3 setup.py --quiet install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+34d340469856777f03b9c9e6d28f232908797bc1456a5b50104dd2f7dc8b7488afc7b29a564d57707ae96f3291f5ae90b8140ab64e378b82f271b5521763fb55  graphviz-0.20.1.tar.gz
+"

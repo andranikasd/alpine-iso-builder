@@ -1,0 +1,65 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=suitesparse
+_pkgname=SuiteSparse
+pkgver=7.3.1
+pkgrel=0
+pkgdesc="A collection of sparse matrix libraries"
+url="http://faculty.cse.tamu.edu/davis/suitesparse.html"
+arch="all"
+license="BSD-3-Clause AND LGPL-2.1-or-later AND GPL-2.0-or-later"
+depends_dev="
+	gmp-dev
+	mpfr-dev
+	openblas-dev
+	"
+makedepends="
+	$depends_dev
+	cmake
+	m4
+	"
+subpackages="
+	$pkgname-static
+	$pkgname-dev
+	$pkgname-graphblas
+	"
+source="https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v$pkgver/$_pkgname-$pkgver.tar.gz
+	remove-rpath.patch
+	"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+_flags="BLAS=-lopenblas LAPACK=-lopenblas"
+
+# Do not include the Partition module (it's optional and Julia doesn't need it).
+# Do not try to override optimization level. SuiteSparse is a huge library
+# heavily optimized for performance, so compiling with -Os doesn't make sense.
+# Actually, the build scripts currently override -Os with -O3 anyway,
+# but better to not rely on it.
+export CFLAGS="${CFLAGS/-Os/} -DNPARTITION"
+export CPPFLAGS=${CPPFLAGS/-Os/}
+export CXXFLAGS=${CXXFLAGS/-Os/}
+
+build() {
+	make library $_flags CMAKE_OPTIONS="\
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_INCLUDEDIR=/usr/include/suitesparse \
+		-DCMAKE_INSTALL_LIBDIR=/usr/lib \
+		-DCMAKE_VERBOSE_MAKEFILE=ON \
+		"
+}
+
+package() {
+	make install $_flags DESTDIR="$pkgdir"
+}
+
+graphblas() {
+	pkgdesc="Graph algorithms in the language of linear algebra"
+	license="Apache-2.0 AND GPL-3.0-or-later"
+
+	amove usr/lib/libgraphblas.so.*
+}
+
+sha512sums="
+681d64349360246aaebea3246a87a7415c3528b4cde4aef6def3988e19087d7184ce1bf1fad0f80f7ea312d59f6f207dc2195f6be100871c5714115705c243f6  SuiteSparse-7.3.1.tar.gz
+79886862a6edfcec8462ccb973ced03aa09968166c317964f107f43222b3b6be8e21aadb4c242696f4b2e1c34f2403c4bdd6d006c6aecc3b84128ba13d079a08  remove-rpath.patch
+"

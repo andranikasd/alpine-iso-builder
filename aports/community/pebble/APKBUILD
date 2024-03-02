@@ -1,0 +1,42 @@
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=pebble
+pkgver=2.4.0
+pkgrel=15
+pkgdesc="small RFC 8555 ACME test server not for a production certificate authority"
+url="https://github.com/letsencrypt/pebble"
+# riscv64 blocked by syscall dependency
+arch="all !riscv64"
+license="MPL-2.0"
+options="!check net" # no testsuite, needs to download dependencies
+makedepends="go"
+source="$pkgname-$pkgver.tar.gz::https://github.com/letsencrypt/pebble/archive/refs/tags/v$pkgver.tar.gz
+	uint.patch
+	"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+prepare() {
+	default_prepare
+
+	go mod download
+}
+
+build() {
+	go build ./cmd/pebble
+	go build ./cmd/pebble-challtestsrv
+}
+
+package() {
+	install -Dm755 \
+		pebble \
+		pebble-challtestsrv \
+		-t "$pkgdir"/usr/bin
+}
+
+sha512sums="
+bfd1c5756a124525b988499ecfd1f6cf3c11d2bbe6523cee3ba1c6dafd58b72fc99995768bb40cfe1e840886ef0f2b70550da4a87e8891da2d0f870b92fa7a78  pebble-2.4.0.tar.gz
+33d4cc39608c05d22a45e6ec9d027646025cd99ee34ad6d32e9447203bdfae17ed020242fa5a8796d64a3ba9956a1f1dfc3dbab8e5abe4c95c9812e3b2281db0  uint.patch
+"

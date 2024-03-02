@@ -1,0 +1,37 @@
+# Contributor: Paper <paper@tilde.institute>
+# Maintainer: Paper <paper@tilde.institute>
+pkgname=confy
+pkgver=0.6.5
+pkgrel=1
+pkgdesc="Conferences schedule viewer for GNOME"
+url="https://confy.kirgroup.net/"
+license="GPL-3.0-or-later"
+arch="noarch"
+depends="
+	gtk+3.0
+	py3-gobject3
+	py3-icalendar
+	libhandy1
+	libnotify
+	"
+makedepends="
+	gettext-dev
+	glib-dev
+	meson
+	"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~fabrixxm/confy/archive/$pkgver.tar.gz"
+options="!check"  # no tests
+subpackages="$pkgname-lang $pkgname-pyc"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install -C output
+}
+
+sha512sums="
+1baac4fe3467bd8aaf0f42fe9ca79fb65b2682fc8ff52e92782a6e6a28afd559218732bc5e5ae8b4b4dec294ce463f0216858ae11d0b60ee216b203e11b9b50f  confy-0.6.5.tar.gz
+"

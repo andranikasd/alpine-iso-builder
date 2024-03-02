@@ -1,0 +1,46 @@
+# Contributor: Dhruvin Gandhi <contact@dhruvin.dev>
+# Maintainer: Dhruvin Gandhi <contact@dhruvin.dev>
+pkgname=hledger-interest
+pkgver=1.6.6
+pkgrel=2
+_llvmver=14
+pkgdesc="hledger addon to compute interest for a given account"
+url="https://github.com/peti/hledger-interest"
+arch="aarch64 x86_64" # limited by ghc
+license="BSD-3-Clause"
+makedepends="ghc cabal ncurses-dev zlib-dev"
+source="https://hackage.haskell.org/package/hledger-interest-$pkgver/hledger-interest-$pkgver.tar.gz
+	cabal.project.freeze"
+options="net !check" # no tests
+
+export CABAL_DIR="$srcdir"/cabal
+export PATH="/usr/lib/llvm$_llvmver/bin:$PATH"
+
+cabal_update() {
+        cd $builddir
+        cabal v2-update
+        (
+                cd "$builddir"
+                cabal v2-freeze --shadow-installed-packages
+                mv cabal.project.freeze "$startdir/"
+        )
+}
+
+prepare() {
+	default_prepare
+	cp "$srcdir"/cabal.project.freeze .
+}
+
+build() {
+	cabal update
+	cabal build --prefix=/usr --enable-relocatable
+}
+
+package() {
+	install -Dm755 "$(cabal list-bin hledger-interest)" "$pkgdir"/usr/bin/hledger-interest
+}
+
+sha512sums="
+77ddb8e930e4f2e7f9d03455872afd45826c53aa84fe3a17204b17c2afa283e3a834217ea28eedaddc9822ffee0857afbc2f9ab13327df56c347108d8f909c2f  hledger-interest-1.6.6.tar.gz
+81328cafe8f5dc1dfb7b9abfc3ae3dc47fd0de219c73d5c93ddd0a0a09dad12b3dad2d4b42dac830e5d859c783652ff848b4da7a9243eef1b5035cf212bc1220  cabal.project.freeze
+"

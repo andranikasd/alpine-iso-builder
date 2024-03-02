@@ -1,0 +1,43 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=gnome-tweaks
+pkgver=45.1
+pkgrel=0
+pkgdesc="GNOME3 tool to customize advanced options"
+url="https://wiki.gnome.org/Apps/Tweaks"
+# armhf, s390x blocked by mozjs91 -> gnome-shell-schemas
+arch="noarch !armhf !s390x"
+license="GPL-3.0-or-later AND CC0-1.0"
+depends="
+	dconf
+	gnome-settings-daemon
+	gnome-shell-schemas
+	mutter-schemas
+	py3-gobject3
+	"
+makedepends="
+	libhandy1-dev
+	gettext-dev
+	meson
+	"
+subpackages="$pkgname-lang $pkgname-pyc"
+source="https://download.gnome.org/sources/gnome-tweaks/${pkgver%.*}/gnome-tweaks-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+2a6f5a69c79e3c18b01f3c5f2573fb2130ef1145d9014efb39096df4fbe9e2bfc62b9797c667e4c3b9d248bf6563583757fbbc3f1ec65873b8344b0414c92cdc  gnome-tweaks-45.1.tar.xz
+"

@@ -1,0 +1,38 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-swagger-spec-validator
+_pyname=swagger-spec-validator
+pkgver=3.0.3
+pkgrel=1
+arch="noarch"
+pkgdesc="Validation of Swagger specifications"
+url="https://pypi.python.org/project/swagger-spec-validator"
+license="Apache-2.0"
+depends="
+	py3-jsonschema
+	py3-yaml
+	"
+makedepends="
+	py3-setuptools
+	py3-gpep517
+	py3-wheel
+	"
+options="!check" # No testsuite
+source="$pkgname-$pkgver.tar.gz::https://pypi.io/packages/source/s/swagger-spec-validator/swagger-spec-validator-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+subpackages="$pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+21d849f3b7631c1bced3831728852d953063f28d918e5b409ac302781769a495536869bf3e042692d70e5a589a9db5306986aebb4cd0e363e6f80e1330a753f2  py3-swagger-spec-validator-3.0.3.tar.gz
+"

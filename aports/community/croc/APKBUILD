@@ -1,0 +1,42 @@
+# Contributor: André Klitzing <aklitzing@@gmail.com>
+# Maintainer: André Klitzing <aklitzing@gmail.com>
+pkgname=croc
+pkgver=9.6.10
+pkgrel=0
+pkgdesc="Easily and securely send things from one computer to another"
+url="https://github.com/schollz/croc"
+license="MIT"
+arch="all"
+makedepends="go"
+subpackages="$pkgname-bash-completion $pkgname-zsh-completion"
+source="https://github.com/schollz/croc/archive/refs/tags/v$pkgver/croc-$pkgver.tar.gz"
+options="net" # fetch dependencies
+
+# secfixes:
+#   9.1.0-r0:
+#     - CVE-2021-31603
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -v -ldflags "-X github.com/schollz/croc/v${pkgver%%.*}/src/cli.Version=v$pkgver"
+}
+
+check() {
+	go test ./...
+}
+
+package() {
+	install -Dm755 $pkgname -t "$pkgdir"/usr/bin/
+
+	install -Dm644 src/install/bash_autocomplete \
+		"$pkgdir"/usr/share/bash-completion/completions/croc
+	install -Dm644 src/install/zsh_autocomplete \
+		"$pkgdir"/usr/share/zsh/site-functions/_croc
+}
+
+sha512sums="
+5f1d265e1559703f45fd7723a64ff63a250eab21027ae32bee0c3a6b1319e586a3e5650e784df6bc0befe7c6943adc60c7ff9dc9c2985c6dee93dc3c86305027  croc-9.6.10.tar.gz
+"

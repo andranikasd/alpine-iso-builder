@@ -1,0 +1,41 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-freecell-solver
+pkgver=0.4.0
+pkgrel=2
+pkgdesc="Freecell Solver bindings"
+url="https://fc-solve.shlomifish.org/"
+arch="noarch"
+license="MIT"
+depends="
+	py3-cffi
+	python3
+	"
+makedepends="
+	py3-pbr
+	py3-setuptools
+	"
+checkdepends="
+	py3-pytest
+	py3-pytest-cov
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/f/freecell_solver/freecell_solver-$pkgver.tar.gz"
+#options="!check" # Requires unavailable package hacking
+builddir="$srcdir/freecell_solver-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	PYTHONPATH="$PWD/build/lib" pytest
+}
+
+package() {
+	python3 setup.py install --skip-build --root="$pkgdir"
+}
+
+sha512sums="
+4cee8cdf70cfc10a07835a9d59dda11ad5f0103c7c9fb78b62eb964634c13aea717672be15c1dd9244153340dbd888c4c72ea44b039f462baafdb6e0e5da10d8  freecell_solver-0.4.0.tar.gz
+"

@@ -1,0 +1,27 @@
+# Contributor: Will Sinatra <wpsinatra@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=mednaffe
+pkgver=0.9.2
+pkgrel=0
+pkgdesc="front-end (GUI) for mednafen emulator"
+url="https://github.com/AmatCoder/mednaffe"
+license="GPL-3.0-only"
+arch="all !s390x" #these do not have mednafen packaged for them
+makedepends="gtk+3.0-dev"
+depends="mednafen gtk+3.0"
+source=https://github.com/AmatCoder/mednaffe/releases/download/$pkgver/mednaffe-$pkgver.tar.gz
+subpackages="$pkgname-doc"
+options="!check"
+
+build() {
+	./configure --prefix=/usr --enable-gtk3
+	make
+}
+
+package() {
+	make prefix="$pkgdir"/usr install
+}
+
+sha512sums="
+76bb0d0ee8279ac179c6d596922fd0a870d96122019df8f98fea08aa7f82b95c4261d70baa5951e31200567e144efbba12c4fabb76f26c08bc1bb1bb60e95024  mednaffe-0.9.2.tar.gz
+"

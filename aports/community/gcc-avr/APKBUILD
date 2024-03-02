@@ -1,0 +1,71 @@
+# Contributor: Pedro Filipe <xpecex@outlook.com>
+# Contributor: Stefan Wagner <stw@bit-strickerei.de>
+# Maintainer: Stefan Wagner <stw@bit-strickerei.de>
+pkgname=gcc-avr
+pkgver=12.2.0
+pkgrel=4
+pkgdesc="The GNU Compiler Collection for AVR targets"
+url="https://gcc.gnu.org/"
+depends="binutils-avr"
+makedepends="bash linux-headers gmp-dev mpfr-dev mpc1-dev zlib-dev isl-dev"
+arch="x86_64 aarch64 ppc64le x86"
+license="GPL-3.0-or-later"
+subpackages="$pkgname-doc"
+source="
+	https://mirrors.kernel.org/gnu/gcc/gcc-$pkgver/gcc-$pkgver.tar.xz
+	fix-no-system-headers.patch
+	"
+
+builddir="$srcdir/gcc-$pkgver"
+_workingdir="$builddir/build"
+
+build() {
+	mkdir "$_workingdir"
+	cd "$_workingdir"
+
+	export CFLAGS_FOR_TARGET='-pipe -Os -ffunction-sections -fdata-sections'
+	export CXXFLAGS_FOR_TARGET='-pipe -Os -ffunction-sections -fdata-sections -fno-use-cxa-atexit'
+
+	# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100431
+	export CFLAGS="$CFLAGS -Wno-error=format-security"
+	export CXXFLAGS="$CXXFLAGS -Wno-error=format-security"
+	export CPPFLAGS="$CPPFLAGS -Wno-error=format-security"
+
+	"$builddir"/configure \
+		--target=avr \
+		--prefix=/usr \
+		--with-sysroot=/usr/avr \
+		--with-native-system-header-dir=/include \
+		--with-headers=/usr/avr/include \
+		--with-python-dir=share/gcc-avr \
+		--libexecdir=/usr/lib \
+		--enable-languages=c,c++ \
+		--disable-__cxa_atexit \
+		--disable-install-libiberty \
+		--disable-libssp \
+		--disable-libstdcxx-pch \
+		--disable-libunwind-exceptions \
+		--disable-linker-build-id \
+		--disable-nls \
+		--disable-werror \
+		--with-gnu-as \
+		--with-gnu-ld \
+		--with-system-zlib \
+		--with-isl \
+		--with-avrlibc \
+		--with-pkgversion='Alpine Linux'
+	make
+}
+
+package() {
+	cd "$_workingdir"
+	make install DESTDIR="$pkgdir"
+	rm -rf "$pkgdir"/usr/share/man/man7
+	rm -f "$pkgdir"/usr/lib/libcc1.*
+	find "$pkgdir"/usr/lib -type f -name "*.a" -exec /usr/bin/avr-strip --strip-debug '{}' \;
+}
+
+sha512sums="
+e9e857bd81bf7a370307d6848c81b2f5403db8c7b5207f54bce3f3faac3bde63445684092c2bc1a2427cddb6f7746496d9fbbef05fbbd77f2810b2998f1f9173  gcc-12.2.0.tar.xz
+358cb41e6a8612f5c96f27ed573354a909253565caa200af8959d90cf21e0ddbee219f6281fc3917ead1f85c5ec7111162f9b075c3e478df56a2fad505bce5f1  fix-no-system-headers.patch
+"

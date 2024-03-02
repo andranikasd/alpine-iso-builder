@@ -1,0 +1,60 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kwordquiz
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://edu.kde.org/kwordquiz"
+pkgdesc="Flash Card Trainer"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	kconfig5-dev
+	kconfigwidgets5-dev
+	kcrash5-dev
+	kdoctools5-dev
+	kguiaddons5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kirigami-addons-dev
+	kirigami2-dev
+	kitemviews5-dev
+	knewstuff5-dev
+	knotifications5-dev
+	knotifyconfig5-dev
+	kwindowsystem5-dev
+	kxmlgui5-dev
+	libkeduvocdocument-dev
+	phonon-dev
+	qt5-qtbase-dev
+	qt5-qtmultimedia-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/education/kwordquiz.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kwordquiz-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+f87c21c34fe8ef6a8b031324c22ee83a4306fee41dbe835963d1a1cbbe7ab6e808ea66060d128bafcdd613519fd61f327d60116c3a70e6dd5a6af52728495233  kwordquiz-23.08.5.tar.xz
+"

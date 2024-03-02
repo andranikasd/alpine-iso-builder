@@ -1,0 +1,56 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer:
+pkgname=gedit
+pkgver=44.2
+pkgrel=4
+pkgdesc="gedit is the GNOME text editor"
+url="https://wiki.gnome.org/Apps/Gedit"
+arch="all !s390x"
+license="GPL-2.0-only"
+depends_dev="gedit=$pkgver-r$pkgrel"
+makedepends="
+	glib-dev
+	gobject-introspection-dev
+	gspell-dev
+	gtk+3.0-dev
+	gtk-doc
+	gtksourceview4-dev
+	itstool
+	libpeas-dev
+	libx11-dev
+	libxml2-dev
+	meson
+	perl
+	tepl-dev
+	vala
+	"
+checkdepends="appstream-glib desktop-file-utils"
+depends="gsettings-desktop-schemas"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://download.gnome.org/sources/gedit/${pkgver%.*}/gedit-$pkgver.tar.xz"
+
+prepare() {
+	default_prepare
+
+	case $CARCH in
+	# sigsegv
+	s390x) sed -i '/test-open-links/d' plugins/openlinks/unit-tests/meson.build ;;
+	esac
+}
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+c9dd412a16d7d0ba17214164017948bd1184ee5f9c44475e9e02880c0597b2fd9840f9488df7262cb413baedf5e16ce49dd32410b02ed0f53cf4bc94d3e3a4c7  gedit-44.2.tar.xz
+"

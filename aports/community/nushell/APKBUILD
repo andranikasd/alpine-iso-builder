@@ -1,0 +1,73 @@
+# Contributor: nibon7 <nibon7@163.com>
+# Maintainer: nibon7 <nibon7@163.com>
+pkgname=nushell
+pkgver=0.90.1
+pkgrel=0
+pkgdesc="A new type of shell"
+url="https://www.nushell.sh"
+# s390x: nix crate
+arch="all !s390x"
+license="MIT"
+makedepends="
+	cargo
+	cargo-auditable
+	libgit2-dev
+	openssl-dev
+	sqlite-dev
+	"
+subpackages="$pkgname-doc $pkgname-plugins:_plugins"
+install="$pkgname.post-install $pkgname.post-upgrade $pkgname.pre-deinstall"
+source="$pkgname-$pkgver.tar.gz::https://github.com/nushell/nushell/archive/$pkgver.tar.gz
+	system-deps.patch
+	"
+
+prepare() {
+	default_prepare
+
+	# Rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# Build against system-provided libs
+	mkdir -p .cargo
+	cat >> .cargo/config.toml <<-EOF
+
+
+		[target.$target]
+		git2 = { rustc-link-lib = ["git2"] }
+		rusqlite = { rustc-link-lib = ["sqlite3"] }
+	EOF
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --workspace --release --frozen
+}
+
+check() {
+	cargo test --workspace --frozen
+}
+
+package() {
+	find target/release \
+		-maxdepth 1 \
+		-executable \
+		-type f \
+		-name "nu*" \
+		-exec install -Dm755 '{}' -t "$pkgdir"/usr/bin/ \;
+
+	install -Dm644 LICENSE \
+		-t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+_plugins() {
+	pkgdesc="Nushell plugins"
+	depends="nushell=$pkgver-r$pkgrel"
+
+	amove usr/bin/nu_plugin_*
+}
+
+sha512sums="
+a70806a8626d5a37d3ca10d7552b280c88068cebeea0688bb01c1aa2f3d424b9d3cea88ae7e6801dd1bee31b42991cc0996ff042f47ab55fb80df566d4cd27d6  nushell-0.90.1.tar.gz
+922acab5cae87e382c2288351281c792691afb4035ff365ecaf87f12d8b5020172fdb910fb444727b891bc2ca726f8f8e84449d091e552c528c640194fa796b5  system-deps.patch
+"

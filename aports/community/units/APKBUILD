@@ -1,0 +1,44 @@
+# Contributor: Miguel Terron <miguel.a.terron@gmail.com>
+# Maintainer: Miguel Terron <miguel.a.terron@gmail.com>
+pkgname=units
+pkgver=2.22
+pkgrel=1
+pkgdesc="Units conversion and calculation program"
+url="https://www.gnu.org/software/units/"
+arch="all"
+license="GPL-3.0-only"
+makedepends="readline-dev python3 py3-requests"
+subpackages="$pkgname-doc $pkgname-cur-update:_cur"
+source="https://ftp.gnu.org/gnu/units/units-$pkgver.tar.gz"
+
+build() {
+	export PYTHON="$(command -v python3)"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--sharedstatedir=/usr/share
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+_cur() {
+	pkgdesc="$pkgdesc (currency database updater)"
+	depends="units py3-requests python3"
+
+	amove usr/bin/units_cur
+}
+
+sha512sums="
+4ed62ce6ee861b817916bc925713794187fa63eb5320e8e720558ac1d5bd48d5f1c9500e1d1f90414a6f4410f1ab806928c2a655adf4cd8b51829cd73397ab2f  units-2.22.tar.gz
+"

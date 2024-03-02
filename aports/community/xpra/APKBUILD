@@ -1,0 +1,94 @@
+# Contributor: Stuart Cardall <developer@it-offshore.co.uk>
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=xpra
+pkgver=5.0.5
+pkgrel=0
+pkgdesc="Xpra is 'screen for X' & allows you to run X programs, usually on a remote host over SSH or encrypted tcp"
+url="https://xpra.org"
+arch="all"
+license="GPL-2.0-or-later"
+depends="
+	py3-brotli
+	py3-cairo
+	py3-cryptography
+	py3-dbus
+	py3-gobject3
+	py3-inotify
+	py3-lz4
+	py3-numpy
+	py3-opengl
+	py3-openssl
+	py3-pillow
+	py3-rencode
+	py3-uinput
+	xf86-video-dummy
+	xorg-server
+	xvfb
+	"
+makedepends="
+	cython
+	ffmpeg-dev
+	glib-dev
+	gmp-dev
+	gtk+3.0-dev
+	libjpeg-turbo-dev
+	libogg-dev
+	libpng-dev
+	libvorbis-dev
+	libvpx-dev
+	libwebp-dev
+	libx11-dev
+	libxcomposite-dev
+	libxdamage-dev
+	libxfixes-dev
+	libxkbfile-dev
+	libxrandr-dev
+	libxres-dev
+	libxtst-dev
+	lz4-dev
+	mpfr-dev
+	opus-dev
+	py3-cairo-dev
+	py3-gobject3-dev
+	python3-dev
+	x264-dev
+	x265-dev
+	"
+subpackages="$pkgname-openrc $pkgname-doc $pkgname-tests::noarch $pkgname-pyc"
+options="!check"
+source="https://xpra.org/src/xpra-$pkgver.tar.xz"
+
+build() {
+	CFLAGS="$CFLAGS -O2 -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -O2 -flto=auto" \
+	python3 setup.py build \
+		--with-bundle_tests
+}
+
+package() {
+	python3 setup.py install --without-docs --prefix=/usr --root="$pkgdir"
+
+	# Fixes Error relocating /usr/lib/xorg/modules/drivers/dummy_drv.so: fbPictureInit: symbol not found
+	# https://bugs.alpinelinux.org/issues/5478
+	printf '\nSection "Module"\n  Load\t"fb"\nEndSection\n' >> "$pkgdir"/etc/xpra/xorg.conf
+
+	rm -rf "$pkgdir"/usr/lib/tmpfiles.d/xpra.conf
+	rm -rf "$pkgdir"/usr/lib/sysusers.d/xpra.conf
+
+	# Fix location of dbus conf
+	mkdir -p "$pkgdir"/usr/share/dbus-1
+	mv "$pkgdir"/etc/dbus-1/system.d "$pkgdir"/usr/share/dbus-1
+
+	mkdir -p "$pkgdir"/usr/share/xpra
+	cp -r tests "$pkgdir"/usr/share/xpra/
+}
+
+tests() {
+	pkgdesc="Xpra test suite"
+
+	amove usr/share/xpra/tests
+}
+
+sha512sums="
+1dfc53a158553976974a1482c231d68b18dd4ebb7b2529f875e18a0b459aba5f434ff77a1543100eb5d3e766e091150faba7303b22494702c8c8be442c5a0fad  xpra-5.0.5.tar.xz
+"

@@ -1,0 +1,41 @@
+# Contributor: Steeve Chailloux <steeve.chailloux@orus.io>
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Mitch Tishmack <mitch.tishmack@gmail.com>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=cabal-stage0
+pkgver=3.10.2.1
+pkgrel=0
+# GHC version used to bootstrap cabal via the ./bootstrap.py script.
+_bootstrapver=9.4.8
+pkgdesc="Cabal version used for bootstrapping"
+url="https://haskell.org/cabal"
+arch="aarch64 x86_64" # Limited by GHC
+license="BSD-3-Clause"
+depends="gmp zlib !cabal"
+makedepends="ghc~=$_bootstrapver gmp-dev libffi-dev zlib-dev python3"
+options="!check"
+source="$pkgname-$pkgver.tar.gz::https://github.com/haskell/cabal/archive/refs/tags/cabal-install-v$pkgver.tar.gz
+	$pkgname-$pkgver-$_bootstrapver.tar.gz::https://dev.alpinelinux.org/archive/cabal-stage0/cabal-$pkgver-with-ghc-$_bootstrapver.tar.gz"
+builddir="$srcdir/cabal-cabal-install-v$pkgver"
+
+# Provide cabal-bootstrap for community/cabal.
+# See comment in community/cabal for details.
+provides="cabal-bootstrap"
+provider_priority=1 # lowest
+
+build() {
+	export PATH="$PATH:/usr/lib/llvm14/bin"
+
+	./bootstrap/bootstrap.py --bootstrap-sources \
+		"$srcdir/$pkgname-$pkgver-$_bootstrapver.tar.gz"
+}
+
+package() {
+	install -m 755 -D _build/bin/cabal "$pkgdir/usr/bin/cabal"
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+sha512sums="
+1acfba42c3dd537366dcfd90a52202a53d002fe9e407c611b4556c93f99f341f4621c30d97a277b94a03981b09c477ae2d415674886ff91961e5013f98b18cbb  cabal-stage0-3.10.2.1.tar.gz
+d14c19d0b3d5f8945102f037c5e3d34fb389c1e1ba6f5bea67e0ddce10fae17494dad7b239bf397291ddaf2f0748973ba3568b002bbef2a1f9dd7d415413bfe4  cabal-stage0-3.10.2.1-9.4.8.tar.gz
+"

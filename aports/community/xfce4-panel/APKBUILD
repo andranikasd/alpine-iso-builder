@@ -1,0 +1,50 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xfce4-panel
+pkgver=4.18.5
+pkgrel=0
+pkgdesc="Panel for the Xfce desktop environment"
+url="https://xfce.org/"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+subpackages="$pkgname-dev libxfce4panel:libs $pkgname-doc $pkgname-lang"
+depends="hicolor-icon-theme"
+depends_dev="xfconf-dev"
+makedepends="
+	$depends_dev
+	exo-dev
+	garcon-dev
+	gobject-introspection-dev
+	gtk+3.0-dev
+	libwnck3-dev
+	libxfce4ui-dev
+	libxfce4util-dev
+	vala
+	"
+source="https://archive.xfce.org/src/xfce/xfce4-panel/${pkgver%.*}/xfce4-panel-$pkgver.tar.bz2
+	"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--libexecdir=/usr/lib \
+		--localstatedir=/var \
+		--disable-static \
+		--enable-introspection \
+		--enable-vala
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+6d3fcf7d56cad2d5f6aa083937c912fe131bd5838a074c4fc9477a01d2c2ceab75fe53edf3681c266f659c6dac7466df38ec2ad3554a1e14267cc62e6c02d818  xfce4-panel-4.18.5.tar.bz2
+"

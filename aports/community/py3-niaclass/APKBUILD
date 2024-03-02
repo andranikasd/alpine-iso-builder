@@ -1,0 +1,37 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-niaclass
+_pkgorig=niaclass
+pkgver=0.1.4
+pkgrel=3
+pkgdesc="Framework for solving classification tasks using nature-inspired algorithms"
+url="https://github.com/lukapecnik/NiaClass"
+arch="noarch"
+license="MIT"
+depends="python3 py3-numpy py3-pandas py3-niapy py3-scikit-learn"
+checkdepends="py3-pytest-xdist"
+makedepends="py3-poetry-core py3-gpep517"
+subpackages="$pkgname-pyc"
+source="https://github.com/lukapecnik/NiaClass/archive/$pkgver/$_pkgorig-$pkgver.tar.gz"
+builddir="$srcdir/NiaClass-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/niaclass-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+6101661a34a2ffd876ff467fade40b1da77045dc4506767cd9c3db7f3bfa479df4d125e05cf62ac6a74f40148d5be5a6e5ca7d71f9849799f6b7a2f3f645a0ce  niaclass-0.1.4.tar.gz
+"

@@ -1,0 +1,44 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-twilio
+pkgver=9.0.0
+pkgrel=0
+arch="noarch"
+pkgdesc="Twilio API client and TwiML generator"
+url="https://pypi.python.org/project/twilio"
+license="MIT"
+depends="
+	py3-flake8
+	py3-mock
+	py3-nose
+	py3-jwt
+	py3-requests
+	py3-twine
+	py3-tz
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+options="!check" # No testsuite
+subpackages="$pkgname-pyc"
+_pyname=twilio
+source="$pkgname-$pkgver.tar.gz::https://pypi.io/packages/source/t/twilio/twilio-$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+options="!check" # No testsuite
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+29847d6210ab2581552e8c7d68ab41850329fcd3914ad3c93ed38031cad907e2bdb49bae9c2b95f922c9b07243d969c61253409cd068bf8b87f58350d6941f84  py3-twilio-9.0.0.tar.gz
+"

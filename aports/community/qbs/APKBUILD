@@ -1,0 +1,36 @@
+# Maintainer:
+pkgname=qbs
+pkgver=2.2.2
+pkgrel=0
+pkgdesc="Cross platform Qt build tool"
+url="https://wiki.qt.io/Qbs"
+arch="all"
+license="LGPL-3.0-or-later AND GPL-2.0-or-later"
+makedepends="clang cmake qt6-qtbase-dev qt6-qt5compat-dev samurai"
+source="https://download.qt.io/official_releases/qbs/$pkgver/qbs-src-$pkgver.tar.gz"
+builddir="$srcdir/qbs-src-$pkgver"
+options="!check" # todo
+
+build() {
+	CC=clang CXX=clang++ \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DWITH_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DQBS_LIBEXEC_INSTALL_DIR=lib/qbs
+	cmake --build build
+}
+
+check() {
+	ctest -j6 --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	rm -rf "$pkgdir"/usr/share/qbs/examples/
+}
+
+sha512sums="
+f233821351b88796d8296baebb866ebe7e0ec66b78dd643fbd5ab34a1adf1ed25a1fd67723ba4ee83e39d41260217505bb0ff633e45785e6ca650496ff0b1855  qbs-src-2.2.2.tar.gz
+"

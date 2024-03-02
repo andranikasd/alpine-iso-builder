@@ -1,0 +1,37 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-simframe
+_pkgorig=simframe
+pkgver=1.0.4
+pkgrel=2
+pkgdesc="Python framework for setting up and running scientific simulations"
+url="https://github.com/stammler/simframe/"
+arch="noarch !armhf !armv7 !x86" #py3-h5py
+license="BSD-3-Clause"
+depends="python3 py3-dill py3-h5py py3-matplotlib py3-scipy py3-numpy"
+checkdepends="py3-pytest-xdist"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/stammler/$_pkgorig/archive/$pkgver/$_pkgorig-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m pytest --deselect tests/frame/test_group.py::test_group_memory_usage
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -rf "$pkgdir"/usr/lib/python3*/site-packages/tests
+}
+
+sha512sums="
+4e992cce86dff3d7e29b1049f0397a9c15791a112383914ceed7c50500721c4d358a25862c61c4c25d46db47a7fa049263cbfbfa2b00cf2a34f6d3c6d7a87b9c  py3-simframe-1.0.4.tar.gz
+"

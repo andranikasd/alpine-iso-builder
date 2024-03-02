@@ -1,0 +1,48 @@
+# Contributor: Oliver Smith <ollieparanoid@postmarketos.org>
+# Maintainer: Oliver Smith <ollieparanoid@postmarketos.org>
+pkgname=mrhlpr
+pkgver=1.3.0
+pkgrel=0
+pkgdesc="postmarketOS tools for interacting with gitlab MRs"
+url="https://gitlab.com/postmarketOS/mrhlpr"
+arch="noarch"
+license="GPL-3.0-or-later"
+depends="python3 git mrhlpr-common"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="pytest"
+source="$pkgname-$pkgver.tar.gz::https://gitlab.com/postmarketos/mrhlpr/-/archive/$pkgver/mrhlpr-$pkgver.tar.gz"
+options="!check" # no testsuite
+subpackages="mrhlpr-common mrtest"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+common() {
+	depends="python3"
+	amove usr/lib/python3*/site-packages/mrhlpr*
+}
+
+mrtest() {
+	pkgdesc="Installs apks from pmaports/aports MRs"
+	url="https://wiki.postmarketos.org/wiki/Mrtest"
+	depends="mrhlpr-common=$pkgver-r$pkgrel"
+	amove \
+		usr/lib/python3*/site-packages/mrtest \
+		usr/bin/mrtest
+}
+
+sha512sums="
+ec65c687fe72d1ab1b3794e6b2de1c8b0a6b86fce9b77c5bc02cccee9c6229423dab079f822495f50e1514ca145be9732a016dbd34de2803a01fbfd9d3daf61e  mrhlpr-1.3.0.tar.gz
+"

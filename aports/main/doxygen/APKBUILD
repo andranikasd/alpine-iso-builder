@@ -1,0 +1,38 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=doxygen
+pkgver=1.10.0
+pkgrel=0
+pkgdesc="Documentation system for C++, C, Java, IDL and PHP"
+url="https://www.doxygen.nl/"
+arch="all"
+license="GPL-2.0-or-later"
+checkdepends="libxml2-utils"
+makedepends="flex bison coreutils perl python3 cmake samurai"
+source="https://doxygen.nl/files/doxygen-$pkgver.src.tar.gz
+	remove-usage-of-fstat64.patch
+	"
+
+build() {
+	cmake -B build -G Ninja \
+		-DGIT_EXECUTABLE=/bin/false \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-Dbuild_xmlparser=ON
+	cmake --build build
+}
+
+check() {
+	# Remove test that use bibtex
+	rm -f ./testing/012_cite.dox
+	cd build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E 061
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+885de36fa0b4364cdd1eddd5e02517e08da7a52274c6fda2c22cbe85f0840e2ddf7358f613c018dc39b4a6dfce2ddd627e9318e73b903f954bbad1a39d03a416  doxygen-1.10.0.src.tar.gz
+590d3ca57a0c7cc492118f386c0f90ebbc94aa7557a7095f2ac6de67fe405480d7237fa452ea6c5881fff2f4d7482080cba3bea7513ac0e10cdc458ad345fee9  remove-usage-of-fstat64.patch
+"

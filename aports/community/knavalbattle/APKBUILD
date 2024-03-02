@@ -1,0 +1,47 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=knavalbattle
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kde.org/applications/games/knavalbattle/"
+pkgdesc="A ship sinking game"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	kconfig5-dev
+	kcrash5-dev
+	kdbusaddons5-dev
+	kdnssd5-dev
+	kdoctools5-dev
+	ki18n5-dev
+	ktextwidgets5-dev
+	kxmlgui5-dev
+	libkdegames-dev
+	qt5-qtbase-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/games/knavalbattle.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/knavalbattle-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+442624b3209a53c3068920ad9cc1c65df742c04aa22a16035086adc9c7c85dcb9455583dcb6dfa4a853ecabdc661c61149db5c3c03590589a595b7f792f4d950  knavalbattle-23.08.5.tar.xz
+"

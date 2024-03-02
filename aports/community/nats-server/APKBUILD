@@ -1,0 +1,45 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Henrik Riomar <henrik.riomar@gmail.com>
+pkgname=nats-server
+pkgver=2.10.11
+pkgrel=0
+pkgdesc="High-Performance server for NATS.io"
+url="https://github.com/nats-io/nats-server"
+arch="all !x86 !armv7 !armhf !s390x !ppc64le" # limited by failing check()
+license="Apache-2.0"
+makedepends="go"
+source="https://github.com/nats-io/nats-server/archive/v$pkgver/nats-server-$pkgver.tar.gz"
+
+# secfixes:
+#   2.10.4-r0:
+#     - CVE-2023-46129
+
+export GOFLAGS="$GOFLAGS -modcacherw"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build
+}
+
+check() {
+	# skip logger due to that it needs syslog
+	# skip other failing tests (due to -buildmode=pie and some timeouts)
+	# we want wordsplitting disable SC2046
+	# shellcheck disable=SC2046
+	go test -p=1 -count=1 -vet=off -timeout=30m -failfast $(go list ./... | grep -v \
+		-e 'logger$' \
+		-e 'server$' \
+		-e 'server/pse$' \
+		-e 'test$'
+		)
+}
+
+package() {
+	install -Dm755 nats-server "$pkgdir"/usr/bin/nats-server
+}
+
+sha512sums="
+c0b1ad21a33430f35856eebea1e1d69527a883df63104f1dd1b3a9a3548acc623136e5aecc8691ecea8473a3e38cc6ccd7f9182f6b6cc6acfe01c5a8bd399a5c  nats-server-2.10.11.tar.gz
+"

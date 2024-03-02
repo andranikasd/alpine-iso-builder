@@ -1,0 +1,48 @@
+# Maintainer:
+pkgname=py3-rpds-py
+pkgver=0.10.6
+pkgrel=0
+pkgdesc="Python bindings to the Rust rpds crate"
+url="https://github.com/crate-py/rpds"
+arch="all"
+license="MIT"
+makedepends="
+	cargo
+	py3-gpep517
+	py3-maturin
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://github.com/crate-py/rpds/releases/download/v$pkgver/rpds_py-$pkgver.tar.gz"
+builddir="$srcdir/rpds_py-$pkgver"
+options="net"
+
+replaces="py3-rpds"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --locked
+}
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--config-json '{"build-args": "--frozen"}' \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+4e887e57c59372f48b87ec10a810a65d0ff1ba2fc7587cc4f4da78d8394a78a91d84a7a7b8ad810bd1f34f4e73ad706628dbc2bd25662c9e4f83e4183c280ab1  rpds_py-0.10.6.tar.gz
+"

@@ -1,0 +1,40 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=gsa
+pkgver=23.0.0
+pkgrel=0
+pkgdesc="Greenbone Security Assistant - The web frontend for the Greenbone Vulnerability Management (GVM) framework "
+url="https://github.com/greenbone/gsa"
+# riscv64: NonErrorEmittedError: (Emitted value instead of an instance of Error) [object Object]
+arch="noarch !riscv64"
+license="AGPL-3.0-or-later"
+options="net"
+makedepends="yarn nodejs-current"
+source="$pkgname-$pkgver.tar.gz::https://github.com/greenbone/gsa/archive/refs/tags/v$pkgver.tar.gz
+	remove-husky-git-hook.patch
+	"
+
+prepare() {
+	default_prepare
+	rm -rf build
+}
+
+build() {
+	export NODE_OPTIONS="--openssl-legacy-provider"
+	yarn
+	yarn build
+}
+
+check() {
+	return 0
+}
+
+package() {
+	mkdir -p "$pkgdir"/usr/share/gvm/gsad/web/
+	cp -r build/* "$pkgdir"/usr/share/gvm/gsad/web/
+}
+
+sha512sums="
+d2dfe12777a8b7610ebc1e7eceb079d38ae1f83085c5a411c115950e55254c82151f77ce16d12342d40b457999f50348a48e66f236a83d145697f68ef9caf993  gsa-23.0.0.tar.gz
+887dac02a4509f71ccd757234f3c80505cd2f094c2ac1b19c4666619c9a80442dda098d69e830986c7c6f4931687a5d60e700f78c52985cca0f6ff869235d6c0  remove-husky-git-hook.patch
+"

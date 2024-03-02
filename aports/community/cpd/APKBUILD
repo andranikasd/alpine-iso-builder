@@ -1,0 +1,41 @@
+# Contributor: Bradley J Chambers <brad.chambers@gmail.com>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=cpd
+pkgver=0.5.4
+pkgrel=1
+pkgdesc="C++ implementation of the Coherent Point Drift point set registration algorithm."
+url="https://github.com/gadomski/cpd"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	cmake
+	eigen-dev
+	fgt-dev
+	samurai
+	"
+subpackages="$pkgname-dev"
+source="https://github.com/gadomski/cpd/archive/v$pkgver/cpd-v$pkgver.tar.gz
+	0001-Stop-forcing-static-builds.patch
+	"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=None \
+		-DWITH_TESTS=ON \
+		-DBUILD_SHARED_LIBS=ON
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+52b38c0cc864d165ac4a5b2a968a74982da3cc63fb00cb6a22b0029c4731b3af9481fd3eacc0c73edfcc082623398e83f6195c741d735acf1aef682b63727593  cpd-v0.5.4.tar.gz
+c9fc897486d2db611946fa060d31ac7a010dd92ffd456ccc4161bad4f5225fdc1fea2410718448a88b98d65187069e22740d00501ed15b0e1798327d3b8b7e22  0001-Stop-forcing-static-builds.patch
+"

@@ -1,0 +1,74 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=valgrind
+pkgver=3.22.0
+pkgrel=0
+pkgdesc="Tool to help find memory-management problems in programs"
+url="https://valgrind.org/"
+# armv6/riscv64 not supported upstream
+arch="all !armhf !riscv64"
+license="GPL-2.0-or-later"
+# it seems like busybox sed works but the configure script requires GNU sed
+makedepends="sed perl linux-headers"
+# from README_PACKAGERS:
+#   Don't strip the debug info off lib/valgrind/$platform/vgpreload*.so
+#   in the installation tree.  Either Valgrind won't work at all, or it
+#   will still work if you do, but will generate less helpful error
+#   messages.
+options="!strip"
+subpackages="$pkgname-scripts $pkgname-dev $pkgname-doc"
+source="https://sourceware.org/pub/valgrind/valgrind-$pkgver.tar.bz2"
+
+# Valgrind 3.19.0 added support for compiling the tests on musl.
+# However, it seems they haven't tested this on many architectures.
+# Disable check on architectures where it doesn't work for now.
+#
+# TODO: Report upstream.
+case "$CARCH" in
+aarch64|s390x|armv7|x86) options="$options !check"
+esac
+
+build() {
+	export CFLAGS="${CFLAGS/-fno-plt} -fno-stack-protector -no-pie -U_FORTIFY_SOURCE"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--without-mpicc
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	# we have options=!strip above so we strip the /usr/bin/* manually
+	if [ -z "$DEBUG" ]; then
+		scanelf -Ry "$pkgdir" \
+			| awk '$1=="ET_DYN"{printf("%s%c",$2,0)}' \
+			| xargs -0 strip
+	fi
+}
+
+scripts() {
+	pkgdesc="$pkgdesc (perl+python cachegrind/callgrind script tools)"
+	depends="$pkgname=$pkgver-r$pkgrel python3 perl"
+
+	amove \
+		usr/bin/ms_print \
+		usr/bin/cg_merge \
+		usr/bin/cg_annotate \
+		usr/bin/cg_diff \
+		usr/bin/callgrind_control \
+		usr/bin/callgrind_annotate
+}
+
+sha512sums="
+2904c13f68245bbafcea70998c6bd20725271300a7e94b6751ca00916943595fc3fac8557da7ea8db31b54a43f092823a0a947bc142829da811d074e1fe49777  valgrind-3.22.0.tar.bz2
+"

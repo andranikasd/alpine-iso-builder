@@ -1,0 +1,44 @@
+# Contributor: Jean-Louis Fuchs <jean-louis.fuchs@adfinis-sygroup.ch>
+# Contributor: omni <omni+alpine@hack.org>
+# Maintainer: Jean-Louis Fuchs <jean-louis.fuchs@adfinis-sygroup.ch>
+pkgname=unison
+# Note: unison breaks compatibility between minor (major.minor) versions.
+pkgver=2.53.3
+_majorver=${pkgver%.*}  # x.y
+pkgrel=0
+pkgdesc="Efficient file-synchronization tool"
+url="https://www.cis.upenn.edu/~bcpierce/unison/"
+arch="all !riscv64" # ocaml
+license="GPL-3.0-or-later"
+makedepends="ocaml linux-headers"
+checkdepends="coreutils"
+subpackages="$pkgname-doc"
+source="unison-$pkgver.tar.gz::https://github.com/bcpierce00/unison/archive/v$pkgver.tar.gz"
+
+build() {
+	make -j1 UISTYLE=text DEBUGGING=false THREADS=true
+	make -C man
+	cp src/unison unison-text
+	cp src/unison-fsmonitor unison-fsmonitor
+}
+
+check() {
+	make test
+}
+
+package() {
+	install -Dm755 unison-text \
+		"$pkgdir"/usr/bin/unison-text-$_majorver
+	install -Dm755 unison-fsmonitor \
+		"$pkgdir"/usr/bin/unison-fsmonitor-$_majorver
+	install -Dm644 man/unison.1 \
+		-t "$pkgdir"/usr/share/man/man1
+
+	cd "$pkgdir"/usr/bin
+	ln -s unison-text-$_majorver unison-text
+	ln -s unison-text unison
+}
+
+sha512sums="
+f3fafd5e1a2950a00ed8bcc682036180ea40eff1ccfa1fc671cca49954890a535ee48faf1e8e62002563143e5479b9df1eca1db1caf03dffc50449fb467b8e2b  unison-2.53.3.tar.gz
+"

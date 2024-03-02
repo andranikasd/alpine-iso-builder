@@ -1,0 +1,46 @@
+# Contributor: Andy Hawkins <andy@gently.org.uk>
+# Maintainer: Andy Hawkins <andy@gently.org.uk>
+pkgname=py3-quantiphy
+pkgver=2.19
+pkgrel=1
+pkgdesc="Physical Quantities"
+url="https://quantiphy.readthedocs.io/"
+arch="noarch"
+license="MIT"
+depends="
+	python3
+	"
+makedepends="
+	py3-gpep517
+	py3-flit-core
+	"
+checkdepends="
+	py3-pytest
+	py3-pytest-cov
+	py3-inform
+	py3-parametrize-from-file
+	py3-voluptuous
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/KenKundert/quantiphy/archive/v$pkgver/quantiphy-v$pkgver.tar.gz"
+builddir="$srcdir/quantiphy-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	# Exclude manual tests as they create a circular dependency with py3-quantiphy_eval
+	PYTHONPATH="$PWD/build/lib" pytest -k 'not test_manual'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/quantiphy-$pkgver*.whl
+}
+
+sha512sums="
+8f76a493997ff51d325ad6e043c12cf0ea272cd1962cf7a9d3b354b2eb2d3c581eda4b3e291b174ba2fe7a1f2f151ed2720c16b9c428e03c22705afb74418755  quantiphy-v2.19.tar.gz
+"

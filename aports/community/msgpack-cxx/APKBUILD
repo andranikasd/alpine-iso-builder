@@ -1,0 +1,38 @@
+# Contributor: Daniel Sabogal <dsabogalcc@gmail.com>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=msgpack-cxx
+# When bumping, rebuild all aports with msgpack-cxx-dev in makedepends.
+pkgver=6.1.0
+pkgrel=0
+pkgdesc="An efficient object serialization library for C++"
+url="https://msgpack.org"
+arch="all"
+license="BSL-1.0"
+depends_dev="boost-dev"
+makedepends="$depends_dev cmake samurai"
+checkdepends="gtest-dev zlib-dev"
+subpackages="$pkgname-dev"
+source="https://github.com/msgpack/msgpack-c/releases/download/cpp-$pkgver/msgpack-cxx-$pkgver.tar.gz"
+
+build() {
+	cmake -G Ninja -B build \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_VERBOSE_MAKEFILE=ON \
+		-DMSGPACK_BUILD_EXAMPLES=OFF \
+		-DMSGPACK_BUILD_TESTS=ON \
+		-DMSGPACK_CXX17=ON
+	cmake --build build
+}
+
+check() {
+	cmake --build build --target test
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+935453432b53d2cbecc3e34d4fb17ecd3bbc6eae9087fa3c4445c90750f144ab39ad6461cc9552eec7ed2b222315c5f6e8b30d409eb34a98bebe02e03582fd41  msgpack-cxx-6.1.0.tar.gz
+"

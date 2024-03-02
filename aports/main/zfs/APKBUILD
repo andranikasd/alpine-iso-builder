@@ -1,0 +1,114 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=zfs
+pkgver=2.2.3
+pkgrel=0
+pkgdesc="Advanced filesystem and volume manager"
+url="https://openzfs.org"
+arch="all"
+license="CDDL-1.0"
+provides="spl=$pkgver-r$pkgrel" # Mitigate upgrade conflicts
+depends_dev="
+	attr-dev
+	e2fsprogs-dev
+	glib-dev
+	libtirpc-dev
+	openssl-dev>3
+	"
+makedepends="
+	$depends_dev
+	linux-headers
+	py3-cffi
+	py3-distlib
+	py3-setuptools
+	python3-dev
+	util-linux-dev
+	"
+options="!check" # need to be run on live system w/ ZFS loaded.
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-dracut::noarch
+	$pkgname-libs
+	$pkgname-openrc
+	$pkgname-scripts
+	$pkgname-udev
+	$pkgname-utils-py:utils_py:noarch
+	py3-pyzfs-pyc
+	py3-pyzfs:pyzfs:noarch
+	"
+source="https://github.com/openzfs/zfs/releases/download/zfs-$pkgver/zfs-$pkgver.tar.gz
+	alpine-bash-completion-dir.patch
+	"
+
+# secfixes:
+#   2.2.1-r1:
+#     - CVE-2023-49298
+
+build() {
+	export CFLAGS="$CFLAGS -fno-tree-vectorize"
+	export CXXFLAGS="$CXXFLAGS -fno-tree-vectorize"
+	export LIBS="$LIBS -lintl"
+	./configure --prefix=/usr \
+		--with-tirpc \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--with-config=user \
+		--with-udevdir=/lib/udev \
+		--disable-systemd \
+		--disable-static \
+		--with-python=3 \
+		--enable-pyzfs
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	rm -rf "$pkgdir"/usr/share/initramfs-tools
+
+	# Fix permissions of zfs OpenRC service configuration (#13840)
+	chmod 644 "$pkgdir"/etc/conf.d/zfs
+}
+
+dracut() {
+	pkgdesc="$pkgdesc (dracut)"
+	install_if="$pkgname=$pkgver-r$pkgrel dracut-modules"
+
+	amove usr/lib/dracut
+}
+
+udev() {
+	pkgdesc="$pkgdesc (udev)"
+
+	amove lib/udev
+}
+
+scripts() {
+	pkgdesc="$pkgdesc (scripts)"
+
+	amove usr/share/zfs
+}
+
+utils_py() {
+	pkgdesc="$pkgdesc (python utils)"
+	depends="python3"
+
+	amove usr/bin/arc_summary
+	amove usr/bin/arcstat
+	amove usr/bin/dbufstat
+}
+
+pyzfs() {
+	pkgdesc="$pkgdesc (Python lib to interact with ZFS)"
+	depends="python3 $pkgname"
+
+	amove usr/lib/python3*
+}
+
+sha512sums="
+e6c3df531a33f4bd198429e61b7630f1e965a03fd60d1b847bdf0d55c6d2af3abc38b5e8a63aa9ef9f969cc7eca36cb24a7641f6fb8c41ef2fa024d76cd28f3d  zfs-2.2.3.tar.gz
+93f7aa5ccaa2d75093930914b291c0b030db5cca813e8cce179e24fc4a76cdeb236e63a9e51b4074dbeb896af1783766e02e4d4aa6134c2a1f1a1fd8fd15ba97  alpine-bash-completion-dir.patch
+"

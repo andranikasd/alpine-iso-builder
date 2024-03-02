@@ -1,0 +1,38 @@
+# Maintainer:
+pkgname=rsgain
+pkgver=3.5
+pkgrel=0
+pkgdesc="Simple, but powerful ReplayGain 2.0 tagging utility"
+url="https://github.com/complexlogic/rsgain"
+arch="all"
+license="BSD-2-Clause"
+makedepends="
+	cmake
+	ffmpeg-dev
+	fmt-dev
+	inih-dev
+	libebur128-dev
+	samurai
+	taglib-dev
+	zlib-dev
+	"
+source="https://github.com/complexlogic/rsgain/releases/download/v$pkgver/rsgain-$pkgver-source.tar.xz"
+# does not contain any tests
+options="!check"
+
+build() {
+	CXXFLAGS="$CXXFLAGS -O2 -flto=auto" \
+	CFLAGS="$CFLAGS -O2 -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+aa870ffcbb333c6b604ee45593e4976c4aca39af7a88f0517b470a3d29c7bc74aeb7bcc8a68f5604aee74114f9751c64d4b5e55711e1340ed2f682ae641d29af  rsgain-3.5-source.tar.xz
+"

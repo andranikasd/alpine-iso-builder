@@ -1,0 +1,51 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=py3-django-allauth
+_pyname="django-allauth"
+pkgver=0.61.1
+pkgrel=0
+arch="noarch"
+pkgdesc="Integrated set of Django applications addressing SSO"
+url="https://pypi.python.org/project/django-allauth"
+license="MIT"
+depends="
+	py3-django
+	py3-openid
+	py3-requests
+	py3-requests-oauthlib
+	py3-jwt
+	py3-cryptography
+	"
+makedepends="
+	py3-setuptools
+	py3-gpep517
+	py3-wheel
+	"
+checkdepends="
+	py3-qrcode
+	py3-pytest
+	py3-pytest-django
+	py3-onelogin
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pennersr/$_pyname/archive/$pkgver.tar.gz"
+builddir="$srcdir"/$_pyname-$pkgver
+options="!check" # Missing py3-onelogin depend
+subpackages="$pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 manage.py test allauth
+}
+
+package() {
+	python3 -m installer --destdir="$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+ad86f79f54ae222a97884fd0e0b18f8eddb0caf08c541490a1f61f968a44ce9b3504c5456bd6e416a459f455b477e5c36f2eda58b7c68ba0f51ba8f67af1759f  py3-django-allauth-0.61.1.tar.gz
+"

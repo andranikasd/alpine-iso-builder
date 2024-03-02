@@ -1,0 +1,45 @@
+# Contributor: jane400 <alpine@j4ne.de>
+# Maintainer: team/gnome <alpine@j4ne.de>
+pkgname=gnome-text-editor
+pkgver=45.3
+pkgrel=0
+pkgdesc="A simple text editor for GNOME"
+url="https://apps.gnome.org/TextEditor"
+arch="all !s390x"
+license="GPL-3.0-or-later"
+makedepends="
+	desktop-file-utils
+	editorconfig-dev
+	enchant2-dev
+	glib-dev
+	gtk4.0-dev
+	gtksourceview5-dev
+	itstool
+	libadwaita-dev
+	meson
+	"
+checkdepends="
+	appstream-glib
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://gitlab.gnome.org/GNOME/gnome-text-editor/-/archive/$pkgver/gnome-text-editor-$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dbugreport_url="https://gitlab.alpinelinux.org/alpine/aports/-/issues" \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+7f21d754144ab0f516e1cdbd6bda12b26a00ea70a4462efdb8e13d1bf02fe74c7607484bf84c7ff5dd252b0f210fb1f7a15b3be00829a92bd50c281ac387dc42  gnome-text-editor-45.3.tar.gz
+"

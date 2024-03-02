@@ -1,0 +1,37 @@
+# Contributor: Duncan Bellamy <dunk@denkimushi.com>
+# Maintainer: Duncan Bellamy <dunk@denkimushi.com>
+pkgname=py3-softlayer
+pkgver=6.1.11
+pkgrel=0
+pkgdesc="library for SoftLayer's API"
+url="https://github.com/softlayer/softlayer-python"
+arch="noarch"
+license="MIT"
+depends="py3-click py3-prompt_toolkit py3-prettytable3 py3-pygments py3-requests py3-rich py3-urllib3"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest py3-pytest-mock py3-testtools py3-softlayer-zeep python3-tkinter"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/softlayer/softlayer-python/archive/v$pkgver.tar.gz"
+builddir="$srcdir/softlayer-python-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+
+	rm -rf "$pkgdir"/usr/lib/python3*/site-packages/tests
+}
+
+sha512sums="
+8c1551bb3eea53b95d5f38fcb8a6220883a2aca4a0d85481145d259f9d822858417131e4e2083d1c626c404539690f14b3003d07d8429209e1c831241157ac48  py3-softlayer-6.1.11.tar.gz
+"

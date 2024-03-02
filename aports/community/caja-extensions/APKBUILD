@@ -1,0 +1,43 @@
+# Contributor: Alan Lacerda <alacerda@alpinelinux.org>
+# Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
+pkgname=caja-extensions
+pkgver=1.26.1
+pkgrel=1
+pkgdesc="Set of extensions for Caja file manager"
+url="https://github.com/mate-desktop/caja-extensions"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	caja-dev
+	dconf-dev
+	glib-dev
+	gtk+3.0-dev
+	intltool
+	mate-desktop-dev
+	"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/caja-extensions-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--enable-sendto \
+		--enable-wallpaper \
+		--enable-open-terminal
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+0b4df2b141f1a5b2e06b9c426f9605b900e9ed61c8725930165465265938740725f3e49f27788cb41728ab6d559245fc1ce6e44ef97b229d1456b191892c1ef0  caja-extensions-1.26.1.tar.xz
+"

@@ -1,0 +1,45 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+pkgname=oxygen-sounds
+pkgver=5.27.10
+pkgrel=0
+pkgdesc="The Oxygen Sound Theme"
+# armhf blocked by extra-cmake-modules
+arch="noarch !armhf"
+url="https://kde.org/plasma-desktop/"
+license="GPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	qt5-qtbase-dev
+	samurai
+	"
+
+case "$pkgver" in
+	*.90*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+_repo_url="https://invent.kde.org/plasma/oxygen-sounds.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/oxygen-sounds-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+4a503c096521e362a960ea4342d5b7fa14e9f15f610b361dbf1c2d3a71205641de1b951f14a9df4c5fc5e62be9bb6cc7c4d656ca0b4e90b63446543dd5231272  oxygen-sounds-5.27.10.tar.xz
+"

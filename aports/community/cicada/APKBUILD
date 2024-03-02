@@ -1,0 +1,44 @@
+# Contributor: Hugo Wang <w@mitnk.com>
+# Maintainer: Hugo Wang <w@mitnk.com>
+pkgname=cicada
+pkgver=0.9.38
+pkgrel=1
+pkgdesc="A bash-like Unix shell"
+url="https://github.com/mitnk/cicada"
+# s390x and riscv64 blocked by cargo
+arch="all !s390x !riscv64"
+license="MIT"
+depends="ncurses-terminfo-base"
+makedepends="sqlite-dev cargo cargo-auditable"
+checkdepends="xz"
+install="$pkgname.post-install $pkgname.pre-deinstall"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/mitnk/cicada/archive/v$pkgver.tar.gz
+	ulimit.patch
+	unbundle-sqlite.patch
+	"
+
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen --release --bins
+}
+
+package() {
+	install -Dm755 target/release/cicada -t "$pkgdir"/usr/bin
+	install -Dm644 docs/*.md -t "$pkgdir"/usr/share/doc/$pkgname
+}
+
+sha512sums="
+df8c500e766bd60a0a119fec8df7db618856bfd9fbdb120ae83f2e7eeba013af218ab3be7de3531d70ff46d1fc816aa05a6e421cc1ece6c0d85f43887eb91163  cicada-0.9.38.tar.gz
+5a68a11b8b91c0536655ed0af959db4d051ea6ecfeff80e7b335c53395321d5cc264d5485ac50c0d986f31a4c56e0d41624dfc2930cca51650ec0b4f8faa5f9a  ulimit.patch
+6d1c264d04d88153b36f5cd8f5fa14775b58416d1477ad3cedf5b8a318c7c7d2c46b3eedbda659c9efc5b1d82c225ce0bdb0353743916380cb1aec43fb055758  unbundle-sqlite.patch
+"

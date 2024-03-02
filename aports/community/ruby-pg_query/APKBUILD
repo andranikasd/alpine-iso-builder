@@ -1,0 +1,81 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=ruby-pg_query
+_gemname=pg_query
+# Keep in mind the aport libpg_query when bumping.
+pkgver=5.0.0
+pkgrel=0
+pkgdesc="PostgreSQL query parsing and normalization library for Ruby"
+url="https://github.com/pganalyze/pg_query"
+# x86, armhf, armv7: fingerprint feature is broken on 32-bit
+# s390x: Failing tests
+# riscv64 blocked by libpg_query
+arch="all !x86 !armhf !armv7 !s390x !riscv64"
+license="BSD-3-Clause"
+depends="ruby ruby-google-protobuf>=3.15.5"
+checkdepends="ruby-rspec"
+makedepends="
+	libpg_query-dev
+	postgresql16-dev
+	protoc
+	ruby-dev
+	xxhash-dev
+	"
+source="https://github.com/pganalyze/pg_query/archive/v$pkgver/$pkgname-$pkgver.tar.gz
+	unbundle-deps.patch
+	"
+builddir="$srcdir/$_gemname-$pkgver"
+
+prepare() {
+	default_prepare
+
+	# Remove bundled dependencies.
+	cd ext/pg_query
+	rm protobuf-c.c xxhash.c src_*.c src_*.h
+	find . -name 'pg_query*' ! -name 'pg_query_ruby.*' -delete
+	rm -Rf include
+}
+
+build() {
+	# Regenerate Ruby source from pg_query.proto provided by libpg_query
+	# package - to be sure that we use correct version.
+	protoc --proto_path=/usr/include/pg_query \
+		--ruby_out=lib/pg_query \
+		/usr/include/pg_query/pg_query.proto
+
+	gem build $_gemname.gemspec
+
+	CFLAGS="$CFLAGS -I$(pg_config --includedir-server)" \
+	gem install \
+		--local \
+		--install-dir dist \
+		--ignore-dependencies \
+		--no-document \
+		--verbose \
+		$_gemname
+
+	# Needed for running tests.
+	cp -l dist/extensions/*/*/$_gemname-*/$_gemname/*.so lib/$_gemname/
+}
+
+check() {
+	rspec --format d
+}
+
+package() {
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
+	cd "$builddir"/dist
+
+	mkdir -p "$gemdir"
+	cp -r extensions gems specifications "$gemdir"/
+
+	# Remove unnecessary and duplicated files.
+	rm -f "$gemdir"/extensions/*/*/$_gemname-*/mkmf.log
+	cd "$gemdir"/gems/$_gemname-$pkgver
+	rm -rf ext/ lib/$_gemname/*.so LICENSE Rakefile *.md
+}
+
+sha512sums="
+c0b2ddec8f2e5d13a43b1c27a26f577a469fa53fad02745436726ab6a775d355622a9bac99697aa40854e2584d0d8581864e75d7026ae254fe05881f69dde1e2  ruby-pg_query-5.0.0.tar.gz
+db45d8bd2390a4b896e6e33e092d07a97e0ad7e6709e2f8bc8764bf7aa77cb1e2b3188de4c9ec58bf27988bf689719aa5ee404e987d9ca1350d07ddca24315b8  unbundle-deps.patch
+"

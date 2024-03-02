@@ -1,0 +1,48 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=postgresql-orafce
+_pkgname=orafce
+pkgver=4.9.2
+_pkgver=VERSION_${pkgver//./_}
+pkgrel=0
+pkgdesc="Oracle's compatibility functions and packages for PostgreSQL"
+url="https://github.com/orafce/orafce"
+arch="all"
+license="0BSD"
+makedepends="bison flex postgresql-dev"
+subpackages="
+	$pkgname-bitcode
+	$pkgname-doc
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/orafce/$_pkgname/archive/$_pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$_pkgver"
+options="!check"  # XXX: installcheck requires running PostgreSQL
+
+build() {
+	make USE_PGXS=1 all
+}
+
+package() {
+	_pgver=$(pg_config --major-version)
+	depends="postgresql$_pgver"
+
+	make USE_PGXS=1 DESTDIR="$pkgdir" install
+
+	cd "$pkgdir"
+	mv ./usr/share/doc/postgresql$_pgver/extension \
+		./usr/share/doc/$pkgname
+	rmdir ./usr/share/doc/postgresql$_pgver
+}
+
+bitcode() {
+	_pgver=$(pg_config --major-version)
+	pkgdesc="$pkgdesc (bitcode for JIT)"
+	depends="$pkgname=$pkgver-r$pkgrel"
+	install_if="postgresql$_pgver-jit $pkgname=$pkgver-r$pkgrel"
+
+	amove usr/lib/postgresql*/bitcode
+}
+
+sha512sums="
+068abfbb24724c19f63540dc5ddb4006508e42a3623f8499eb98d1ec8943c9f8fdba94e1ec49bf77e6450776252f76e17853e773ce92d121f64cc6d9a1cd62e8  postgresql-orafce-4.9.2.tar.gz
+"

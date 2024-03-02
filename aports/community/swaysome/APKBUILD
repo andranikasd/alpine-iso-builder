@@ -1,0 +1,37 @@
+# Maintainer: Cowington Post <cowingtonpost@gmail.com>
+pkgname=swaysome
+pkgver=2.1.0
+pkgrel=1
+pkgdesc="Helps you configure sway to work a bit more like AwesomeWM"
+url="https://gitlab.com/hyask/swaysome"
+arch="all"
+license="MIT"
+depends="sway"
+makedepends="cargo cargo-auditable"
+subpackages="$pkgname-doc"
+source="https://gitlab.com/hyask/swaysome/-/archive/$pkgver/swaysome-$pkgver.tar.gz"
+options="net"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/"$pkgname" -t "$pkgdir"/usr/bin
+
+	install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="
+963f318e2de4ebefd9867fb48b305cbc78b9c6b9b512946ad4e1df6b8337cc5fd291ca9f154e75bafe2e02b534aac12a46e61590ec192f37b7f7fe75e46a08d6  swaysome-2.1.0.tar.gz
+"

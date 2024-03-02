@@ -1,0 +1,49 @@
+# Contributor: prspkt <prspkt@protonmail.com>
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=gnuplot
+pkgver=6.0.0
+pkgrel=0
+pkgdesc="Utility for plotting graphs"
+url="http://www.gnuplot.info/"
+arch="all"
+license="MIT"
+makedepends="
+	cairo-dev
+	gd-dev
+	libcerf-dev
+	libjpeg-turbo-dev
+	libpng-dev
+	lua5.3-dev
+	pango-dev
+	readline-dev
+	"
+subpackages="$pkgname-doc"
+source="https://downloads.sourceforge.net/sourceforge/gnuplot/gnuplot-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-stats \
+		--disable-wxwidgets \
+		--without-qt
+	make
+}
+
+check() {
+	make GNUTERM=dumb check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm644 BUGS NEWS PGPKEYS README* \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+sha512sums="
+520b9a74ac64e4d0b0f89dda55f77b27026e60b7a9208e994d321299481d0aa1f8adc91e61682534112bf739311a3d312c5abe08c12ec9bc2a7a6319b53872ea  gnuplot-6.0.0.tar.gz
+"

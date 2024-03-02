@@ -1,0 +1,39 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-xarray
+_pkgorig=xarray
+pkgver=2024.1.1
+pkgrel=0
+pkgdesc="N-D labeled arrays and datasets in Python"
+url="https://xarray.dev"
+arch="noarch !s390x" # assertionErrors
+license="Apache-2.0"
+depends="python3 py3-numpy py3-packaging py3-pandas"
+makedepends="py3-gpep517 py3-setuptools_scm py3-wheel"
+checkdepends="py3-coverage py3-mock py3-pytest-xdist py3-pytest-cov"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/x/xarray/xarray-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgorig-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest -n auto -k 'not test_dataset and not test_distributed and not test_dataarray and not test_accessor_str and not test_missing'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm -r "$pkgdir"/usr/lib/python3.*/site-packages/xarray/tests
+}
+
+sha512sums="
+b6447ca2c80b3a3091ac2baba648fef4faa79ffff272360e9726b318b517ede9d2717d1b6f77f03fdacf55527233f1a37c0d114901fe1a265d3e435cf293a487  py3-xarray-2024.1.1.tar.gz
+"

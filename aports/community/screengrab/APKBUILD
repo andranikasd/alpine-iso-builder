@@ -1,0 +1,46 @@
+# Maintainer: Antoni Aloy <aaloytorrens@gmail.com>
+pkgname=screengrab
+pkgver=2.7.0
+pkgrel=0
+pkgdesc="Crossplatform tool for fast making screenshots"
+url="https://github.com/lxqt/screengrab"
+arch="all !armhf" # blocked by kwindowsystem-dev
+license="GPL-2.0-or-later"
+makedepends="
+	cmake
+	kwindowsystem5-dev
+	libqtxdg-dev
+	lxqt-build-tools
+	qt5-qtbase-dev
+	qt5-qttools-dev
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://github.com/lxqt/screengrab/releases/download/$pkgver/screengrab-$pkgver.tar.xz"
+options="!check" # No testsuite
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		$CMAKE_CROSSOPTS .
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	install_if="lang $pkgname=$pkgver-r$pkgrel"
+	amove usr/share/$pkgname/translations
+}
+
+sha512sums="
+0becd8972408a788b56affc9091cdc9ce1fe79160bba27ae29c5f1bf48ed0b73bafdabf3aeaac1eafe646aeaa4e162c0302b7ba1ee4f07785010e50a7d8131a1  screengrab-2.7.0.tar.xz
+"

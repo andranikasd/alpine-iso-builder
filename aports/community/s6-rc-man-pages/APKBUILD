@@ -1,0 +1,23 @@
+# Maintainer: Peter Shkenev <santurysim@gmail.com>
+pkgname=s6-rc-man-pages
+pkgver=0.5.4.2.1
+pkgrel=0
+pkgdesc="Unofficial mdoc versions of the s6-rc documentation"
+url="https://git.sr.ht/~flexibeast/s6-rc-man-pages"
+arch="noarch"
+license="ISC"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~flexibeast/s6-rc-man-pages/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check" # no tests
+install_if="${pkgname%-*-*}>=${pkgver%.*} docs"
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	find "$pkgdir" -type f ! -name "*.gz" \
+		-exec gzip -9 {} \;
+}
+
+sha512sums="
+f7b02c9c48dc4fcbbf0248dbe9b6069ba0a94bac1afad55ba450a4daee9f54d3646831f6bdca98e1a6a7f0423a46898b4b35c2843b81e232364a362ed7a51234  s6-rc-man-pages-0.5.4.2.1.tar.gz
+"

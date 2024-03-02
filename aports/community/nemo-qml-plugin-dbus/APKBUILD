@@ -1,0 +1,33 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=nemo-qml-plugin-dbus
+pkgver=2.1.33
+pkgrel=0
+pkgdesc="Nemo QML dbus plugin"
+url="https://github.com/sailfishos/nemo-qml-plugin-dbus"
+arch="all !armhf" # armhf blocked by qt5-qtdeclarative-dev
+license="BSD-3-Clause AND LGPL-2.1-only"
+depends_dev="
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	"
+makedepends="$depends_dev"
+subpackages="$pkgname-dev"
+source="https://github.com/sailfishos/nemo-qml-plugin-dbus/archive/$pkgver/nemo-qml-plugin-dbus-$pkgver.tar.gz"
+options="!check" # No tests
+
+build() {
+	qmake-qt5
+	make
+}
+
+package() {
+	INSTALL_ROOT="$pkgdir" make install
+
+	# Remove installed tests
+	rm -r "$pkgdir"/opt
+}
+
+sha512sums="
+3b8827aba12089d05356192f32a2415890c5dea04b302e5fe10545242374e7004596b94fc18421c9c35c9a12ee097418f10148d483ee0102068b815e057022ae  nemo-qml-plugin-dbus-2.1.33.tar.gz
+"

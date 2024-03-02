@@ -1,0 +1,34 @@
+# Contributor: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+# Maintainer: Iztok Fister, Jr. <iztok@iztok-jr-fister.eu>
+pkgname=py3-thumbnails-readme
+pkgver=0.4.1
+pkgrel=0
+pkgdesc="Create thumbnails from Git folders"
+url="https://github.com/firefly-cpp/thumbnails-readme"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3 poppler-utils py3-cairosvg py3-pdf2image py3-pillow"
+makedepends="py3-gpep517 py3-poetry-core"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://github.com/firefly-cpp/thumbnails-readme/archive/$pkgver/thumbnails-readme-$pkgver.tar.gz"
+builddir="$srcdir/thumbnails-readme-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/thumbnails_readme-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+b5d8042a154ae4182768f1aa634e295d7fa2ddd82ceab50a02fc38c71fd344f1a1012623923f79936b53038079bf316dbb8e63c79667a29e94bccd9200410087  thumbnails-readme-0.4.1.tar.gz
+"

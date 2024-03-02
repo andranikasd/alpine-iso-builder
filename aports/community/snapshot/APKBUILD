@@ -1,0 +1,45 @@
+# Contributor: Thomas Aldrian <aldrian.thom@proton.me>
+# Maintainer: team/gnome <aldrian.thom@proton.me>
+pkgname=snapshot
+pkgver=45.2
+pkgrel=0
+pkgdesc="Take pictures and videos"
+url="https://gitlab.gnome.org/GNOME/snapshot"
+arch="all !s390x"
+license="GPL-3.0-or-later"
+makedepends="
+	cargo
+	desktop-file-utils
+	glib-dev
+	gst-plugins-bad-dev
+	gst-plugins-base-dev
+	gstreamer-dev
+	gtk4.0-dev
+	libadwaita-dev
+	meson
+	"
+depends="
+	gst-plugin-pipewire
+	gst-plugins-bad
+	pipewire
+	"
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/snapshot/${pkgver%%.*}/snapshot-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	cargo test
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+821fb43fbf8c71dd669054889e6860974a3725d30509e00bf35ef908d97966bf9d55f8689e38371d331e4d629f19cd8f8cc874781b8fe57dbea6f029adcfaf26  snapshot-45.2.tar.xz
+"

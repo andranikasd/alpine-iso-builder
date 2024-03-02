@@ -1,0 +1,69 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=ansible-lint
+pkgver=6.22.2
+pkgrel=0
+pkgdesc="check ansible playbooks"
+url="https://github.com/ansible/ansible-lint"
+arch="noarch"
+options="!check"
+license="MIT"
+depends="
+	ansible-core
+	black
+	git
+	py3-ansible-compat
+	py3-filelock
+	py3-jinja2
+	py3-jsonschema
+	py3-packaging
+	py3-requests
+	py3-rich
+	py3-ruamel.yaml
+	py3-wcmatch
+	py3-yaml
+	python3
+	yamllint
+	"
+makedepends="
+	py3-gpep517
+	py3-installer
+	py3-setuptools
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="
+	py3-flaky
+	py3-psutil
+	py3-pytest
+	py3-pytest-cov
+	py3-pytest-xdist
+	yamllint
+	"
+subpackages="$pkgname-pyc"
+source="ansible-lint-$pkgver.tar.gz::https://github.com/ansible-community/ansible-lint/archive/refs/tags/v$pkgver/ansible-lint-v$pkgver.tar.gz
+	no-version-check.patch
+	"
+provides="py3-ansible-lint=$pkgver-r$pkgrel" # for backward compatibility
+replaces="py3-ansible-lint" # for backward compatibility
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/ansible_lint-$pkgver-py3-none-any.whl
+}
+
+sha512sums="
+f661c7654e0b2a6d648aa1f2040c856f54c8703d99b772e994ee89dc0feab14c478a07d2674e5985e68cae8187da6332563e58a428a2bbcdc840c4442410d3fc  ansible-lint-6.22.2.tar.gz
+314fa02e0b30db8a8886824b0cce825ae4ffe227e2c5be434bc96e1c3ab8a6239548574d9ed0869def67b94c684a67abbf594f78aadbc64286fe8187502ba275  no-version-check.patch
+"

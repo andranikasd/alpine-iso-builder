@@ -1,0 +1,36 @@
+# Contributor: omni <omni@gitlab.alpinelinux.org>
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=termshark
+pkgver=2.4.0
+pkgrel=14
+pkgdesc="terminal UI for tshark, inspired by Wireshark"
+url="https://termshark.io"
+license="MIT"
+arch="all !armhf" # no tshark on armhf
+depends="tshark"
+makedepends="go"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/gcla/termshark/archive/v$pkgver.tar.gz"
+
+export GOFLAGS="$GOFLAGS -trimpath -mod=readonly -modcacherw"
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	go build -v ./cmd/...
+}
+
+check() {
+	go test -v ./...
+}
+
+package() {
+	install -Dm755 $pkgname "$pkgdir"/usr/bin/$pkgname
+	install -Dm644 docs/UserGuide.md -t "$pkgdir"/usr/share/doc/$pkgname
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname
+}
+
+sha512sums="
+378bb67ff50a8dfa80f614540371f326627e73bdf63bceb183ed73afbbf9dead4e0597fb969ba49c4ee3d3de00ac7bb91166421c19c788df47ff8d9fcbc5b9fc  termshark-2.4.0.tar.gz
+"

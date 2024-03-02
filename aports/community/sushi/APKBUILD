@@ -1,0 +1,42 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=sushi
+pkgver=45.0
+pkgrel=0
+pkgdesc="Quick preview for Nautilus"
+url="https://gitlab.gnome.org/GNOME/sushi"
+arch="all !armhf !s390x !riscv64" # blocked by gjs
+license="GPL-2.0-or-later"
+depends="bubblewrap gjs webkit2gtk-4.1"
+makedepends="
+	evince-dev
+	freetype-dev
+	gjs-dev
+	gobject-introspection-dev
+	gst-plugins-base-dev
+	gstreamer-dev
+	gtk+3.0-dev
+	gtksourceview4-dev
+	harfbuzz-dev
+	meson
+	webkit2gtk-4.1-dev
+	"
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/sushi/${pkgver%.*}/sushi-$pkgver.tar.xz"
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+25f8183e8a98ece5f8fe8b62bd60c1570e580634bc154650c044d37a18f3848fac724a2bebcc59a6d2b55290cf2ec852abda21864b15d97b3395183c2391ae0f  sushi-45.0.tar.xz
+"

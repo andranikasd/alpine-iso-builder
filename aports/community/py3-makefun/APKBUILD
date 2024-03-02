@@ -1,0 +1,42 @@
+# Contributor: Andy Hawkins <andy@gently.org.uk>
+# Maintainer: Andy Hawkins <andy@gently.org.uk>
+pkgname=py3-makefun
+pkgver=1.15.2
+pkgrel=2
+pkgdesc="Small library to dynamically create python functions"
+url="https://github.com/smarie/python-makefun"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="
+	py3-pytest
+	py3-pytest-runner
+	"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/m/makefun/makefun-$pkgver.tar.gz"
+builddir="$srcdir/makefun-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	PYTHONPATH="$PWD/src" pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/makefun-$pkgver*-py2.py3-none-any.whl
+}
+
+sha512sums="
+b6cb588ebf491176b06e97201846b2a5cee65f60e34b5dbcc4878d8a55e7f9fcf4b58126cb3a4ca47f5d2726422dff9ee685566c5d093dbd8fd75119ecc796b2  makefun-1.15.2.tar.gz
+"

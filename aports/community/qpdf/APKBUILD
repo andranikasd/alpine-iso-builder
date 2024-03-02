@@ -1,0 +1,68 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=qpdf
+pkgver=11.9.0
+pkgrel=0
+pkgdesc="Command-line tools and library for transforming PDF files"
+url="https://github.com/qpdf/qpdf"
+arch="all"
+license="Apache-2.0"
+makedepends="
+	cmake
+	gnutls-dev
+	libjpeg-turbo-dev
+	openssl-dev
+	samurai
+	zlib-dev
+	"
+checkdepends="coreutils perl"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-libs
+	$pkgname-fix-qdf:fix_qdf
+	"
+source="https://github.com/qpdf/qpdf/releases/download/v$pkgver/qpdf-$pkgver.tar.gz"
+
+# secfixes:
+#   7.0.0-r0:
+#     - CVE-2017-9208
+#     - CVE-2017-9209
+#     - CVE-2017-9210
+#     - CVE-2017-11624
+#     - CVE-2017-11625
+#     - CVE-2017-11626
+#     - CVE-2017-11627
+#     - CVE-2017-12595
+
+build() {
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	CFLAGS="$CFLAGS -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DBUILD_STATIC_LIBS=OFF \
+		-DBUILD_DOC_PDF=OFF \
+		-DBUILD_DOC_HTML=OFF \
+		-DINSTALL_EXAMPLES=OFF
+
+	cmake --build build
+}
+
+check() {
+	export LANG=C # Some tests fail without it
+	ctest -j2 --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+fix_qdf() {
+	pkgdesc="Repair PDF files in QDF form after editing"
+
+	amove usr/bin/fix-qdf
+}
+
+sha512sums="
+5e0a990797081f121b3a52fddedea199baf1af260093a384ed6df347e052601622b03c9ff62b7ea069d81464eb0381932428cb8c0565b3686961f7505021a165  qpdf-11.9.0.tar.gz
+"

@@ -1,0 +1,30 @@
+diff --git a/package.json b/package.json
+index 3eca670..5866073 100644
+--- a/package.json
++++ b/package.json
+@@ -86,7 +86,6 @@
+     "@types/jest": "^29.5.4",
+     "babel-plugin-i18next-extract": "^0.9.0",
+     "eslint-config-prettier": "^9.0.0",
+-    "husky": "^2.7.0",
+     "jest-environment-jsdom": "^29.7.0",
+     "jest-junit": "^16.0.0",
+     "jest-styled-components": "^6.3.4",
+@@ -115,15 +114,10 @@
+     "not op_mini all",
+     "ff ESR"
+   ],
+-  "husky": {
+-    "hooks": {
+-      "pre-commit": "lint-staged"
+-    }
+-  },
+   "lint-staged": {
+     "*.{js,json}": [
+       "prettier --write",
+       "git add"
+     ]
+   }
+-}
+\ No newline at end of file
++}

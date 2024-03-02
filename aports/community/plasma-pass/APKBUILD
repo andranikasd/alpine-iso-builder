@@ -1,0 +1,47 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-other
+pkgname=plasma-pass
+pkgver=1.2.1
+pkgrel=2
+pkgdesc="Plasma applet for the Pass password manager"
+# armhf blocked by qt5-qtdeclarative
+arch="all !armhf"
+url="https://kde.org/plasma-desktop/"
+license="LGPL-2.1-or-later"
+makedepends="
+	extra-cmake-modules
+	gpgme-dev
+	ki18n5-dev
+	kitemmodels5-dev
+	oath-toolkit-dev
+	plasma-framework5-dev
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/plasma/plasma-pass.git"
+source="https://download.kde.org/stable/plasma-pass/plasma-pass-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+eff989e045ece776a5f2696c09381ecd8f49ba83cf7de89840ab1cad89bd15e33b9b331d9c91d16956a3d5b8e5f67f52a1aa176abf1d8023b57c18573c8ce5f9  plasma-pass-1.2.1.tar.xz
+"

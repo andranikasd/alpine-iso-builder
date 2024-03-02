@@ -1,0 +1,47 @@
+# Contributor: Breno Leitao <breno.leitao@gmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=quilt
+pkgver=0.67
+pkgrel=1
+pkgdesc="Quilt allows you to easily manage large numbers of patches by keeping track of the changes each patch makes"
+url="https://savannah.nongnu.org/projects/quilt"
+arch="noarch"
+license="GPL-2.0-only"
+depends="bash bzip2 diffutils gawk gettext patch"
+makedepends="lynx perl sed"
+checkdepends="ed"
+subpackages="
+	$pkgname-doc
+	$pkgname-lang
+	$pkgname-bash-completion
+	"
+source="https://download.savannah.gnu.org/releases/quilt/quilt-$pkgver.tar.gz"
+# Broken: "mv: can't rename 'patches/test.diff': Permission denied !"
+options="!check"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make all
+}
+
+check() {
+	make check
+}
+
+package() {
+	make BUILD_ROOT="$pkgdir" install
+
+	cd "$pkgdir"
+	mkdir -p usr/share/bash-completion
+	mv etc/bash_completion.d usr/share/bash-completion/completions
+}
+
+sha512sums="
+2dcf9396444484e1664f3dc9bf6a024d11fbaac4e984a295b269bab2649e254dafe3dd89d8f79cfaf1c33d2aa80a803ea55eef4debbc1ebc8d3459ecfa52e4ec  quilt-0.67.tar.gz
+"

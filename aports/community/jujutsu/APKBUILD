@@ -1,0 +1,84 @@
+# Contributor: Celeste <cielesti@protonmail.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=jujutsu
+pkgver=0.14.0
+pkgrel=0
+pkgdesc="Git-compatible distributed version control system"
+url="https://github.com/martinvonz/jj"
+# armhf, armv7, x86: tests fail
+arch="all !armhf !armv7 !x86"
+license="Apache-2.0"
+makedepends="
+	cargo
+	cargo-auditable
+	libgit2-dev
+	libssh-dev
+	openssl-dev
+	zstd-dev
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	"
+source="https://github.com/martinvonz/jj/archive/v$pkgver/jujutsu-$pkgver.tar.gz"
+builddir="$srcdir/jj-$pkgver"
+
+export LIBSSH2_SYS_USE_PKG_CONFIG=1
+export ZSTD_SYS_USE_PKG_CONFIG=1
+
+prepare() {
+	default_prepare
+
+	# Rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# Build against system-provided libs
+	mkdir -p .cargo
+	cat >> .cargo/config.toml <<-EOF
+		[target.$target]
+		git2 = { rustc-link-lib = ["git2"] }
+	EOF
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release --bin jj
+
+	for shell in bash fish zsh; do
+		./target/release/jj util completion --$shell > jj.$shell
+	done
+
+	./target/release/jj util mangen > jj.1
+}
+
+check() {
+	# Skip flaky test on s390x
+	if [ "$CARCH" = "s390x" ]; then
+		cargo test --frozen --workspace -- \
+			--skip test_git_backend::test_gc
+	else
+		cargo test --frozen
+	fi
+}
+
+package() {
+	install -Dvm755 target/release/jj -t "$pkgdir"/usr/bin/
+
+	install -Dvm644 jj.bash \
+		"$pkgdir"/usr/share/bash-completion/completions/jj
+	install -Dvm644 jj.fish \
+		"$pkgdir"/usr/share/fish/vendor_completions.d/jj.fish
+	install -Dvm644 jj.zsh \
+		"$pkgdir"/usr/share/zsh/site-functions/_jj
+
+	install -Dvm644 jj.1 -t "$pkgdir"/usr/share/man/man1/
+	install -dvm755 "$pkgdir"/usr/share/doc
+	cp -av docs "$pkgdir"/usr/share/doc/$pkgname
+}
+
+sha512sums="
+caf494f0b21797290b02d390f8b00da89f4ca3f35fbfdffd94c65c45793e0d73dd339e82e57892c06bc6e4db162f24b403de2ccb3c520ab1c65fd6f7ebdf287e  jujutsu-0.14.0.tar.gz
+"

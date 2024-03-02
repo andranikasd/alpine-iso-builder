@@ -1,0 +1,68 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libcap
+pkgver=2.69
+pkgrel=1
+pkgdesc="POSIX 1003.1e capabilities"
+arch="all"
+license="BSD-3-Clause OR GPL-2.0-only"
+url="https://sites.google.com/site/fullycapable/"
+depends_dev="linux-headers"
+makedepends_build="linux-headers perl bash"
+makedepends_host="$depends_dev"
+makedepends="$makedepends_build $makedepends_host"
+subpackages="
+	$pkgname-doc
+	$pkgname-static
+	$pkgname-dev
+	$pkgname-getcap
+	$pkgname-setcap
+	$pkgname-utils
+	libcap2
+	"
+source="https://kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-$pkgver.tar.xz"
+
+build() {
+	make BUILD_CC=gcc CC="${CC:-gcc}" lib=lib prefix=/usr GOLANG=no \
+		DESTDIR="$pkgdir"
+}
+
+check() {
+	make GOLANG=no test
+}
+
+package() {
+	# backwards compatibility for things that depended on 'libcap'
+	depends="libcap2=$pkgver-r$pkgrel $pkgname-utils=$pkgver-r$pkgrel"
+
+	make lib=lib prefix=/usr GOLANG=no DESTDIR="$pkgdir" \
+		install
+}
+
+getcap() {
+	pkgdesc="$pkgdesc (getcap utility)"
+
+	amove usr/sbin/getcap
+}
+
+setcap() {
+	pkgdesc="$pkgdesc (setcap utility)"
+
+	amove usr/sbin/setcap
+}
+
+utils() {
+	pkgdesc="$pkgdesc (extra utils)"
+	depends="$pkgname-getcap=$pkgver-r$pkgrel $pkgname-setcap=$pkgver-r$pkgrel"
+
+	amove usr/sbin
+}
+
+libcap2() {
+	replaces="$pkgname<2.64-r1"
+	default_libs
+}
+
+sha512sums="
+647c307dc451517da9d089495ab959b4a6fbbe41c79f4e1e9bb663569dad630ead0c2e413dfb393319e3ea14dc9848c81b392107fe3382ce1813d278c3394a7f  libcap-2.69.tar.xz
+"

@@ -1,0 +1,64 @@
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+pkgname=qt6-qttools
+pkgver=6.6.2
+pkgrel=0
+_llvmver=17
+pkgdesc="A cross-platform application and UI framework (Development Tools, QtHelp)"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends_dev="
+	qt6-qtdeclarative-dev
+	vulkan-headers
+	"
+# -static not used but needed for cmake
+makedepends="$depends_dev
+	clang$_llvmver-dev
+	clang$_llvmver-static
+	cmake
+	llvm$_llvmver-dev
+	llvm$_llvmver-gtest
+	llvm$_llvmver-static
+	perl
+	samurai
+	"
+subpackages="$pkgname-dev"
+options="!check" # No autotests w/o a valid DISPLAY that allows X11 connections
+builddir="$srcdir/qttools-everywhere-src-${pkgver/_/-}"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qttools-everywhere-src-${pkgver/_/-}.tar.xz"
+
+build() {
+	# their cmake uses the clang_include_dirs only, but our llvm include dirs
+	# are in another castle
+	export CXXFLAGS="$CXXFLAGS -flto=auto -I/usr/include/llvm$_llvmver"
+	export CFLAGS="$CFLAGS -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DINSTALL_PUBLICBINDIR=usr/bin
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	cd "$pkgdir"
+	mkdir -p usr/bin
+
+	while read -r line; do
+		ln -s $line
+	done < "$builddir"/build/user_facing_tool_links.txt
+}
+
+sha512sums="
+bf8d7fc92768b2a4992cef021576b1a6ed1405995ab18113db22c72f9e159b38012ff98d797b2a9578cc82527dc51fae92605a5e6a94fdeecd7e0da95509ce90  qttools-everywhere-src-6.6.2.tar.xz
+"

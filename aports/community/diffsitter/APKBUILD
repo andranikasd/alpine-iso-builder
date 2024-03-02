@@ -1,0 +1,64 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=diffsitter
+pkgver=0.8.1
+pkgrel=1
+pkgdesc="A tree-sitter based AST difftool to get meaningful semantic diffs"
+url="https://github.com/afnanenayet/diffsitter"
+arch="all"
+license="MIT"
+checkdepends="
+	tree-sitter-python
+	tree-sitter-rust
+	"
+makedepends="cargo cargo-auditable"
+install="$pkgname.post-install"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+"
+source="https://github.com/afnanenayet/diffsitter/archive/v$pkgver/$pkgname-$pkgver.tar.gz"
+
+_cargo_opts="--frozen --no-default-features --features dynamic-grammar-libs"
+_binname=$pkgname
+
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build $_cargo_opts --release
+
+	mkdir -p comp
+	local shell; for shell in bash fish zsh; do
+		./target/release/$_binname gen-completion $shell > comp/$_binname.$shell
+	done
+}
+
+check() {
+	# Skipped tests fail due to differences in the tree-sitter grammars.
+	cargo test $_cargo_opts -- \
+		--skip=_medium_cpp_cpp_false_expects \
+		--skip=_medium_cpp_cpp_true_expects \
+		--skip=_short_go_go_true_expects \
+		--skip=_short_python_py_true_expects \
+		--skip=_medium_rust_rs_false_expects \
+		--skip=_medium_rust_rs_true_expects \
+		--skip=_short_rust_rs_true_expects
+}
+
+package() {
+	install -D -m755 target/release/$_binname -t "$pkgdir"/usr/bin/
+
+	install -D -m644 comp/$_binname.bash "$pkgdir"/usr/share/bash-completion/completions/$_binname
+	install -D -m644 comp/$_binname.fish "$pkgdir"/usr/share/fish/vendor_completions.d/$_binname.fish
+	install -D -m644 comp/$_binname.zsh "$pkgdir"/usr/share/zsh/site-functions/_$_binname
+}
+
+sha512sums="
+40c44ea27578847041969a1e5dd29ab2d87639181281c21b1c976307db009da46710e47cb446c04b6875fcc6f29597e338bacddb9cc90fad3064985e4f8d98b1  diffsitter-0.8.1.tar.gz
+"

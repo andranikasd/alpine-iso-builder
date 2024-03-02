@@ -1,0 +1,89 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Pablo Correa Gomez <ablocorrea@hotmail.com>
+# Maintainer: team/gnome <ablocorrea@hotmail.com>
+pkgname=gnome-control-center
+pkgver=45.3
+pkgrel=0
+pkgdesc="GNOME control center"
+url="https://gitlab.gnome.org/GNOME/gnome-control-center"
+arch="all !s390x" # no gnome-bluetooth-dev
+license="GPL-2.0-or-later"
+depends="
+	accountsservice
+	colord
+	cups-pk-helper
+	dbus:org.freedesktop.Secrets
+	openrc-settingsd
+	setxkbmap
+	"
+makedepends="
+	accountsservice-dev
+	cairo-dev
+	colord-dev
+	colord-gtk-dev
+	cups-dev
+	docbook-xml
+	docbook-xsl
+	gcr-dev
+	glib-dev
+	gnome-bluetooth-dev
+	gnome-desktop-dev
+	gnome-online-accounts-dev
+	gnome-settings-daemon-dev
+	gsound-dev
+	ibus-dev
+	itstool
+	krb5-dev
+	libadwaita-dev
+	libgtop-dev
+	libgudev-dev
+	libnma-dev
+	libpwquality-dev
+	libsecret-dev
+	libwacom-dev
+	libxml2-utils
+	libxslt
+	meson
+	modemmanager-dev
+	networkmanager-dev
+	polkit-dev
+	pulseaudio-dev
+	samba-dev
+	tecla-dev
+	udisks2-dev
+	upower-dev
+	"
+options="!check" # needs unpackaged py-dbusmock
+install="$pkgname.pre-install $pkgname.pre-upgrade"
+subpackages="$pkgname-dbg $pkgname-dev $pkgname-lang $pkgname-doc $pkgname-bash-completion"
+source="https://download.gnome.org/sources/gnome-control-center/${pkgver%.*}/gnome-control-center-$pkgver.tar.xz
+	README.alpine
+	"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dibus=true \
+		. output
+
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+
+	mkdir -p "$pkgdir"/usr/lib/pkgconfig
+	mv "$pkgdir"/usr/share/pkgconfig/* "$pkgdir"/usr/lib/pkgconfig
+	rmdir "$pkgdir"/usr/share/pkgconfig
+
+	install -Dm0644 "$srcdir"/README.alpine -t "$pkgdir"/usr/share/doc/"$pkgname"
+}
+
+sha512sums="
+0aad27f3324940292551c0aa9fa79771d1d41cc5a633970c709836a2d6af575f688df8553755f936495f75a02268a5a1f89e7f3b5fb03512140c73bf14fc4cf5  gnome-control-center-45.3.tar.xz
+350aa443149c71851ad4de0976c7fc5cb626ba0c57a8d41e6ef80da1c65ed84a4dfa2483ae92630a3b611c4bfa9360ded82b55e8cd0e3907294c025e4f6b1671  README.alpine
+"

@@ -1,0 +1,54 @@
+# Contributor: rubicon <rubicon@mailo.com>
+# Maintainer: Celeste <cielesti@protonmail.com>
+pkgname=txr
+pkgver=293
+pkgrel=0
+pkgdesc="Programming language for convenient data munging"
+url="https://www.nongnu.org/txr/"
+# s390x: ftbfs (struct jmp in unwind.h not ported)
+# riscv64: tests/006/freeform-5.txr segfaults
+arch="all !s390x !riscv64"
+license="BSD-2-Clause"
+makedepends="libffi-dev zlib-dev"
+subpackages="$pkgname-doc $pkgname-vim::noarch"
+source="https://www.kylheku.com/cgit/txr/snapshot/txr-$pkgver.tar.gz"
+
+build() {
+	./configure --prefix=/usr
+	make
+}
+
+check() {
+	case "$CARCH" in
+	aarch64)
+		msg "Disabling IPv6 test for aarch64 in 014/dgram-stream.tl"
+		sed -i 's/,\*maybe-ipv6//' tests/014/dgram-stream.tl
+		;;
+	x86)
+		msg "Disabling 012/cont.tl and 012/compile.tl tests on x86"
+		rm -v tests/012/cont.tl tests/012/compile.tl
+		;;
+	esac
+
+	make tests
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dvm644 LICENSE METALICENSE \
+		-t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+vim() {
+	pkgdesc="Vim syntax for $pkgname"
+	depends=
+	install_if="$pkgname=$pkgver-r$pkgrel vim"
+
+	install -Dvm644 "$builddir"/*.vim \
+		-t "$subpkgdir"/usr/share/vim/vimfiles/syntax/
+}
+
+sha512sums="
+7761cb87a4bf617a6339d7273ac9e99a5853d00d58da9f6ab841a97b31622fa0121595ce048b328a487040fc13860c82aa5431420a0cb58900e2d7891ea18390  txr-293.tar.gz
+"

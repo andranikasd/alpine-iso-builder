@@ -1,0 +1,71 @@
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Maintainer: Clayton Craft <clayton@craftyguy.net>
+pkgname=py3-lsp-server
+pkgver=1.10.0
+pkgrel=0
+pkgdesc="python implementation of the language server protocol, fork of python-language-server"
+url="https://github.com/python-lsp/python-lsp-server"
+arch="noarch !armhf !s390x"  # armhf: no py3-qt, s390x: no py3-pylint
+license="MIT"
+depends="
+	py3-docstring-to-markdown
+	py3-jedi
+	py3-lsp-jsonrpc
+	py3-pluggy
+	py3-setuptools
+	py3-ujson
+	python3
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="
+	py3-autopep8
+	py3-flake8
+	py3-flaky
+	py3-matplotlib
+	py3-mccabe
+	py3-numpy
+	py3-pandas
+	py3-pycodestyle
+	py3-pydocstyle
+	py3-pyflakes
+	py3-pylint
+	py3-pytest
+	py3-pytest-cov
+	py3-python-versioneer
+	py3-qt5
+	py3-rope
+	py3-toml
+	py3-whatthepatch
+	py3-yapf
+	"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/p/python-lsp-server/python-lsp-server-$pkgver.tar.gz"
+builddir="$srcdir/python-lsp-server-$pkgver"
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# deselect'ed tests are broken
+	.testenv/bin/python3 -m pytest \
+		-k 'not test_jedi_completion_environment and not test_symbols_all_scopes_with_jedi_environment'
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+342452a5e3b1ae448a993f64501b2162b286f009026f1b5d306621c4befd0188699fc682206d50d06a93d8780862c8476186f8d0e4bb20592ddbbade1276445c  python-lsp-server-1.10.0.tar.gz
+"

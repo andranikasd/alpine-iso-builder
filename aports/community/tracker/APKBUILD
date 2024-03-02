@@ -1,0 +1,77 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=tracker
+pkgver=3.6.0
+pkgrel=2
+pkgdesc="Personal search tool and storage system"
+url="https://wiki.gnome.org/Projects/Tracker"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	asciidoc
+	bash-completion-dev
+	dbus-dev
+	glib-dev
+	gobject-introspection-dev
+	icu-dev
+	json-glib-dev
+	libsoup3-dev
+	libstemmer-dev
+	libxml2-dev
+	meson
+	py3-gobject3
+	py3-setuptools
+	sqlite-dev
+	networkmanager-dev
+	vala
+	"
+checkdepends="
+	bash
+	dbus
+	"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	lib$pkgname:libs
+	$pkgname-bash-completion
+	$pkgname-testutils:_testutils"
+source="https://download.gnome.org/sources/tracker/${pkgver%.*}/tracker-$pkgver.tar.xz"
+
+# x86: still sigabrts
+# armhf: hang for a really long time
+case "$CARCH" in
+armhf|x86) options="$options !check" ;;
+esac
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Ddocs=false \
+		-Dsystemd_user_services=false \
+		-Dtests="$(want_check && echo true || echo false)" \
+		. output
+	meson compile -C output
+}
+
+check() {
+	XDG_RUNTIME_DIR="$(mktemp -p "$builddir" -d)" \
+	dbus-run-session -- \
+	meson test -t 10 --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+_testutils() {
+	pkgdesc="$pkgname (test utilities)"
+	depends="tracker=$pkgver-r$pkgrel py3-gobject3 bash"
+
+	amove usr/lib/tracker-3.0/trackertestutils
+}
+
+sha512sums="
+d3b7d4c1fd1cdcccc0d78c05f43b85f5cdab584e378cb56a2b568293ff95c887650d41c3c7f65de8864a0b6f80ae26410f4a443f045a80e30bacdf7ef9499697  tracker-3.6.0.tar.xz
+"

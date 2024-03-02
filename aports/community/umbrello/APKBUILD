@@ -1,0 +1,63 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=umbrello
+pkgver=23.08.5
+pkgrel=0
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://umbrello.kde.org/"
+pkgdesc="GUI for diagramming Unified Modelling Language (UML)"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	extra-cmake-modules
+	karchive5-dev
+	kcompletion5-dev
+	kconfig5-dev
+	kcoreaddons5-dev
+	kcrash5-dev
+	kdelibs4support-dev
+	kdoctools5-dev
+	ki18n5-dev
+	kiconthemes5-dev
+	kio5-dev
+	kitemmodels5-dev
+	ktexteditor5-dev
+	kwidgetsaddons5-dev
+	kwindowsystem5-dev
+	kxmlgui5-dev
+	qt5-qtbase-dev
+	samurai
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/sdk/umbrello.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/umbrello-$pkgver.tar.xz"
+options="!check" # Broken
+
+case "$CARCH" in
+	ppc64le|armv7) options="!check";; # FIXME: testsuite fails
+esac
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_KF5=ON
+	cmake --build build
+}
+
+check() {
+	xvfb-run ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+1820e1ff81754132d7d758817e833bcd7719bdb0dbb9a30c02db6cd8d17430dd95eeca9e532a06a17c478c17fba87ae572022774a73d7b750fda734936be642f  umbrello-23.08.5.tar.xz
+"

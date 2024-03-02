@@ -1,0 +1,66 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: team/kde <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+pkgname=kasts
+pkgver=23.08.5
+pkgrel=0
+pkgdesc="Kirigami-based podcast player"
+# armhf blocked by extra-cmake-modules
+# s390x blocked by vlc-dev
+arch="all !armhf !s390x"
+url="https://invent.kde.org/plasma-mobile/kasts"
+license="LicenseRef-KDE-Accepted-GPL AND CC0-1.0"
+depends="
+	gst-plugins-good
+	kirigami-addons
+	kirigami2
+	qt5-qtbase-sqlite
+	vlc
+	"
+makedepends="
+	extra-cmake-modules
+	kconfig5-dev
+	kcoreaddons5-dev
+	ki18n5-dev
+	kirigami-addons-dev
+	kirigami2-dev
+	networkmanager-qt5-dev
+	openssl-dev>3
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	qtkeychain-dev
+	qt5-qtmultimedia-dev
+	qt5-qtquickcontrols2-dev
+	qt5-qtsvg-dev
+	samurai
+	syndication5-dev
+	taglib-dev
+	threadweaver5-dev
+	vlc-dev
+	"
+subpackages="$pkgname-lang"
+_repo_url="https://invent.kde.org/multimedia/kasts.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kasts-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build --output-on-failure
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+bfe2fa6d0bc628c51fa0db13a434e80c08a29e4bae95bccbaf6d029c424d6277eea9d0625f9de69ad6f011c482cd571000566ac838e22b03c57e8671ff4c3bd8  kasts-23.08.5.tar.xz
+"

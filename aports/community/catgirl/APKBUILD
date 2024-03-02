@@ -1,0 +1,29 @@
+# Contributor: TBK <alpine@jjtc.eu>
+# Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+pkgname=catgirl
+pkgver=2.2
+pkgrel=3
+pkgdesc="TLS-only terminal IRC client"
+arch="all"
+url="https://git.causal.agency/catgirl/"
+license="GPL-3.0-or-later"
+options="!check" # No test suite
+makedepends="libretls-dev ncurses-dev"
+subpackages="$pkgname-doc"
+source="https://git.causal.agency/catgirl/snapshot/catgirl-$pkgver.tar.gz"
+
+build() {
+	export CFLAGS="$CFLAGS -flto=auto"
+	./configure \
+		--prefix=/usr \
+		--mandir=/usr/share/man
+	make all
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+a963a469635f5cc1c28112e35028ea2b550886ff9ca4fea82286ff3c5222f18c5271c4055fcd351b2fcdfbb41bd9e52d19854f81262591acdc90d992e49a3ede  catgirl-2.2.tar.gz
+"

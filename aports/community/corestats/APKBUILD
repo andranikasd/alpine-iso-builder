@@ -1,0 +1,32 @@
+# Contributor: rahmanshaber <rahmanshaber@yahoo.com>
+# Maintainer: rahmanshaber <rahmanshaber@yahoo.com>
+pkgname=corestats
+pkgver=4.4.0
+pkgrel=1
+pkgdesc="A system resource viewer from C-Suite"
+# not useful on s390x
+arch="all !s390x"
+url="https://gitlab.com/cubocore"
+license="GPL-3.0-or-later"
+depends="qt5-qtsvg"
+makedepends="qt5-qtbase-dev libcprime-dev libcsys-dev lm-sensors-dev cmake ninja"
+source="$pkgname-$pkgver.tar.gz::https://gitlab.com/cubocore/corestats/-/archive/v$pkgver/corestats-v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-v$pkgver"
+options="!check"
+
+build() {
+	cmake -B build \
+		-GNinja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=None
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+86d9203ed313bc3dc8487b94f1f5bae26b91e12c7b7d0edd5d0d673760bf201b0fd77d648a1a60708aca45e2b37e16208701835a0505fbfa70bfb6c5211d7403  corestats-4.4.0.tar.gz
+"

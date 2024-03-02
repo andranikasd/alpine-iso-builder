@@ -1,0 +1,46 @@
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Henrik Riomar <henrik.riomar@gmail.com>
+pkgname=virt-what
+pkgver=1.25
+pkgrel=2
+pkgdesc="Detect if we are running in a virtual machine"
+url="https://people.redhat.com/~rjones/virt-what/"
+arch="x86 x86_64 ppc64le aarch64"
+license="GPL-2.0-or-later"
+depends="dmidecode"
+checkdepends="checkbashisms"
+makedepends="automake autoconf perl-dev"
+subpackages="$pkgname-doc"
+source="https://people.redhat.com/~rjones/$pkgname/files/$pkgname-$pkgver.tar.gz
+	0001-fix-bashisms-in-Alibaba-checks.patch
+	"
+
+prepare() {
+	default_prepare
+
+	autoreconf -ivf
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--mandir=/usr/share/man
+	make
+}
+
+check() {
+	make check
+
+	checkbashisms ./virt-what
+}
+
+package() {
+	make install DESTDIR="$pkgdir"
+}
+
+sha512sums="
+0147b4b44ae0ee685977aa34dfa9bf30ae8e0eb31b7a6d5c0097d16f830fa6fb6afd7156964fc79f3fd5e82b2f68d921fd5306245cc63a2140f6dddc7fdd0e98  virt-what-1.25.tar.gz
+ccc252d0efd41b9d89355dd0d400494077411ae10bffb49f48423ef2bd3d638e14c7bfe22f83d375eb9f67b5ff944e8abd226bc188a1b1d185b4c5afc00c738e  0001-fix-bashisms-in-Alibaba-checks.patch
+"

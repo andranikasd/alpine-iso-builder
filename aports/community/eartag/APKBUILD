@@ -1,0 +1,40 @@
+# Contributor: knuxify <knuxify@gmail.com>
+# Maintainer: knuxify <knuxify@gmail.com>
+pkgname=eartag
+pkgver=0.5.1
+pkgrel=0
+pkgdesc="Small and simple music tag editor that doesn't try to manage your entire library"
+url="https://gitlab.gnome.org/World/eartag"
+arch="noarch"
+license="MIT"
+depends="python3
+	py3-gobject3
+	gtk4.0
+	libadwaita
+	py3-magic
+	py3-mutagen
+	py3-pillow
+	py3-pyacoustid
+	"
+makedepends="meson glib-dev desktop-file-utils"
+checkdepends="appstream-glib py3-pytest"
+subpackages="$pkgname-lang"
+source="https://gitlab.gnome.org/World/eartag/-/archive/$pkgver/eartag-$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		. output
+	meson compile -C output
+}
+
+check() {
+	meson test --no-rebuild --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+9fa2767f6411ff1a851110a24e1b051e2c70380865ca62509d4f2c9f28440a8cf5da63d5e55a0527fa7f1a0faa2a563224d0fef39a38426494dd481c8c9ed286  eartag-0.5.1.tar.gz
+"

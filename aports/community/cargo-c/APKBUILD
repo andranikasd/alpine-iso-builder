@@ -1,0 +1,64 @@
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Oleg Titov <oleg.titov@gmail.com>
+pkgname=cargo-c
+pkgver=0.9.28
+pkgrel=0
+pkgdesc="cargo subcommand to build and install C-ABI compatibile dynamic and static libraries"
+url="https://github.com/lu-zero/cargo-c"
+arch="all"
+license="MIT"
+# nghttp2-sys doesn't support system
+makedepends="
+	cargo
+	cargo-auditable
+	curl-dev
+	libgit2-dev
+	libssh2-dev
+	openssl-dev>3
+	zlib-dev
+	"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/lu-zero/cargo-c/archive/v$pkgver.tar.gz
+	$pkgname-$pkgver-Cargo.lock::https://github.com/lu-zero/cargo-c/releases/download/v$pkgver/Cargo.lock"
+options="net" # To download crates
+
+export LIBSSH2_SYS_USE_PKG_CONFIG=1
+export DEP_NGHTTP2_ROOT=/usr
+
+prepare() {
+	default_prepare
+
+	cp "$srcdir"/$pkgname-$pkgver-Cargo.lock Cargo.lock
+
+	# Rust target triple.
+	local target=$(rustc -vV | sed -n 's/host: //p')
+
+	# Build against system-provided libs
+	mkdir -p .cargo
+	cat >> .cargo/config.toml <<-EOF
+		[target.$target]
+		git2 = { rustc-link-lib = ["git2"] }
+	EOF
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	rm target/release/cargo-*.d
+	install -Dm755 target/release/cargo-* -t "$pkgdir"/usr/bin/
+
+	install -Dm644 -t "$pkgdir/usr/share/doc/cargo-c" README.md
+}
+
+sha512sums="
+0cf05a1fff84548eb3fb9e5d68ae800b0d8a080d0480964f23fa25eea758bedcc6a8e71cd92c5b11e18257db8c0634dc3954ade80b8f4494036136bf30a41c84  cargo-c-0.9.28.tar.gz
+69c7e7b051fd50e65b1775a01c1991fb3adaa907db841f887558b15e8679b24f457547e14041c45c1fd493b0babe2241a93dd41e9f3043ffdc3becf414695a75  cargo-c-0.9.28-Cargo.lock
+"

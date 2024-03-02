@@ -1,0 +1,298 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=kodi
+pkgver=20.2
+_realname=Nexus
+pkgrel=4
+_libdvdcss="1.4.3-Next-Nexus-Alpha2-2"
+_libdvdnav="6.1.1-Next-Nexus-Alpha2-2"
+_libdvdread="6.1.3-Next-Nexus-Alpha2-2"
+_crossguid="ca1bf4b810e2d188d04cb6286f957008ee1b7681"
+pkgdesc="software media player and entertainment hub for digital media"
+url="https://kodi.tv/"
+# kodi does not know of other archs
+# x86: no flatbuffers
+arch="x86_64 aarch64 armv7"
+license="GPL-2.0-only"
+install="kodi-gbm.pre-install"
+depends="
+	curl
+	hicolor-icon-theme
+	py3-bluez
+	py3-pillow
+	py3-simplejson
+	python3
+	xdpyinfo
+	"
+# Required dependencies
+depends_dev="
+	curl-dev
+	ffmpeg4-dev
+	flatbuffers-dev
+	fmt-dev
+	freetype-dev
+	fribidi-dev
+	fstrcmp-dev
+	giflib-dev
+	glu-dev
+	gtest-dev
+	libass-dev
+	libcdio-dev
+	libdrm-dev
+	libjpeg-turbo-dev
+	lzo-dev
+	mesa-dev
+	openssl-dev>3
+	pcre-dev
+	rapidjson-dev
+	spdlog-dev
+	sqlite-dev
+	taglib-dev
+	tinyxml-dev
+	zlib-dev
+	"
+# Required for Wayland
+depends_dev="
+	$depends_dev
+	libxkbcommon-dev
+	waylandpp-dev
+	"
+# Required for gbm
+depends_dev="
+	$depends_dev
+	libinput-dev
+	"
+# Optional for extra features
+depends_dev="
+	$depends_dev
+	alsa-lib-dev
+	avahi-dev
+	bluez-dev
+	dav1d-dev
+	dbus-dev
+	eudev-dev
+	lcms2-dev
+	libbluray-dev
+	libcap-dev
+	libcec4-dev
+	libmicrohttpd-dev
+	libnfs-dev
+	libplist-dev
+	libshairport-dev
+	libudfread-dev
+	libva-glx-dev
+	libva-glx-dev
+	libxslt-dev
+	libxslt-dev
+	mariadb-connector-c-dev
+	pipewire-dev
+	pulseaudio-dev
+	python3-dev
+	samba-dev
+	"
+makedepends="
+	$depends_dev
+	autoconf
+	automake
+	clang
+	cmake
+	doxygen
+	graphviz
+	libtool
+	lld
+	llvm
+	openjdk8-jre-base
+	samurai
+	swig
+	tar
+	wayland-protocols
+	xz
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-openrc
+	$pkgname-x11
+	$pkgname-wayland
+	$pkgname-gbm
+	py3-$pkgname:py3
+	$pkgname-polkit::noarch
+	"
+replaces="xbmc"
+options="ldpath-recursive !check" # No testsuite
+source="https://github.com/xbmc/xbmc/archive/$pkgver-$_realname.tar.gz
+	crossguid-$_crossguid.tar.gz::https://mirrors.kodi.tv/build-deps/sources/crossguid-$_crossguid.tar.gz
+	libdvdcss-$_libdvdcss.tar.gz::https://github.com/xbmc/libdvdcss/archive/$_libdvdcss.tar.gz
+	libdvdnav-$_libdvdnav.tar.gz::https://github.com/xbmc/libdvdnav/archive/$_libdvdnav.tar.gz
+	libdvdread-$_libdvdread.tar.gz::https://github.com/xbmc/libdvdread/archive/$_libdvdread.tar.gz
+	fix-musl-incompability.patch
+	gcc13.patch
+	lfs64.patch
+	sse-build.patch
+	$pkgname-$pkgver-fmt10-1.patch::https://github.com/xbmc/xbmc/commit/c0357fc8aa17211b45cef3c450dfa7f4b3f83365.patch
+	$pkgname-$pkgver-fmt10-2.patch::https://github.com/xbmc/xbmc/commit/93c5212b135f398fae56ece55a3b29a21315c3ea.patch
+	$pkgname-$pkgver-fmt10-3.patch::https://github.com/xbmc/xbmc/commit/cb7caa030b3df0b411df879cdf59c789e7eb8cfe.patch
+	$pkgname-$pkgver-fmt10-4.patch::https://github.com/xbmc/xbmc/commit/894c8bf2a3fca8cdd1de92e2730e2418b6f6d965.patch
+	fix-building-with-swig-4.2.0.patch
+	kodi.initd
+	60-kodi.rules
+	"
+builddir="$srcdir/xbmc-$pkgver-$_realname"
+
+# secfixes:
+#   18.2-r0:
+#     - CVE-2018-8831
+
+_build() {
+	local outdir="$1"
+	shift
+
+	cmake -B "$outdir" -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DENABLE_EGL=ON \
+		-DENABLE_EVENTCLIENTS=ON \
+		-DENABLE_INTERNAL_CROSSGUID=ON \
+		-DENABLE_INTERNAL_FLATBUFFERS=OFF \
+		-DENABLE_INTERNAL_RapidJSON=OFF \
+		-DENABLE_GOLD=OFF \
+		-DENABLE_VAAPI=ON \
+		-DENABLE_TESTING=OFF \
+		-DCROSSGUID_URL="$srcdir"/crossguid-$_crossguid.tar.gz \
+		-Dlibdvdcss_URL="$srcdir"/libdvdcss-$_libdvdcss.tar.gz \
+		-Dlibdvdnav_URL="$srcdir"/libdvdnav-$_libdvdnav.tar.gz \
+		-Dlibdvdread_URL="$srcdir"/libdvdread-$_libdvdread.tar.gz \
+		"$@"
+	# build output doesn't track libcrossguid.a, so ninja fails if we don't build this first
+	cmake --build "$outdir" --target crossguid
+	cmake --build "$outdir"
+}
+
+build() {
+	# use less memory on x86
+	[ "$CARCH" = "x86" ] && export LDFLAGS="$LDFLAGS -Wl,--no-keep-memory"
+
+	case "$CARCH" in
+	armv7)
+		# thinlto with >8 threads on armv7 doesn't work
+		export LDFLAGS="$LDFLAGS -Wl,--thinlto-jobs=8"
+		;;
+	esac
+
+	export CC=clang
+	export CXX=clang++
+	export CFLAGS="$CFLAGS -flto=thin -I$PWD/crossguid-root/usr/include/crossguid"
+	export CXXFLAGS="$CXXFLAGS -flto=thin -I$PWD/crossguid-root/usr/include/crossguid"
+	export LDFLAGS="$LDFLAGS -fuse-ld=lld -Wl,-z,stack-size=2097152"
+	export NM=llvm-nm
+
+	case "$CARCH" in
+	arm*|aarch64)
+		# not implemented in clang here
+		export CFLAGS="${CFLAGS/-fstack-clash-protection/}"
+		export CXXFLAGS="${CXXFLAGS/-fstack-clash-protection/}"
+		;;
+	esac
+
+	_build build-x11 -DCORE_PLATFORM_NAME=x11 -DAPP_RENDER_SYSTEM=gl
+	_build build-wayland -DCORE_PLATFORM_NAME=wayland -DAPP_RENDER_SYSTEM=gl
+	_build build-gbm -DCORE_PLATFORM_NAME=gbm -DAPP_RENDER_SYSTEM=gles
+}
+
+package() {
+	depends="$depends $pkgname-bin"
+
+	DESTDIR="$pkgdir" cmake --install build-x11
+
+	install -Dm755 "$srcdir"/kodi.initd "$pkgdir"/etc/init.d/kodi
+
+	mkdir -p "$pkgdir"/usr/lib/cmake
+	mv "$pkgdir"/usr/share/kodi/cmake "$pkgdir"/usr/lib/cmake/kodi
+	mv "$pkgdir"/usr/lib/kodi/cmake/* "$pkgdir"/usr/lib/cmake/kodi/
+	rmdir "$pkgdir"/usr/lib/kodi/cmake/
+
+	install -Dm644 "$srcdir"/60-kodi.rules \
+		"$pkgdir"/usr/share/polkit-1/rules.d/60-kodi.rules
+
+	install -Dm755 \
+		build-gbm/kodi-gbm \
+		build-wayland/kodi-wayland \
+		-t "$pkgdir"/usr/bin/
+}
+
+x11() {
+	pkgdesc="X11 Kodi binary"
+	depends="$pkgname=$pkgver-r$pkgrel"
+	provides="$pkgname-bin"
+	provider_priority=5
+
+	# the "kodi" is just a script that launches the x11 backend
+	amove \
+		usr/bin/kodi \
+		usr/lib/kodi/kodi-x11 \
+		usr/lib/kodi/kodi-xrandr
+}
+
+wayland() {
+	pkgdesc="Wayland Kodi binary"
+	depends="$pkgname=$pkgver-r$pkgrel"
+	provides="$pkgname-bin"
+	provider_priority=4
+
+	amove usr/bin/kodi-wayland
+}
+
+gbm() {
+	pkgdesc="GBM Kodi binary"
+	depends="$pkgname=$pkgver-r$pkgrel"
+	provides="$pkgname-bin"
+	provider_priority=2
+
+	amove usr/bin/kodi-gbm
+}
+
+openrc() {
+	default_openrc
+	install_if="$pkgname-gbm=$pkgver-r$pkgrel openrc"
+}
+
+py3() {
+	pkgdesc="kodi python module"
+	depends="
+		glib
+		py3-avahi
+		py3-dbus
+		py3-gobject3
+		py3-udev
+		python3
+		"
+
+	amove usr/lib/python3*
+}
+
+polkit() {
+	pkgdesc="Polkit rules for Kodi in combination with GBM"
+	install_if="$pkgname-gbm=$pkgver-r$pkgrel polkit"
+
+	amove usr/share/polkit-1/rules.d
+}
+
+sha512sums="
+ddeaa626f324817f6d038fd1eaeb851d0006156fa9ef96ef475932ec50c64cbdcc7ce8b93ceea0d8bfcd1f24edc1c9d0c4a97a163a615842a9fb698e5393f7ca  20.2-Nexus.tar.gz
+f0a80d8e99b10473bcfdfde3d1c5fd7b766959819f0d1c0595ac84ce46db9007a5fbfde9a55aca60530c46cb7f8ef4c7e472c6191559ded92f868589c141ccaf  crossguid-ca1bf4b810e2d188d04cb6286f957008ee1b7681.tar.gz
+d3be3bfc13c5ea56d8db745c2aab090c99760684fe4c8f62a13d266feb319e9180ceeecf8116bfd2ed90d9accba2c11dbbf93b61ad00f69a40812ebf4eabcdda  libdvdcss-1.4.3-Next-Nexus-Alpha2-2.tar.gz
+51e6fc033121241354a5f0b3fc9a430577ae3ff6bb7f31445aa548ef4893037fb80eea3b2c6774c81e9ebaf9c45e9b490c98c2c65eb38f9f7daba84b236f7e1d  libdvdnav-6.1.1-Next-Nexus-Alpha2-2.tar.gz
+629a41157d07b8ec0ea1fe89ae5ec48f63047472a862782b805c531ae31a0376fc4dc15175f8280c3ef91d7fa977bacebb1b51232640034a34bab2293210fc5e  libdvdread-6.1.3-Next-Nexus-Alpha2-2.tar.gz
+d3445c7f96eeab7cd2a2a67319fab09300ee2e8c03912d474e885d7e8a770b501abc59352972abb4dab6fab7f138b42fdb31b0113b9bb1a71b4f000fe1cdcbbb  fix-musl-incompability.patch
+83871534c8b8a19fa50752a9793a71d571e8898e05a6662149bb5fc05a29aed33c48b99a60e45c46bb1dba9bd1fd6eb94cc24cf17131c014842757b7c42934cf  gcc13.patch
+ec0a65d45cbd1e60798a756867adeb0c30ef972e6bd4e434d666525bde4ad74aa0b78fae164f18c08b88c61c04a836a27a4f4e5c990386ce18f9b294a7337238  lfs64.patch
+82c73147c4f4cd369b413eb503e22b5ac0e4c6dc4c5558efb0b093bf9338da74510bf45141cf7a7b2b30c817eaaa0c7dab7d44960de58bfdcdff51b6e1e7652d  sse-build.patch
+4873b1acd45f882b1ac977eea329c4be527f39d5095691f52175e1e8b3cc0e76f335e163aa3838e616c50be631f851e26a7ec9c0d54650d4f0a31b64147fcc0e  kodi-20.2-fmt10-1.patch
+0105db1111bf2b38af67076c61e65d6abd44e08b4034774e04735e9a3f08c9f33f15680ac17229c810114043080729c35d40660c5a3eace57f87e94e13ab84d2  kodi-20.2-fmt10-2.patch
+0355ffcbaa955999a9cd5992c228bc2f56ba22bfdd0b64f5f68c3a7c33b44c7b08efa6ccb6de5127d11a90d5e0d5b801615d6d321828c2a6c5998a992ba52b18  kodi-20.2-fmt10-3.patch
+bb880bcbf6e3cd1454eacc20ce47af09919134df3a491f9a9a89f517d55ff8865dd7e54cc4372ca1dcd3893f5c5526f6b6931b81910d01563744cc1b818d962f  kodi-20.2-fmt10-4.patch
+6fb1bdd249590977587f59c5a57d3824380233b30edb04932c8291d8f0da0fd52d9709543e033d502fd053b1d15e0ed8a2638694b16352432c7a75781fc0f102  fix-building-with-swig-4.2.0.patch
+c47e90b6bb011092c033705195c8f1e4fcb56be412f12133514f46f5cb52acda7075c8350d78c98b86e0808f3d373ac3735f0fae10e907610b5405ba623cebac  kodi.initd
+465a2079d598bf909a458d8e9d0ddd2b2a41dff83ba736542cffec7811c044295d5af092928f20aaa6cd3bc8b13bb03ede5c7ded1783680f890464e103392787  60-kodi.rules
+"

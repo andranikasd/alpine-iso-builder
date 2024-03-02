@@ -1,0 +1,34 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Michał Polański <michal@polanski.me>
+pkgname=wf-recorder
+pkgver=0.4.1
+pkgrel=1
+pkgdesc="Screen recording for wlroots-based compositors"
+url="https://github.com/ammen99/wf-recorder"
+arch="all !ppc64le"
+license="MIT"
+makedepends="
+	ffmpeg-dev
+	mesa-dev
+	meson
+	pulseaudio-dev
+	scdoc
+	wayland-dev
+	wayland-protocols
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/ammen99/wf-recorder/releases/download/v$pkgver/wf-recorder-$pkgver.tar.xz"
+options="!check" # no test suite
+
+build() {
+	abuild-meson -Db_lto=true . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+c97b3a0570aa5496d93b88549db6cd682e80c1497bbd6e999ab6b35f2f13adc7af167c22517fa35eab5d3021439001d0e7cfe2ee75a2ba99b9aa6953beb56aa0  wf-recorder-0.4.1.tar.xz
+"
